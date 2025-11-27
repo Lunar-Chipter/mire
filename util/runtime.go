@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	runtime "runtime"
 	"strings"
-	"mire/core"
+	"github.com/Lunar-Chipter/mire/core"
 )
 
 func GetCallerInfo(skip int) *core.CallerInfo {
