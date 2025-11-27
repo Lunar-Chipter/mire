@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 	"sync/atomic"
-	"mire/core"
+	"github.com/Lunar-Chipter/mire/core"
 )
 
 // LogSampler defines the interface for a logger that can be sampled.
