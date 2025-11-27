@@ -3,7 +3,7 @@
 ![Go Version](https://img.shields.io/badge/Go-1.25.4-blue.svg)
 ![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Go-informational.svg)
-![Performance](https://img.shields.io/badge/Performance-1M%2B%20logs%2Fsec-brightgreen.svg)
+![Performance](https://img.shields.io/badge/Performance-56,479%2B%20logs%2Fsec-brightgreen.svg)
 ![Status](https://img.shields.io/badge/Status-Beta-yellow.svg)
 ![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg)
 ![Maintained](https://img.shields.io/badge/Maintained-Yes-blue.svg)
