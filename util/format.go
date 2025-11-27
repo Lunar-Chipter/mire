@@ -1,0 +1,183 @@
+package util
+
+import (
+	"bytes"
+	"strconv" // Re-added strconv import
+	"time"
+
+	"mire/core" // Added import for core.S2b and core.ErrorAppender
+)
+
+// FormatValue formats a given value into a byte buffer, with an optional max width.
+// This version is optimized to reduce string allocations.
+func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
+	// Use a pooled byte slice for intermediate conversions
+	tempBuf := GetSmallByteSliceFromPool()
+	defer PutSmallByteSliceToPool(tempBuf)
+
+	var needsQuote bool
+	var content []byte // The content to write, potentially truncated
+
+	switch v := value.(type) {
+	case string:
+		content = core.S2b(v) // Zero-copy conversion
+	case []byte:
+		content = v
+	case int:
+		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // Reset length before appending
+	case int8:
+		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // Reset length before appending
+	case int16:
+		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // Reset length before appending
+	case int32:
+		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // Reset length before appending
+	case int64:
+		content = strconv.AppendInt(tempBuf[:0], v, 10) // Reset length before appending
+	case uint:
+		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // Reset length before appending
+	case uint8:
+		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // Reset length before appending
+	case uint16:
+		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // Reset length before appending
+	case uint32:
+		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // Reset length before appending
+	case uint64:
+		content = strconv.AppendUint(tempBuf[:0], v, 10) // Reset length before appending
+	case float32:
+		content = strconv.AppendFloat(tempBuf[:0], float64(v), 'f', 2, 32) // 'f' format, 2 decimal places, 32-bit float
+	case float64:
+		content = strconv.AppendFloat(tempBuf[:0], v, 'f', 2, 64) // 'f' format, 2 decimal places, 64-bit float
+	case bool:
+		content = strconv.AppendBool(tempBuf[:0], v) // Reset length before appending
+	case error: // Handle errors directly
+		if appender, ok := v.(core.ErrorAppender); ok { // Changed to core.ErrorAppender
+			appender.AppendError(buf)
+			return
+		}
+		content = core.S2b(v.Error()) // Fallback, still allocates a string internally for v.Error()
+	default:
+		// Fallback for complex types - manual string conversion to avoid fmt
+		tempStr := manualStringConversion(v)
+		content = core.S2b(tempStr)
+	}
+
+	// Handle max width truncation
+	if maxWidth > 0 && len(content) > maxWidth {
+		buf.Write(content[:maxWidth])
+		buf.Write([]byte("..."))
+		return
+	}
+
+	// Determine if quoting is needed (value contains space)
+	needsQuote = bytes.Contains(content, []byte(" "))
+
+	if needsQuote {
+		buf.WriteByte('"')
+		buf.Write(content)
+		buf.WriteByte('"')
+	} else {
+		buf.Write(content)
+	}
+}
+
+// FormatTimestamp formats a timestamp to a byte buffer with zero allocation
+func FormatTimestamp(buf *bytes.Buffer, t time.Time, format string) {
+	// Use a pooled byte slice for intermediate conversions
+	tempBuf := GetSmallByteSliceFromPool()
+	defer PutSmallByteSliceToPool(tempBuf)
+
+	// Format the timestamp to the temp buffer
+	tsBytes := t.AppendFormat(tempBuf[:0], format)
+	buf.Write(tsBytes)
+}
+
+// manualStringConversion manually converts common types to string without fmt
+// Kept for compatibility - uses the public function
+func manualStringConversion(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case []byte:
+		return string(v) // This is unavoidable for []byte to string
+	case int:
+		return strconv.Itoa(v)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'g', -1, 32)
+	case float64:
+		return strconv.FormatFloat(v, 'g', -1, 64)
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	case nil:
+		return "null"
+	default:
+		// For complex types that can't be easily converted
+		// This is a last resort case - should be avoided in high-performance scenarios
+		return "<complex-type>"
+	}
+}
+
+// ManualStringConversion converts common types to string without fmt
+func ManualStringConversion(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case []byte:
+		return string(v) // This is unavoidable for []byte to string
+	case int:
+		return strconv.Itoa(v)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'g', -1, 32)
+	case float64:
+		return strconv.FormatFloat(v, 'g', -1, 64)
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	case nil:
+		return "null"
+	default:
+		// For complex types that can't be easily converted
+		// This is a last resort case - should be avoided in high-performance scenarios
+		return "<complex-type>"
+	}
+}
