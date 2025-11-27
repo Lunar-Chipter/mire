@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"mire/core"
+	"github.com/Lunar-Chipter/mire/core"
 )
 
 // MetricsCollector interface defines methods for collecting metrics
