@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"mire/core"
-	"mire/formatter"
-	"mire/logger"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/formatter"
+	"github.com/Lunar-Chipter/mire/logger"
 )
 
 // TestLogEntry is a minimal struct to unmarshal JSON log entries for testing.

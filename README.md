@@ -735,6 +735,14 @@ If you encounter issues or have questions:
 - Context-aware logging
 - Hook system implementation
 
+## 🔧 Recent Fixes
+
+### Level Filtering Fix
+- Fixed `TestLogger_LevelFiltering` test that was previously failing due to active buffering
+- Disabled buffering in tests for consistent results
+- Improved `ExitFunc` handling during Fatal/Panic tests to prevent actual exits
+- Ensured level filtering works as expected (only logs with level >= configuration are recorded)
+
 ## 🔍 Related Projects
 
 - [zap](https://github.com/uber-go/zap) - Blazing fast, structured, leveled logging in Go
