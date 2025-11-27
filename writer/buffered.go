@@ -6,7 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"mire/util"
+	"github.com/Lunar-Chipter/mire/util"
 )
 
 // wrappedError wraps an error with a message

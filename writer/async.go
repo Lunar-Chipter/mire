@@ -7,9 +7,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"mire/core"
-	"mire/errors"
-	"mire/util"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/errors"
+	"github.com/Lunar-Chipter/mire/util"
 )
 
 // LogProcessor defines the interface for the underlying logger that the AsyncLogger will use.

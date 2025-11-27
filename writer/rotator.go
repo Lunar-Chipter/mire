@@ -2,7 +2,7 @@ package writer
 
 import (
 	"os"
-	"mire/config" // Updated import
+	"github.com/Lunar-Chipter/mire/config" // Updated import
 )
 
 // RotatingFileWriter provides a file writer that rotates logs.
