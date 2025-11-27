@@ -10,7 +10,7 @@
 ![Downloads](https://img.shields.io/github/downloads/mire/mire/total.svg)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/golang-samples/gophers/master/gopher-color.png" alt="Gopher Logo" width="150" />
+  <img src="https://github.com/egonelbre/gophers/blob/master/vector/party/music.svg" alt="Gopher Logo" width="150" />
 </p>
 
 <p align="center">
