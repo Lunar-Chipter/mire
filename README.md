@@ -37,6 +37,7 @@
 - [📚 Examples](#-examples)
 - [🧪 Testing](#-testing)
 - [🔧 Advanced Configuration](#-advanced-configuration)
+- [🗺️ Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 - [📞 Support](#-support)
@@ -97,10 +98,10 @@ package main
 
 import (
     "context"
-    "mire/core"
-    "mire/formatter"
-    "mire/logger"
-    "mire/util"
+    "github.com/Lunar-Chipter/mire/core"
+    "github.com/Lunar-Chipter/mire/formatter"
+    "github.com/Lunar-Chipter/mire/logger"
+    "github.com/Lunar-Chipter/mire/util"
 )
 
 func main() {
@@ -135,9 +136,9 @@ package main
 
 import (
     "os"
-    "mire/core"
-    "mire/formatter"
-    "mire/logger"
+    "github.com/Lunar-Chipter/mire/core"
+    "github.com/Lunar-Chipter/mire/formatter"
+    "github.com/Lunar-Chipter/mire/logger"
 )
 
 func main() {
@@ -692,6 +693,31 @@ When reporting issues, please include:
 - Actual behavior
 - Steps to reproduce
 - Any relevant logs or error messages
+
+## 🗺️ Roadmap
+
+### Philosophy Alignment
+Mire aims to continuously align with the 15 core philosophies of Go logging, including zero-allocation, manual byte manipulation, cache-conscious design, and goroutine-local storage.
+
+### Planned Enhancements
+
+#### Performance & Reliability
+- [ ] Perfect goroutine ID detection for truly scalable local storage
+- [ ] Implement advanced memory prefetching strategies
+- [ ] Optimize memory layout to further reduce cache misses
+- [ ] Enhance error handling for extreme resource exhaustion scenarios
+
+#### Advanced Features
+- [ ] Add structured query capabilities on log entries
+- [ ] Implement log compression for storage efficiency
+- [ ] Create custom formatter plugin system
+- [ ] Develop real-time log streaming and monitoring
+
+#### Integration & Ecosystem
+- [ ] Add exporters for popular metric systems (Prometheus, OpenTelemetry)
+- [ ] Create comprehensive API documentation
+- [ ] Develop integration guides for various Go frameworks
+- [ ] Implement sensitive data masking and security mechanisms
 
 ## 📄 License
 
