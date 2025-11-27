@@ -23,7 +23,8 @@
   <a href="#-installation">Installation</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-examples">Examples</a> •
-  <a href="#-contributing">Contributing</a>
+  <a href="#-contributing">Contributing</a> •
+  <a href="#-roadmap">Roadmap<\a>
 </p>
 
 ## 📋 Table of Contents
@@ -37,7 +38,7 @@
 - [📚 Examples](#-examples)
 - [🧪 Testing](#-testing)
 - [🔧 Advanced Configuration](#-advanced-configuration)
-- [🗺️ Roadmap](#roadmap)
+- [🗺️ Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 - [📞 Support](#-support)
