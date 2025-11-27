@@ -30,7 +30,7 @@
 - [✨ Features](#-features)
 - [🚀 Installation](#-installation)
 - [⚡ Quick Start](#-quick-start)
-- [⚙️ Configuration](#️-configuration)
+- [⚙️ Configuration](#️-configuration-options)
 - [📊 Performance](#-performance)
 - [🏗️ Architecture](#️-architecture)
 - [📚 Examples](#-examples)
