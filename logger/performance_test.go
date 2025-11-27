@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"mire/core"
-	"mire/formatter"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/formatter"
 )
 
 // TestMemoryAllocations tests memory allocations for different log levels
