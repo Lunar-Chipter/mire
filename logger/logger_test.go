@@ -270,56 +270,56 @@ func (m *mockHook) Fire(entry *core.LogEntry) error {
 	return m.ErrorToReturn
 }
 
-func TestLogger_BasicLoggingMethods(t *testing.T) {
-	// Using a buffer to capture logger output
-	outputBuffer := &bytes.Buffer{}
-	
-	// Create a logger configured to output to our buffer, level TRACE to capture all
-	cfg := logger.LoggerConfig{
-		Level:  core.TRACE, // Set to TRACE to ensure all levels are processed
-		Output: outputBuffer,
-		Formatter: &formatter.TextFormatter{
-			EnableColors:  false, // Disable colors for easier string matching
-			ShowTimestamp: false,
-			ShowCaller:    false,
-		},
-	}
-	l := logger.New(cfg)
-	defer l.Close()
+func (m *mockHook) Close() error {
+	return nil
+}
 
+func TestLogger_BasicLoggingMethods(t *testing.T) {
 	tests := []struct {
 		name     string
-		logFunc  func(args ...interface{})
+		logFunc  func(*logger.Logger) func(args ...interface{})
 		level    core.Level
 		message  string
 	}{
-		{"Trace", l.Trace, core.TRACE, "trace message"},
-		{"Debug", l.Debug, core.DEBUG, "debug message"},
-		{"Info", l.Info, core.INFO, "info message"},
-		{"Notice", l.Notice, core.NOTICE, "notice message"},
-		{"Warn", l.Warn, core.WARN, "warn message"},
-		{"Error", l.Error, core.ERROR, "error message"},
-		{"Fatal", l.Fatal, core.FATAL, "fatal message"},
-		{"Panic", l.Panic, core.PANIC, "panic message"},
+		{"Trace", func(l *logger.Logger) func(args ...interface{}) { return l.Trace }, core.TRACE, "trace message"},
+		{"Debug", func(l *logger.Logger) func(args ...interface{}) { return l.Debug }, core.DEBUG, "debug message"},
+		{"Info", func(l *logger.Logger) func(args ...interface{}) { return l.Info }, core.INFO, "info message"},
+		{"Notice", func(l *logger.Logger) func(args ...interface{}) { return l.Notice }, core.NOTICE, "notice message"},
+		{"Warn", func(l *logger.Logger) func(args ...interface{}) { return l.Warn }, core.WARN, "warn message"},
+		{"Error", func(l *logger.Logger) func(args ...interface{}) { return l.Error }, core.ERROR, "error message"},
+		{"Fatal", func(l *logger.Logger) func(args ...interface{}) { return l.Fatal }, core.FATAL, "fatal message"},
+		{"Panic", func(l *logger.Logger) func(args ...interface{}) { return l.Panic }, core.PANIC, "panic message"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			outputBuffer.Reset() // Clear buffer for each test
+			// Using a buffer to capture logger output
+			outputBuffer := &bytes.Buffer{}
 
-			// Temporarily change exitFunc to prevent test runner from exiting on Fatal/Panic
-			if tt.level == core.FATAL || tt.level == core.PANIC {
-				originalExitFunc := l.Config.ExitFunc
-				l.Config.ExitFunc = func(code int) {
-					t.Logf("ExitFunc called with code %d (simulated)", code)
-				}
-				defer func() {
-					l.Config.ExitFunc = originalExitFunc // Restore original exit func
-				}()
+			// Create a logger configured to output to our buffer, level TRACE to capture all
+			cfg := logger.LoggerConfig{
+				Level:  core.TRACE, // Set to TRACE to ensure all levels are processed
+				Output: outputBuffer,
+				Formatter: &formatter.TextFormatter{
+					EnableColors:  false, // Disable colors for easier string matching
+					ShowTimestamp: false,
+					ShowCaller:    false,
+				},
 			}
 
-			tt.logFunc(tt.message) // Call the logger method
-			
+			// Set exit function that doesn't actually exit in tests
+			if tt.level == core.FATAL || tt.level == core.PANIC {
+				cfg.ExitFunc = func(code int) {
+					t.Logf("ExitFunc called with code %d (simulated)", code)
+				}
+			}
+
+			l := logger.New(cfg)
+			defer l.Close()
+
+			logFunc := tt.logFunc(l)
+			logFunc(tt.message) // Call the logger method
+
 			// // Workaround: Temporarily comment out this assertion due to inexplicable bytes.Index failure
 			// if bytes.Index(actualOutput, expectedMessageBytes) == -1 { // Use bytes.Index to find substring
 			// 	t.Errorf("Expected output to contain message '%s' (bytes: %v), but it wasn't. Got '%s' (bytes: %v)",
