@@ -8,6 +8,7 @@
 ![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg)
 ![Maintained](https://img.shields.io/badge/Maintained-Yes-blue.svg)
 ![Downloads](https://img.shields.io/github/downloads/Lunar-Chipter/mire/total.svg)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Lunar-Chipter/mire.svg)](https://pkg.go.dev/github.com/Lunar-Chipter/mire)
 
 <p align="center">
   <img src="https://github.com/egonelbre/gophers/blob/master/.thumb/animation/gopher-dance-long-3x.gif" alt="Gopher Logo" width="150" />
