@@ -37,7 +37,7 @@
 - [📚 Examples](#-examples)
 - [🧪 Testing](#-testing)
 - [🔧 Advanced Configuration](#-advanced-configuration)
-- [🗺️ Roadmap](#-roadmap)
+- [🗺️ Roadmap](https://github.com/Lunar-Chipter/mire/tree/main?tab=readme-ov-file#%EF%B8%8F-roadmap)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 - [📞 Support](#-support)
