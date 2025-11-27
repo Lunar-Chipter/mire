@@ -23,7 +23,7 @@
   <a href="#-installation">Installation</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-examples">Examples</a> •
-  <a href="#-contributing">Contributing</a> •
+  <a href="#-contributing">Contributing</a>
 </p>
 
 ## 📋 Table of Contents
