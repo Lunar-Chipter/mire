@@ -2,7 +2,7 @@ package formatter
 
 import (
 	"bytes"
-	"mire/core"
+	"github.com/Lunar-Chipter/mire/core"
 )
 
 // Formatter interface defines how log entries are formatted

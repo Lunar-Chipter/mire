@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"mire/core"
-	"mire/util"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/util"
 )
 
 // TextFormatter formats log entries in a human-readable text format
