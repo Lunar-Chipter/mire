@@ -71,21 +71,21 @@
 
 ```bash
 # Add to your project
-go get mire
+go get github.com/Lunar-Chipter/mire
 
 # Or add to your go.mod file directly
 go mod init your-project
-go get mire
+go get github.com/Lunar-Chipter/mire
 ```
 
 ### Version Management
 
 ```bash
 # Use a specific version
-go get mire@0.0.1
+go get github.com/Lunar-Chipter/mire@0.0.1
 
 # Use the latest version
-go get -u mire
+go get -u github.com/Lunar-Chipter/mire
 ```
 
 ## ⚡ Quick Start
