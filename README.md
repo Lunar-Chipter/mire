@@ -649,7 +649,7 @@ We welcome contributions! Here's how you can help:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/mire.git
+git clone https://github.com/Lunar-Chipter/mire.git
 cd mire
 
 # Setup module
