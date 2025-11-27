@@ -81,7 +81,7 @@ go get mire
 
 ```bash
 # Use a specific version
-go get mire@v1.0.0
+go get mire@0.0.1
 
 # Use the latest version
 go get -u mire
