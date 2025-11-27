@@ -10,6 +10,12 @@ import (
 	"mire/formatter"
 )
 
+// Hook interface defines the contract for log processing hooks
+type Hook interface {
+	Fire(entry *core.LogEntry) error
+	Close() error
+}
+
 // wrappedError wraps an error with a message
 type wrappedError struct {
 	msg   string
