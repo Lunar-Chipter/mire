@@ -28,21 +28,21 @@
 
 ## 📋 Table of Contents
 
-- [✨ Features](#-features)
-- [🚀 Installation](#-installation)
-- [⚡ Quick Start](#-quick-start)
-- [⚙️ Configuration](#️-configuration-options)
-- [📊 Performance](#-performance)
-- [🏗️ Architecture](#️-architecture)
-- [📚 Examples](#-examples)
-- [🧪 Testing](#-testing)
-- [🔧 Advanced Configuration](#-advanced-configuration)
+- [✨ Features](#features)
+- [🚀 Installation](#installation)
+- [⚡ Quick Start](#quick-start)
+- [⚙️ Configuration](#configuration-options)
+- [📊 Performance](#performance)
+- [🏗️ Architecture](#architecture)
+- [📚 Examples](#examples)
+- [🧪 Testing](#testing)
+- [🔧 Advanced Configuration](#advanced-configuration)
 - [🗺️ Roadmap](#roadmap)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
-- [📞 Support](#-support)
-- [📄 Changelog](#-changelog)
-- [🔍 Related Projects](#-related-projects)
+- [🤝 Contributing](#contributing)
+- [📄 License](#license)
+- [📞 Support](#support)
+- [📄 Changelog](#changelog)
+- [🔍 Related Projects](#related-projects)
 
 ## ✨ Features
 
