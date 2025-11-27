@@ -44,7 +44,7 @@
 
 ## ✨ Features
 
-- **High Performance**: Optimized for 1M+ logs/second with zero-allocation design
+- **High Performance**: Optimized for 56,479+ logs/second with zero-allocation design
 - **Context-Aware**: Automatic extraction of trace IDs, user IDs, and request IDs from context
 - **Multiple Formatters**: Text, JSON, and CSV formatters with custom options
 - **Asynchronous Logging**: Non-blocking log processing with configurable worker count
