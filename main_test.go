@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"io"
 	"os"
@@ -120,24 +119,19 @@ func TestMainFunction(t *testing.T) {
 // into a slice of TestLogEntry.
 func parseJSONLogs(t *testing.T, data []byte, entries *[]TestLogEntry) error {
 	decoder := json.NewDecoder(bytes.NewReader(data))
-	for decoder.More() {
+	for {
 		var entry TestLogEntry
 		if err := decoder.Decode(&entry); err != nil {
+			if err == io.EOF {
+				break
+			}
 			return &wrappedError{
 				msg:   "failed to decode JSON object",
 				cause: err,
 			}
 		}
 
-		// Base64 decode the message
-		decodedMessage, err := base64.StdEncoding.DecodeString(entry.Message)
-		if err != nil {
-			return &wrappedError{
-				msg:   "failed to base64 decode message for level " + entry.LevelName + ", raw message: " + entry.Message,
-				cause: err,
-			}
-		}
-		entry.Message = string(decodedMessage)
+		// No base64 decode needed - the JSON formatter writes messages as regular strings
 		*entries = append(*entries, entry)
 	}
 	return nil
