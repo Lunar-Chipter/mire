@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"mire/core"
-	"mire/formatter"
-	"mire/hook"
-	"mire/logger"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/formatter"
+	"github.com/Lunar-Chipter/mire/hook"
+	"github.com/Lunar-Chipter/mire/logger"
 )
 
 // Helper to capture stdout/stderr
@@ -331,7 +331,7 @@ func TestLogger_BasicLoggingMethods(t *testing.T) {
 
 func TestLogger_LevelFiltering(t *testing.T) {
 	outputBuffer := &bytes.Buffer{}
-	
+
 	cfg := logger.LoggerConfig{
 		Level:  core.WARN, // Logger configured to only show WARN and above
 		Output: outputBuffer,
@@ -339,6 +339,10 @@ func TestLogger_LevelFiltering(t *testing.T) {
 			EnableColors:  false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
+		},
+		BufferSize: 0, // Disable buffering to ensure immediate writes
+		ExitFunc: func(code int) {
+			// Mock exit function to prevent actual exit during tests
 		},
 	}
 	l := logger.New(cfg)
@@ -370,6 +374,7 @@ func TestLogger_LevelFiltering(t *testing.T) {
 				l.Config.ExitFunc = func(code int) {
 					t.Logf("ExitFunc called with code %d (simulated)", code)
 				}
+				// Restore original exit function before this subtest ends
 				defer func() {
 					l.Config.ExitFunc = originalExitFunc
 				}()

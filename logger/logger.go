@@ -10,14 +10,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"mire/core"
-	"mire/formatter"
-	"mire/hook"
-	"mire/metric"
-	"mire/sampler"
-	"mire/util"
-	"mire/writer"
-	"mire/config" // Add this import
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/formatter"
+	"github.com/Lunar-Chipter/mire/hook"
+	"github.com/Lunar-Chipter/mire/metric"
+	"github.com/Lunar-Chipter/mire/sampler"
+	"github.com/Lunar-Chipter/mire/util"
+	"github.com/Lunar-Chipter/mire/writer"
+	"github.com/Lunar-Chipter/mire/config" // Add this import
 )
 const (
 	DEFAULT_TIMESTAMP_FORMAT = "2006-01-02 15:04:05.000"
