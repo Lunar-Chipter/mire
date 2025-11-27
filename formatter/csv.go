@@ -5,8 +5,8 @@ import (
 	"encoding/csv"
 	"strconv"
 
-	"mire/core"
-	"mire/util"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/util"
 )
 
 // CSVFormatter - Optimized version - Returns byte slice instead of string to reduce memory allocation

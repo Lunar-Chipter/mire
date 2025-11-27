@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"strconv"
 
-	"mire/core"
-	"mire/util"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/util"
 )
 
 // JSONFormatter formats log entries in JSON format
