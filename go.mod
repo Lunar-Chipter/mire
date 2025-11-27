@@ -1,3 +1,3 @@
-module github.com/Lunar-Chipter/mire
+module mire
 
 go 1.25
