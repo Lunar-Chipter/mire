@@ -269,25 +269,6 @@ jsonFormatter := &formatter.JSONFormatter{
 }
 ```
 
-## 📊 Performance
-
-Mire is designed for high-performance logging scenarios:
-
-- **Zero Allocation**: Manual formatting avoids fmt package allocations
-- **Object Pooling**: Reuses LogEntry, buffers, and maps to minimize GC pressure
-- **Asynchronous Processing**: Non-blocking logging with configurable worker count
-- **Fast Clock**: Optimized timestamp generation
-- **Optimized I/O**: Buffered writes and batch processing
-
-### Performance Benchmarks
-
-Based on benchmark results:
-- TextFormatter: ~14μs per operation (6 allocs/op, ~870 B/op)
-- JSONFormatter: ~43μs per operation (13 allocs/op, ~2110 B/op)
-- Asynchronous logging: Significantly lower latency for application threads
-
-For detailed benchmark results, see [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md).
-
 ## 🏗️ Architecture
 
 Mire follows a modular architecture with clear separation of concerns:
@@ -458,7 +439,7 @@ go run main.go
 | Async logging | <1μs/op | 1 allocs/op | 32 B/op |
 
 
-## 📊 Performance Benchmarks
+## 📊 Performance
 
 The Mire logging library has been tested across various performance aspects including memory allocation, throughput, and component performance. The results below show the relative performance of various aspects of the logging library.
 
