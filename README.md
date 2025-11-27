@@ -24,7 +24,6 @@
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-examples">Examples</a> •
   <a href="#-contributing">Contributing</a> •
-  <a href="#-roadmap">Roadmap<\a>
 </p>
 
 ## 📋 Table of Contents
@@ -38,7 +37,7 @@
 - [📚 Examples](#-examples)
 - [🧪 Testing](#-testing)
 - [🔧 Advanced Configuration](#-advanced-configuration)
-- [🗺️ Roadmap](#-roadmap)
+- [🗺️ Roadmap](#roadmap)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 - [📞 Support](#-support)
@@ -696,9 +695,6 @@ When reporting issues, please include:
 - Any relevant logs or error messages
 
 ## 🗺️ Roadmap
-
-### Philosophy Alignment
-Mire aims to continuously align with the 15 core philosophies of Go logging, including zero-allocation, manual byte manipulation, cache-conscious design, and goroutine-local storage.
 
 ### Planned Enhancements
 
