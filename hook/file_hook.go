@@ -6,8 +6,8 @@ import (
 	"os"
 	"sync"
 
-	"mire/core"
-	"mire/formatter"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/formatter"
 )
 
 // Hook interface defines the contract for log processing hooks
