@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
-	"mire/core"
-	"mire/formatter"
-	"mire/logger"
-	"mire/util"
-	// "mire/hook" // Removed import for hook package
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/formatter"
+	"github.com/Lunar-Chipter/mire/logger"
+	"github.com/Lunar-Chipter/mire/util"
+	// "github.com/Lunar-Chipter/mire/hook" // Removed import for hook package
 )
 
 // wrappedError wraps an error with a message

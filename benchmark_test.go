@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"mire/core"
-	"mire/formatter"
-	"mire/logger"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/formatter"
+	"github.com/Lunar-Chipter/mire/logger"
 )
 
 // BenchmarkTextFormatterNoAlloc measures allocation for text formatter
