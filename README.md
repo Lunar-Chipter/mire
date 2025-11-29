@@ -569,7 +569,7 @@ Note: Debug level has faster operation time as it may not go through all filters
 
 Note: Formatters with timestamp and/or caller info are faster as they may not experience certain overhead. JSON requires more time and allocations due to serialization.
 
-#### Updated Formatter Performance (After Zero-Allocation Optimizations)
+#### Updated Formatter Performance
 
 | Formatter              | Operations | Time/Ops | Bytes/Operation | Allocs/Operation |
 |------------------------|------------|----------|-----------------|------------------|
@@ -848,15 +848,6 @@ If you encounter issues or have questions:
 - Improved cache-friendly memory access patterns
 - Enhanced branch prediction optimizations
 - Added utility functions for zero-allocation operations
-
-### v0.0.1
-- Initial release
-- Basic logging functionality with multiple levels
-- Text and JSON formatters
-- File and console output support
-- Context-aware logging
-- Hook system implementation
-
 
 ## 🔍 Related Projects
 
