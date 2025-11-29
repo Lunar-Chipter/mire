@@ -1,4 +1,4 @@
-# Mire - High-Performance Go Logging Library
+# Mire - Go Logging Library
 
 ![Go Version](https://img.shields.io/badge/Go-1.25.4-blue.svg)
 ![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)
@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  A high-performance, zero-allocation logging library built for modern Go applications.
+  A zero-allocation logging library built for modern Go applications.
 </p>
 
 <p align="center">
@@ -46,8 +46,8 @@
 
 ## ✨ Features
 
-- **High Performance**: Optimized for 736,000+ logs/second with zero-allocation design
-- **Zero-Allocation**: Extensive use of object pooling for maximum efficiency
+- **Optimized Performance**: Optimized for 736,000+ logs/second with zero-allocation design
+- **Zero-Allocation**: Extensive use of object pooling for high efficiency
 - **Context-Aware**: Automatic extraction of trace IDs, user IDs, and request IDs from context
 - **Multiple Formatters**: Text, JSON, and CSV formatters with custom options
 - **Asynchronous Logging**: Non-blocking log processing with configurable worker count
@@ -219,7 +219,7 @@ config := logger.LoggerConfig{
     LogProcessTimeout: time.Second,              // Timeout for processing logs
     AsyncLogChannelBufferSize: 1000,            // Buffer size for async channel
     AsyncWorkerCount:  4,                        // Number of async workers
-    FastClockInterval: 10 * time.Millisecond,   // Fast clock interval
+    ClockInterval: 10 * time.Millisecond,   // Clock interval
     MaskStringValue:   "[MASKED]",              // Mask string value
 }
 ```
@@ -315,7 +315,7 @@ Mire follows a modular architecture with clear separation of concerns:
 3. **Writers**: Handle output to various destinations (console, files, networks)
 4. **Object Pools**: Reuse objects to minimize allocations and garbage collection
 5. **Hooks**: Extensible system for custom log processing
-6. **Fast Clock**: High-performance clock for timestamp operations with minimal overhead
+6. **Clock**: Clock for timestamp operations with minimal overhead
 
 ## 📚 Examples
 
@@ -602,24 +602,24 @@ Note: In this case, buffering appears slower, possibly due to small buffer size 
 
 1. **Low Memory Allocation**: The library is designed with a strong focus on memory efficiency, with around 2-3 allocations per log operation after zero-allocation optimizations.
 
-2. **High Performance**: High throughput with operation times significantly improved, especially for batch operations (sub-25ns/op for CSV formatter, as low as 1.4μs/op in optimal conditions).
+2. **Optimized Performance**: High throughput with operation times significantly improved, especially for batch operations (sub-25ns/op for CSV formatter, as low as 1.4μs/op in best conditions).
 
 3. **Formatter Efficiency**:
-   - TextFormatter maintains good performance with ~2.5μs/op in typical conditions, as low as 1.8μs/op in optimal conditions
+   - TextFormatter maintains good performance with ~2.5μs/op in typical conditions, as low as 1.8μs/op in best conditions
    - JSONFormatter shows ~3.2μs/op for standard operations and ~4.9μs/op for pretty printing
-   - CSVFormatter achieves ~2.0μs/op with further optimization for batch processing, as fast as 1.4μs/op in optimal conditions
+   - CSVFormatter achieves ~2.0μs/op with further optimization for batch processing, as fast as 1.4μs/op in best conditions
 
 4. **Zero-Allocation Performance**: Several formatter operations achieve zero allocations through efficient object pooling and manual memory management.
 
-5. **Concurrency Scalability**: The library handles concurrency well with minimal overhead and optimized goroutine-local storage.
+5. **Concurrency Scalability**: The library handles concurrency well with minimal overhead and efficient goroutine-local storage.
 
-6. **Advanced Optimization**:
+6. **Optimization**:
    - Design uses object pooling to reduce allocations
    - Formatters are designed to minimize string creation and allocation
    - Cache-friendly memory access patterns for improved performance
    - Branch prediction optimizations for faster execution
 
-The Mire logging library is well-suited for high-load applications that require high-performance logging and efficient memory usage.
+The Mire logging library is well-suited for high-load applications that require optimized logging and efficient memory usage.
 
 ## 🔧 Advanced Configuration
 
@@ -841,8 +841,8 @@ If you encounter issues or have questions:
 - Added complete CSV formatter with zero-allocation implementation
 - Added field transformers support for all formatters
 - Added comprehensive sensitive data masking capabilities
-- Improved object pooling for maximum memory efficiency
-- Added fast clock implementation for timestamp operations
+- Improved object pooling for high memory efficiency
+- Added clock implementation for timestamp operations
 - Updated README with comprehensive examples for all formatters
 - Added formatter benchmark tests with updated performance metrics
 - Improved cache-friendly memory access patterns
@@ -857,6 +857,6 @@ If you encounter issues or have questions:
 
 ## 🙏 Acknowledgments
 
-- Inspired by other high-performance logging libraries
+- Inspired by other efficient logging libraries
 - Thanks to the Go community for performance optimization techniques
 - Special thanks to contributors and early adopters

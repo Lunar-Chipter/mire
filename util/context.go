@@ -49,7 +49,7 @@ func WithRequestID(ctx context.Context, requestID string) context.Context {
 }
 
 // ExtractFromContext extracts all context values - Optimized version
-// ExtractFromContext mengekstrak semua nilai konteks - Versi optimal
+// ExtractFromContext mengekstrak semua nilai konteks - Versi efisien
 func ExtractFromContext(ctx context.Context) map[string]string {
 	result := GetMapStringFromPool()
 	// The defer putMapStringToPool(result) cannot be used here because the map is returned.

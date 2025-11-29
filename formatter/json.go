@@ -443,7 +443,7 @@ func (f *JSONFormatter) transformValue(val interface{}, defaultVal string) strin
 		return "null"
 	default:
 		// For complex types that can't be easily converted
-		// This is a last resort case - should be avoided in high-performance scenarios
+		// This is a last resort case - should be avoided in demanding scenarios
 		return defaultVal
 	}
 }

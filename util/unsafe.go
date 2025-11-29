@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-// ZeroAllocBuffer represents a zero-allocation buffer for high-performance logging
+// ZeroAllocBuffer represents a zero-allocation buffer for efficient logging
 // Prinsip: "No hidden costs, no runtime surprises"
 type ZeroAllocBuffer struct {
 	buf []byte

@@ -696,7 +696,7 @@ func TestFormatterPerformance(t *testing.T) {
 
 // Example usage for documentation
 func ExampleLogger_performance() {
-	// Create a high-performance logger configuration
+	// Create an efficient logger configuration
 	logger := New(LoggerConfig{
 		Level:             core.INFO,
 		Output:            io.Discard, // Use io.Discard for benchmarks
@@ -711,7 +711,7 @@ func ExampleLogger_performance() {
 	})
 
 	// Use the logger
-	logger.Info("This is a high-performance log message")
+	logger.Info("This is an efficient log message")
 
 	// Always close the logger when done
 	logger.Close()

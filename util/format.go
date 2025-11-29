@@ -132,7 +132,7 @@ func manualStringConversion(value interface{}) string {
 		return "null"
 	default:
 		// For complex types that can't be easily converted
-		// This is a last resort case - should be avoided in high-performance scenarios
+		// This is a last resort case - should be avoided in demanding scenarios
 		return "<complex-type>"
 	}
 }
@@ -207,7 +207,7 @@ func ManualStringConversion(value interface{}) string {
 		return "null"
 	default:
 		// For complex types that can't be easily converted
-		// This is a last resort case - should be avoided in high-performance scenarios
+		// This is a last resort case - should be avoided in demanding scenarios
 		return "<complex-type>"
 	}
 }

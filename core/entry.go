@@ -222,7 +222,7 @@ var entryPool = sync.Pool{
 	},
 }
 
-// Fast allocation-free pool access with fast-path optimization
+// Efficient allocation-free pool access with optimized path
 var (
 	// Pre-allocated entries to reduce sync.Pool contention under low load
 	preallocatedEntries = make([]*LogEntry, 32) // Fixed-size array for fast access
@@ -243,7 +243,7 @@ const (
 
 	// Performance optimization constants
 	PreallocatedPoolSize  = 32   // Number of pre-allocated entries
-	MaxFastPathAttempts   = 5    // Max attempts to use fast path before fallback
+	MaxOptimizedPathAttempts   = 5    // Max attempts to use optimized path before fallback
 )
 
 // GetEntryFromPool gets a LogEntry from the pool
@@ -586,7 +586,7 @@ func (le *LogEntry) ManualByteWrite(buf []byte) []byte {
 						return "null"
 					default:
 						// For complex types that can't be easily converted
-						// This is a last resort case - should be avoided in high-performance scenarios
+						// This is a last resort case - should be avoided in demanding scenarios
 						return "<complex-type>"
 					}
 				}
@@ -752,7 +752,7 @@ func manualStringConversion(value interface{}) string {
 		return "null"
 	default:
 		// For complex types that can't be easily converted
-		// This is a last resort case - should be avoided in high-performance scenarios
+		// This is a last resort case - should be avoided in demanding scenarios
 		return "<complex-type>"
 	}
 }
