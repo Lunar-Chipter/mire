@@ -836,8 +836,8 @@ If you encounter issues or have questions:
 
 ### v0.0.2
 - Major performance improvements with zero-allocation formatters
-- TextFormatter now runs at ~0.13μs/op (100x faster)
-- JSONFormatter now runs at ~2.4μs/op (18x faster)
+- TextFormatter now runs at ~0.13μs/op
+- JSONFormatter now runs at ~2.4μs/op
 - Added complete CSV formatter with zero-allocation implementation
 - Added field transformers support for all formatters
 - Added comprehensive sensitive data masking capabilities
