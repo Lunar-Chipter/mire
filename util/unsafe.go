@@ -103,9 +103,9 @@ var (
 	ResetColor   = []byte("\x1b[0m")
 )
 
-// S2b converts a string to a byte slice without memory allocation.
+// StringToBytes converts a string to a byte slice without memory allocation.
 // WARNING: The returned byte slice shares memory with the string. It is read-only.
-func S2b(s string) (b []byte) {
+func StringToBytes(s string) (b []byte) {
 	bh := (*[3]int)(unsafe.Pointer(&b))
 	sh := (*[2]int)(unsafe.Pointer(&s))
 	bh[0] = sh[0]

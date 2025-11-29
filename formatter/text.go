@@ -152,7 +152,7 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 		// Create GID string more efficiently using a temporary buffer
 		gidPrefix := []byte("GID:")
 		buf.Write(gidPrefix)
-		buf.Write(core.S2b(entry.GoroutineID))
+		buf.Write(core.StringToBytes(entry.GoroutineID))
 		buf.WriteByte(' ')
 	}
 	if f.ShowTraceInfo {
@@ -162,7 +162,7 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 		if f.EnableColors {
 			buf.Write(callerColorBytes)
 		}
-		buf.Write(core.S2b(entry.Caller.File))
+		buf.Write(core.StringToBytes(entry.Caller.File))
 		buf.WriteByte(':')
 
 		// Use pooled byte slice for AppendInt
@@ -199,7 +199,7 @@ func (f *TextFormatter) writeMetaPart(buf *bytes.Buffer, part string) {
 	if f.EnableColors {
 		buf.Write(metaColorBytes)
 	}
-	buf.Write(core.S2b(part)) // Use zero-allocation string to byte conversion
+	buf.Write(core.StringToBytes(part)) // Use zero-allocation string to byte conversion
 	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
@@ -208,13 +208,13 @@ func (f *TextFormatter) writeMetaPart(buf *bytes.Buffer, part string) {
 
 func (f *TextFormatter) writeTraceInfo(buf *bytes.Buffer, entry *core.LogEntry) {
 	if entry.TraceID != "" {
-		f.writeTracePart(buf, []byte("TRACE"), shortID(entry.TraceID))
+		f.writeTracePart(buf, []byte("TRACE"), shortenID(entry.TraceID))
 	}
 	if entry.SpanID != "" {
-		f.writeTracePart(buf, []byte("SPAN"), shortID(entry.SpanID))
+		f.writeTracePart(buf, []byte("SPAN"), shortenID(entry.SpanID))
 	}
 	if entry.RequestID != "" {
-		f.writeTracePart(buf, []byte("REQ"), shortID(entry.RequestID))
+		f.writeTracePart(buf, []byte("REQ"), shortenID(entry.RequestID))
 	}
 }
 
@@ -224,7 +224,7 @@ func (f *TextFormatter) writeTracePart(buf *bytes.Buffer, key []byte, value stri
 	}
 	buf.Write(key)
 	buf.WriteByte(':')
-	buf.Write(core.S2b(value)) // Use zero-allocation string to byte conversion
+	buf.Write(core.StringToBytes(value)) // Use zero-allocation string to byte conversion
 	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
@@ -323,7 +323,7 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string]interf
 			buf.Write(fieldKeyColorBytes)
 		}
 		// Use manual byte writing for key to avoid allocation
-		buf.Write(core.S2b(k))
+		buf.Write(core.StringToBytes(k))
 		buf.WriteByte('=')
 		if f.EnableColors {
 			buf.Write(fieldValueColorBytes)
@@ -332,11 +332,11 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string]interf
 		// Apply field transformer or mask sensitive data
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
 			// Use byte slice for mask value to avoid string allocation
-			buf.Write(core.S2b(f.MaskStringValue)) // Use string to byte conversion
+			buf.Write(core.StringToBytes(f.MaskStringValue)) // Use string to byte conversion
 		} else if transformer, exists := f.FieldTransformers[k]; exists {
 			// Apply field transformer
 			transformedValue := transformer(v)
-			buf.Write(core.S2b(transformedValue)) // Convert string to byte slice without allocation
+			buf.Write(core.StringToBytes(transformedValue)) // Convert string to byte slice without allocation
 		} else {
 			// Use optimized FormatValue that minimizes allocations
 			util.FormatValue(buf, v, f.MaxFieldWidth)
@@ -361,7 +361,7 @@ func (f *TextFormatter) formatTags(buf *bytes.Buffer, tags []string) {
 		if i > 0 {
 			buf.WriteByte(',')
 		}
-		buf.Write(core.S2b(tag)) // Use zero-allocation string to byte conversion
+		buf.Write(core.StringToBytes(tag)) // Use zero-allocation string to byte conversion
 	}
 	buf.WriteByte(']')
 	if f.EnableColors {
@@ -380,7 +380,7 @@ func (f *TextFormatter) formatMetrics(buf *bytes.Buffer, metrics map[string]floa
 			buf.WriteByte(' ')
 		}
 		first = false
-		buf.Write(core.S2b(k)) // Use zero-allocation string to byte conversion
+		buf.Write(core.StringToBytes(k)) // Use zero-allocation string to byte conversion
 		buf.WriteByte('=')
 
 		// Use pooled byte slice for AppendFloat
@@ -403,19 +403,19 @@ func manualFormatTimestamp(buf *bytes.Buffer, t time.Time, format string) {
 	util.FormatTimestamp(buf, t, format)
 }
 
-func shortID(id string) string {
+func shortenID(id string) string {
 	if len(id) > 8 {
 		return id[:8]
 	}
 	return id
 }
 
-// shortIDBytes returns a byte slice with short ID without allocation
-func shortIDBytes(id string) []byte {
+// shortIDToBytes returns a byte slice with short ID without allocation
+func shortIDToBytes(id string) []byte {
 	if len(id) > 8 {
-		return core.S2b(id[:8])
+		return core.StringToBytes(id[:8])
 	}
-	return core.S2b(id)
+	return core.StringToBytes(id)
 }
 
 func (f *TextFormatter) isSensitiveField(field string) bool {

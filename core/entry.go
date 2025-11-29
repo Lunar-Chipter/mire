@@ -489,9 +489,9 @@ type ErrorAppender interface {
 	AppendError(buf *bytes.Buffer)
 }
 
-// S2b converts a string to a byte slice without memory allocation.
+// StringToBytes converts a string to a byte slice without memory allocation.
 // WARNING: The returned byte slice shares memory with the string. It is read-only.
-func S2b(s string) (b []byte) {
+func StringToBytes(s string) (b []byte) {
 	bh := (*[3]int)(unsafe.Pointer(&b))
 	sh := (*[2]int)(unsafe.Pointer(&s))
 	bh[0] = sh[0]
@@ -500,23 +500,23 @@ func S2b(s string) (b []byte) {
 	return b
 }
 
-// ManualByteWrite menulis data log secara manual ke buffer byte untuk efisiensi maksimal
-func (le *LogEntry) ManualByteWrite(buf []byte) []byte {
+// formatLogToBytes menulis data log secara manual ke buffer byte untuk efisiensi maksimal
+func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	// Format: TIMESTAMP LEVEL MESSAGE [FIELDS] [TAGS]
-	
+
 	// Menulis timestamp
 	ts := le.Timestamp.Format("2006-01-02T15:04:05.000Z07:00")
 	buf = append(buf, ts...)
 	buf = append(buf, ' ')
-	
+
 	// Menulis level
 	buf = append(buf, le.LevelName...)
 	buf = append(buf, ' ')
-	
+
 	// Menulis pesan
 	buf = append(buf, le.Message...)
 	buf = append(buf, ' ')
-	
+
 	// Menulis fields jika ada
 	if len(le.Fields) > 0 {
 		buf = append(buf, '[')
@@ -527,17 +527,17 @@ func (le *LogEntry) ManualByteWrite(buf []byte) []byte {
 			}
 			buf = append(buf, k...)
 			buf = append(buf, ':')
-			
+
 			// Konversi nilai ke string tanpa alokasi berlebih
 			switch val := v.(type) {
 			case string:
 				buf = append(buf, val...)
 			case int:
-				buf = le.writeIntToBuffer(buf, val)
+				buf = le.intToBytes(buf, val)
 			case int64:
-				buf = le.writeInt64ToBuffer(buf, val)
+				buf = le.int64ToBytes(buf, val)
 			case float64:
-				buf = le.writeFloatToBuffer(buf, val)
+				buf = le.floatToBytes(buf, val)
 			case bool:
 				if val {
 					buf = append(buf, "true"...)
@@ -547,7 +547,7 @@ func (le *LogEntry) ManualByteWrite(buf []byte) []byte {
 			default:
 				// Gunakan konversi manual untuk menghindari alokasi fmt.Sprintf
 				// Gunakan fungsi konversi lokal untuk menghindari circular import
-				localManualStringConversion := func(value interface{}) string {
+				localStringConversion := func(value interface{}) string {
 					switch v := value.(type) {
 					case string:
 						return v
@@ -590,7 +590,7 @@ func (le *LogEntry) ManualByteWrite(buf []byte) []byte {
 						return "<complex-type>"
 					}
 				}
-				tempStr := localManualStringConversion(val)
+				tempStr := localStringConversion(val)
 				buf = append(buf, tempStr...)
 			}
 			first = false
@@ -598,7 +598,7 @@ func (le *LogEntry) ManualByteWrite(buf []byte) []byte {
 		buf = append(buf, ']')
 		buf = append(buf, ' ')
 	}
-	
+
 	// Menulis tags jika ada
 	if len(le.Tags) > 0 {
 		buf = append(buf, '[')
@@ -610,22 +610,22 @@ func (le *LogEntry) ManualByteWrite(buf []byte) []byte {
 		}
 		buf = append(buf, ']')
 	}
-	
+
 	return buf
 }
 
-// writeIntToBuffer menulis integer ke buffer tanpa alokasi
-func (le *LogEntry) writeIntToBuffer(buf []byte, value int) []byte {
+// intToBytes menulis integer ke buffer tanpa alokasi
+func (le *LogEntry) intToBytes(buf []byte, value int) []byte {
 	if value == 0 {
 		return append(buf, '0')
 	}
-	
+
 	// Untuk angka negatif
 	if value < 0 {
 		buf = append(buf, '-')
 		value = -value
 	}
-	
+
 	// Konversi tanpa alokasi
 	var temp [20]byte
 	i := len(temp)
@@ -634,22 +634,22 @@ func (le *LogEntry) writeIntToBuffer(buf []byte, value int) []byte {
 		temp[i] = byte(value%10) + '0'
 		value /= 10
 	}
-	
+
 	return append(buf, temp[i:]...)
 }
 
-// writeInt64ToBuffer menulis int64 ke buffer tanpa alokasi
-func (le *LogEntry) writeInt64ToBuffer(buf []byte, value int64) []byte {
+// int64ToBytes menulis int64 ke buffer tanpa alokasi
+func (le *LogEntry) int64ToBytes(buf []byte, value int64) []byte {
 	if value == 0 {
 		return append(buf, '0')
 	}
-	
+
 	// Untuk angka negatif
 	if value < 0 {
 		buf = append(buf, '-')
 		value = -value
 	}
-	
+
 	// Konversi tanpa alokasi
 	var temp [20]byte
 	i := len(temp)
@@ -658,7 +658,7 @@ func (le *LogEntry) writeInt64ToBuffer(buf []byte, value int64) []byte {
 		temp[i] = byte(value%10) + '0'
 		value /= 10
 	}
-	
+
 	return append(buf, temp[i:]...)
 }
 
@@ -680,8 +680,8 @@ func PutByteSliceToPool(b []byte) {
 	byteSlicePool.Put(b)
 }
 
-// writeFloatToBuffer menulis float64 ke buffer tanpa alokasi
-func (le *LogEntry) writeFloatToBuffer(buf []byte, value float64) []byte {
+// floatToBytes menulis float64 ke buffer tanpa alokasi
+func (le *LogEntry) floatToBytes(buf []byte, value float64) []byte {
 	// Gunakan pooled buffer untuk konversi float
 	tempBuf := GetByteSliceFromPool()
 	defer PutByteSliceToPool(tempBuf)

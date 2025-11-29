@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Lunar-Chipter/mire/errors"
+	"unsafe"
 )
 
 // ===============================
@@ -137,11 +138,22 @@ func (l Level) Bytes() []byte {
 	return []byte("UNKNOWN") // Allocate in this rare case
 }
 
+// s2b converts a string to a byte slice without memory allocation.
+// WARNING: The returned byte slice shares memory with the string. It is read-only.
+func s2b(s string) (b []byte) {
+	bh := (*[3]int)(unsafe.Pointer(&b))
+	sh := (*[2]int)(unsafe.Pointer(&s))
+	bh[0] = sh[0]
+	bh[1] = sh[1]
+	bh[2] = sh[1]
+	return b
+}
+
 // ParseLevel parses a level from a string.
 // It accepts both uppercase and lowercase level names (e.g., "info", "INFO", "Info").
 // It also handles "WARNING" as a special case for "WARN".
 func ParseLevel(levelStr string) (Level, error) {
-	levelBytes := S2b(levelStr) // Changed from util.S2b to S2b
+	levelBytes := s2b(levelStr) // Use local function
 
 	for i, b := range LevelBytes {
 		if bytes.EqualFold(levelBytes, b) {
@@ -149,7 +161,7 @@ func ParseLevel(levelStr string) (Level, error) {
 		}
 	}
 	// Handle "WARNING" as a special case for "WARN"
-	if bytes.EqualFold(levelBytes, S2b("WARNING")) { // Changed from util.S2b to S2b
+	if bytes.EqualFold(levelBytes, s2b("WARNING")) { // Use local function
 		return WARN, nil
 	}
 

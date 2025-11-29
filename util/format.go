@@ -20,7 +20,7 @@ func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 
 	switch v := value.(type) {
 	case string:
-		content = core.S2b(v) // Zero-copy conversion
+		content = StringToBytes(v) // Zero-copy conversion - using function from util package
 	case []byte:
 		content = v
 	case int:
@@ -54,11 +54,11 @@ func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 			appender.AppendError(buf)
 			return
 		}
-		content = core.S2b(v.Error()) // Fallback, still allocates a string internally for v.Error()
+		content = StringToBytes(v.Error()) // Fallback, still allocates a string internally for v.Error()
 	default:
 		// Fallback for complex types - manual string conversion to avoid fmt
-		tempStr := manualStringConversion(v)
-		content = core.S2b(tempStr)
+		tempStr := convertValueToString(v)
+		content = StringToBytes(tempStr)
 	}
 
 	// Handle max width truncation
@@ -91,9 +91,9 @@ func FormatTimestamp(buf *bytes.Buffer, t time.Time, format string) {
 	buf.Write(tsBytes)
 }
 
-// manualStringConversion manually converts common types to string without fmt
+// convertValueToString manually converts common types to string without fmt
 // Kept for compatibility - uses the public function
-func manualStringConversion(value interface{}) string {
+func convertValueToString(value interface{}) string {
 	switch v := value.(type) {
 	case string:
 		return v
@@ -167,8 +167,8 @@ func WriteFloat(buf *bytes.Buffer, value float64) {
 	buf.Write(bytes)
 }
 
-// ManualStringConversion converts common types to string without fmt
-func ManualStringConversion(value interface{}) string {
+// ConvertValue converts common types to string without fmt
+func ConvertValue(value interface{}) string {
 	switch v := value.(type) {
 	case string:
 		return v

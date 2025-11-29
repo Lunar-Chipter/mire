@@ -427,7 +427,7 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 		}
 		switch v := arg.(type) {
 		case string:
-			buf = append(buf, core.S2b(v)...) // Use zero-allocation string to byte conversion
+			buf = append(buf, core.StringToBytes(v)...) // Use zero-allocation string to byte conversion
 		case []byte:
 			buf = append(buf, v...)
 		case int:
@@ -610,7 +610,7 @@ func (l *Logger) handleError(err error) {
 		buf := util.GetBufferFromPool()
 		defer util.PutBufferToPool(buf)
 		buf.Write([]byte("logger error: "))
-		buf.Write(core.S2b(err.Error())) // Use zero-allocation string to byte conversion
+		buf.Write(core.StringToBytes(err.Error())) // Use zero-allocation string to byte conversion
 		buf.Write([]byte("\n"))
 		l.errOut.Write(buf.Bytes())
 	}
@@ -793,7 +793,7 @@ func (l *Logger) PanicfC(ctx context.Context, format string, args ...interface{}
 func manualFormatValue(buf *bytes.Buffer, v interface{}) {
 	switch val := v.(type) {
 	case string:
-		buf.Write(core.S2b(val)) // Use zero-allocation conversion
+		buf.Write(core.StringToBytes(val)) // Use zero-allocation conversion
 	case []byte:
 		buf.Write(val)
 	case int:
@@ -843,7 +843,7 @@ func manualFormatWithArgs(buf *bytes.Buffer, format string, args ...interface{})
 				switch spec {
 				case 's':
 					if s, ok := arg.(string); ok {
-						buf.Write(core.S2b(s)) // Use zero-allocation string to byte conversion
+						buf.Write(core.StringToBytes(s)) // Use zero-allocation string to byte conversion
 					} else {
 						manualFormatValue(buf, arg)
 					}

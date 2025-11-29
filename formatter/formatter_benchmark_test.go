@@ -19,7 +19,7 @@ func BenchmarkCSVFormatter(b *testing.B) {
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
 	entry.LevelName = "INFO"
-	entry.Message = core.S2b("Test message for benchmark")
+	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
 	entry.TraceID = "trace-12345"
 	entry.Fields = map[string]interface{}{
@@ -47,7 +47,7 @@ func BenchmarkJSONFormatter(b *testing.B) {
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
 	entry.LevelName = "INFO"
-	entry.Message = core.S2b("Test message for benchmark")
+	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
 	entry.TraceID = "trace-12345"
 	entry.Fields = map[string]interface{}{
@@ -75,7 +75,7 @@ func BenchmarkJSONFormatterPretty(b *testing.B) {
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
 	entry.LevelName = "INFO"
-	entry.Message = core.S2b("Test message for benchmark")
+	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
 	entry.TraceID = "trace-12345"
 	entry.Fields = map[string]interface{}{
@@ -105,7 +105,7 @@ func BenchmarkTextFormatter(b *testing.B) {
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
 	entry.LevelName = "INFO"
-	entry.Message = core.S2b("Test message for benchmark")
+	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
 	entry.TraceID = "trace-12345"
 	entry.Fields = map[string]interface{}{
@@ -141,7 +141,7 @@ func BenchmarkAllFormatters(b *testing.B) {
 			entry.Timestamp = time.Now()
 			entry.Level = core.INFO
 			entry.LevelName = "INFO"
-			entry.Message = core.S2b("Test message for benchmark")
+			entry.Message = core.StringToBytes("Test message for benchmark")
 			entry.PID = 12345
 			entry.TraceID = "trace-12345"
 			entry.Fields = map[string]interface{}{

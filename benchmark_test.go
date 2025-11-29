@@ -20,7 +20,7 @@ func BenchmarkTextFormatterNoAlloc(b *testing.B) {
 	}
 	
 	entry := core.GetEntryFromPool()
-	entry.Message = core.S2b("Test message for benchmark")
+	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.Level = core.INFO
 	entry.LevelName = core.INFO.String()
 	defer core.PutEntryToPool(entry)
@@ -41,7 +41,7 @@ func BenchmarkJSONFormatterNoAlloc(b *testing.B) {
 	}
 	
 	entry := core.GetEntryFromPool()
-	entry.Message = core.S2b("Test message for benchmark")
+	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.Level = core.INFO
 	entry.LevelName = core.INFO.String()
 	defer core.PutEntryToPool(entry)

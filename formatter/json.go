@@ -77,7 +77,7 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 	// Add caller info if needed
 	if f.ShowCaller && entry.Caller != nil {
 		buf.WriteString(",\"caller\":\"")
-		buf.Write(core.S2b(entry.Caller.File))
+		buf.Write(core.StringToBytes(entry.Caller.File))
 		buf.WriteByte(':')
 		util.WriteInt(buf, int64(entry.Caller.Line))
 		buf.WriteByte('"')
@@ -93,17 +93,17 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 	if f.ShowTraceInfo {
 		if entry.TraceID != "" {
 			buf.WriteString(",\"trace_id\":\"")
-			buf.Write(core.S2b(entry.TraceID))
+			buf.Write(core.StringToBytes(entry.TraceID))
 			buf.WriteByte('"')
 		}
 		if entry.SpanID != "" {
 			buf.WriteString(",\"span_id\":\"")
-			buf.Write(core.S2b(entry.SpanID))
+			buf.Write(core.StringToBytes(entry.SpanID))
 			buf.WriteByte('"')
 		}
 		if entry.UserID != "" {
 			buf.WriteString(",\"user_id\":\"")
-			buf.Write(core.S2b(entry.UserID))
+			buf.Write(core.StringToBytes(entry.UserID))
 			buf.WriteByte('"')
 		}
 	}
@@ -206,7 +206,7 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 		buf.WriteString(",\n  ")
 		indent(1)
 		buf.WriteString("\"caller\": \"")
-		buf.Write(core.S2b(entry.Caller.File))
+		buf.Write(core.StringToBytes(entry.Caller.File))
 		buf.WriteByte(':')
 		util.WriteInt(buf, int64(entry.Caller.Line))
 		buf.WriteByte('"')
@@ -227,21 +227,21 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 			buf.WriteString(",\n  ")
 			indent(1)
 			buf.WriteString("\"trace_id\": \"")
-			buf.Write(core.S2b(entry.TraceID))
+			buf.Write(core.StringToBytes(entry.TraceID))
 			buf.WriteByte('"')
 		}
 		if entry.SpanID != "" {
 			buf.WriteString(",\n  ")
 			indent(1)
 			buf.WriteString("\"span_id\": \"")
-			buf.Write(core.S2b(entry.SpanID))
+			buf.Write(core.StringToBytes(entry.SpanID))
 			buf.WriteByte('"')
 		}
 		if entry.UserID != "" {
 			buf.WriteString(",\n  ")
 			indent(1)
 			buf.WriteString("\"user_id\": \"")
-			buf.Write(core.S2b(entry.UserID))
+			buf.Write(core.StringToBytes(entry.UserID))
 			buf.WriteByte('"')
 		}
 	}
@@ -330,7 +330,7 @@ func (f *JSONFormatter) formatJSONValue(buf *bytes.Buffer, v interface{}) {
 		// Since we can't know the field name here, we'll just format the string normally
 		// The field-level sensitivity check is handled in formatFields
 		buf.WriteByte('"')
-		escapeJSON(buf, core.S2b(val))
+		escapeJSON(buf, core.StringToBytes(val))
 		buf.WriteByte('"')
 	case []byte:
 		buf.WriteByte('"')
@@ -363,7 +363,7 @@ func (f *JSONFormatter) formatJSONValue(buf *bytes.Buffer, v interface{}) {
 		// Apply field transformers if available
 		transformed := f.transformValue(val, "<complex-type>")
 		buf.WriteByte('"')
-		escapeJSON(buf, core.S2b(transformed))
+		escapeJSON(buf, core.StringToBytes(transformed))
 		buf.WriteByte('"')
 	}
 }
@@ -471,7 +471,7 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string]interf
 
 		// Write field name
 		buf.WriteByte('"')
-		buf.Write(core.S2b(fieldName))
+		buf.Write(core.StringToBytes(fieldName))
 		buf.Write([]byte("\":"))
 
 		// Apply field transformer if available
@@ -480,7 +480,7 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string]interf
 			// Convert transformed value to string and write
 			transformedStr := f.transformValue(transformedValue, "<transformed-value>")
 			buf.WriteByte('"')
-			escapeJSON(buf, core.S2b(transformedStr))
+			escapeJSON(buf, core.StringToBytes(transformedStr))
 			buf.WriteByte('"')
 		} else {
 			// Format value based on type
@@ -562,7 +562,7 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 
 		// Write field name
 		buf.WriteByte('"')
-		buf.Write(core.S2b(fieldName))
+		buf.Write(core.StringToBytes(fieldName))
 		buf.Write([]byte("\": "))
 
 		// Apply field transformer if available
@@ -571,7 +571,7 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 			// Convert transformed value to string and write
 			transformedStr := f.transformValue(transformedValue, "<transformed-value>")
 			buf.WriteByte('"')
-			escapeJSON(buf, core.S2b(transformedStr))
+			escapeJSON(buf, core.StringToBytes(transformedStr))
 			buf.WriteByte('"')
 		} else {
 			// Format value based on type

@@ -72,8 +72,8 @@ func (al *AsyncLogger) worker() {
 				// Write panic message manually
 				al.processor.ErrOut().Write([]byte("recovering from panic in async logger worker: "))
 				// Convert recovered value to string manually
-				recoveredStr := util.ManualStringConversion(r)
-				al.processor.ErrOut().Write(util.S2b(recoveredStr))
+				recoveredStr := util.ConvertValue(r)
+				al.processor.ErrOut().Write(util.StringToBytes(recoveredStr))
 				al.processor.ErrOut().Write([]byte("\n"))
 
 				buf := make([]byte, 1024)
