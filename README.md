@@ -834,6 +834,16 @@ If you encounter issues or have questions:
 
 ## 📄 Changelog
 
+### v0.0.3
+- Enhanced function naming consistency across all packages for improved readability
+- Renamed `S2b` function to `StringToBytes` in both `core` and `util` packages for clearer semantics
+- Renamed `ManualByteWrite` to `formatLogToBytes` in core package for better clarity
+- Renamed buffer conversion functions: `writeIntToBuffer`, `writeInt64ToBuffer`, `writeFloatToBuffer` to `intToBytes`, `int64ToBytes`, `floatToBytes`
+- Renamed utility functions: `shortID` to `shortenID` and `shortIDBytes` to `shortIDToBytes` in formatter package
+- Improved code maintainability with more consistent and intuitive function names
+- Optimized zero-allocation performance with enhanced string-to-byte conversion functions
+- Standardized exported function naming conventions across all packages
+
 ### v0.0.2
 - Major performance improvements with zero-allocation formatters
 - TextFormatter now runs at ~0.13μs/op
