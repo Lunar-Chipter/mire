@@ -137,6 +137,36 @@ func manualStringConversion(value interface{}) string {
 	}
 }
 
+// WriteInt writes an integer value directly to a buffer with minimal allocation
+func WriteInt(buf *bytes.Buffer, value int64) {
+	tempBuf := GetSmallByteSliceFromPool()
+	defer PutSmallByteSliceToPool(tempBuf)
+
+	// Use AppendInt to format the integer
+	bytes := strconv.AppendInt(tempBuf[:0], value, 10) // Reset length before appending
+	buf.Write(bytes)
+}
+
+// WriteUint writes an unsigned integer value directly to a buffer with minimal allocation
+func WriteUint(buf *bytes.Buffer, value uint64) {
+	tempBuf := GetSmallByteSliceFromPool()
+	defer PutSmallByteSliceToPool(tempBuf)
+
+	// Use AppendUint to format the unsigned integer
+	bytes := strconv.AppendUint(tempBuf[:0], value, 10) // Reset length before appending
+	buf.Write(bytes)
+}
+
+// WriteFloat writes a float value directly to a buffer with minimal allocation
+func WriteFloat(buf *bytes.Buffer, value float64) {
+	tempBuf := GetSmallByteSliceFromPool()
+	defer PutSmallByteSliceToPool(tempBuf)
+
+	// Use AppendFloat to format the float
+	bytes := strconv.AppendFloat(tempBuf[:0], value, 'g', -1, 64) // Reset length before appending
+	buf.Write(bytes)
+}
+
 // ManualStringConversion converts common types to string without fmt
 func ManualStringConversion(value interface{}) string {
 	switch v := value.(type) {

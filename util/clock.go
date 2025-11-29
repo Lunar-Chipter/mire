@@ -158,6 +158,14 @@ func (fc *FastClock) TimeToBytes() []byte {
 	return buf
 }
 
+// Global fast clock instance
+var globalFastClock = NewFastClock(DefaultInterval)
+
+// Now returns the current time from the global fast clock
+func Now() time.Time {
+	return globalFastClock.Now()
+}
+
 // ReleaseTimeBuffer returns the buffer to the pool after use
 func (fc *FastClock) ReleaseTimeBuffer(buf []byte) {
 	timeBufferPool.Put(buf[:0]) // Reset before putting back
