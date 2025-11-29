@@ -80,7 +80,7 @@ type LoggerConfig struct {
 	AsyncLogChannelBufferSize int                     // Buffer size for async log channel
 	AsyncWorkerCount          int                     // Number of async worker goroutines
 	DisablePerLogContextTimeout bool                  // Disable context timeout per log in async mode
-	FastClockInterval time.Duration                   // Interval for fast clock (for timestamp optimization)
+	ClockInterval time.Duration                   // Interval for clock (for timestamp optimization)
 	MaskStringValue   string                          // String value to use for masking sensitive data
 }
 // validate ensures the logger configuration has sane defaults.
@@ -150,7 +150,7 @@ type Logger struct {
 	errorFileHook    *hook.SimpleFileHook            // Built-in error file hook for ERROR+ levels
 	closed           atomic.Bool                     // Flag to indicate if logger is closed
 	pid              int                             // Process ID
-	fastClock        *util.FastClock                 // Fast clock for timestamp optimization
+	clock            *util.Clock                 // Clock for timestamp optimization
 }
 
 // LoggerStats tracks logger statistics
@@ -209,7 +209,7 @@ func NewDefaultLogger() *Logger {
 		BufferSize:        DEFAULT_BUFFER_SIZE,
 		FlushInterval:     DEFAULT_FLUSH_INTERVAL,
 		AsyncWorkerCount:  4,
-		FastClockInterval: 10 * time.Millisecond,
+		ClockInterval: 10 * time.Millisecond,
 		MaskStringValue:   "[MASKED]", // Set default mask string value here
 		Formatter: &formatter.TextFormatter{
 			EnableColors:      true,
@@ -253,8 +253,8 @@ func New(config LoggerConfig) *Logger {
 		}
 	}
 
-	if config.FastClockInterval > 0 {
-		l.fastClock = util.NewFastClock(config.FastClockInterval)
+	if config.ClockInterval > 0 {
+		l.clock = util.NewClock(config.ClockInterval)
 	}
 
 	if l.exitFunc == nil {
@@ -325,14 +325,14 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
         return
 	}
 
-	// Fast-path for non-blocking scenarios using atomic operations
+	// Optimized path for non-blocking scenarios using atomic operations
 	if l.asyncLogger != nil {
-		// Use lock-free async logging for maximum throughput
+		// Use lock-free async logging for high throughput
 		l.asyncLogger.Log(level, message, fields, ctx)
 		return
 	}
 
-	// Hot path is maximally optimized
+	// Hot path is efficient
 	l.write(ctx, level, message, fields)
 }
 
@@ -340,7 +340,7 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
 	entry := l.buildEntry(ctx, level, message, fields)
 	
-	// Gunakan buffer yang dioptimalkan untuk zero-allocation
+	// Gunakan buffer yang efisien untuk zero-allocation
 	buf := util.GetBufferFromPool()
 	defer util.PutBufferToPool(buf)
 
@@ -354,7 +354,7 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 
 	// Optimized write with minimal locking - only lock when actually writing
 	if l.Config.DisableLocking {
-		// Ultra-fast path: no locking at all
+		// Direct path: no locking at all
 		if n, err := l.out.Write(bytesToWrite); err != nil {
 			l.handleError(err)
 		} else {
@@ -382,7 +382,7 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 // formatArgsToBytes formats variadic arguments into a byte slice with minimal allocations.
 // This implementation aims for at most 1 allocation per call.
 func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
-	// Use a more efficient approach by pre-calculating the total size if possible
+	// Use an efficient approach by pre-calculating the total size if possible
 	// to reduce allocations during concatenation
 	totalLen := 0
 	spaceCount := len(args) - 1
@@ -390,7 +390,7 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 		spaceCount = 0
 	}
 
-	// Pre-calculate total length for optimal allocation
+	// Pre-calculate total length for efficient allocation
 	for i, arg := range args {
 		if i > 0 {
 			totalLen++ // space between args
@@ -485,9 +485,9 @@ func (l *Logger) formatfArgsToBytes(format string, args ...interface{}) []byte {
 func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) *core.LogEntry {
     entry := core.GetEntryFromPool()
 
-    // Use fast clock if available to avoid allocation
-    if l.fastClock != nil {
-        entry.Timestamp = l.fastClock.Now()
+    // Use clock if available to avoid allocation
+    if l.clock != nil {
+        entry.Timestamp = l.clock.Now()
     } else {
         entry.Timestamp = time.Now()
     }
@@ -642,9 +642,9 @@ func (l *Logger) Close() {
 			}
 		}
 
-		// Stop fast clock if present
-		if l.fastClock != nil {
-			l.fastClock.Stop()
+		// Stop clock if present
+		if l.clock != nil {
+			l.clock.Stop()
 		}
 
 		// Close error file hook if present

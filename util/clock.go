@@ -28,9 +28,9 @@ type ClockMetrics struct {
 	lastUpdate   atomic.Int64
 }
 
-// FastClock provides a high-performance, low-precision clock
+// Clock provides a clock
 // by updating an atomic time variable in a background goroutine.
-type FastClock struct {
+type Clock struct {
 	atomicTime atomic.Value // Stores time.Time
 	interval   time.Duration
 	stop       chan struct{}
@@ -42,13 +42,13 @@ type FastClock struct {
 // Constants for compile-time configuration
 const (
 	DefaultInterval = time.Millisecond * 10 // Standard update interval
-	FastInterval    = time.Millisecond      // High-frequency update interval
-	SlowInterval    = time.Second           // Low-frequency update interval
+	FastInterval    = time.Millisecond      // Frequent update interval
+	SlowInterval    = time.Second           // Infrequent update interval
 )
 
-// NewFastClock creates and starts a new fast clock.
-func NewFastClock(interval time.Duration) *FastClock {
-	fc := &FastClock{
+// NewClock creates and starts a new clock.
+func NewClock(interval time.Duration) *Clock {
+	fc := &Clock{
 		interval: interval,
 		stop:     make(chan struct{}, 1), // Buffered channel to prevent blocking
 		metrics:  &ClockMetrics{},
@@ -63,9 +63,9 @@ func NewFastClock(interval time.Duration) *FastClock {
 }
 
 // run updates the atomic time at the specified interval.
-func (fc *FastClock) run() {
-	defer fc.wg.Done()
-	ticker := time.NewTicker(fc.interval)
+func (c *Clock) run() {
+	defer c.wg.Done()
+	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
 
 	// Get a worker from the pool
@@ -76,18 +76,18 @@ func (fc *FastClock) run() {
 		select {
 		case <-ticker.C:
 			now := time.Now()
-			fc.atomicTime.Store(now)
-			fc.metrics.updateCount.Add(1)
-			fc.metrics.lastUpdate.Store(now.UnixNano())
-			
+			c.atomicTime.Store(now)
+			c.metrics.updateCount.Add(1)
+			c.metrics.lastUpdate.Store(now.UnixNano())
+
 			// Send to worker pool for processing
 			select {
 			case worker <- now:
 			default:
 				// Worker busy, increment error count
-				fc.metrics.errorCount.Add(1)
+				c.metrics.errorCount.Add(1)
 			}
-		case <-fc.stop:
+		case <-c.stop:
 			return
 		default:
 			// Prevent tight loop, yield control
@@ -96,22 +96,22 @@ func (fc *FastClock) run() {
 	}
 }
 
-// Now returns the current time from the fast clock.
-func (fc *FastClock) Now() time.Time {
-	return fc.atomicTime.Load().(time.Time)
+// Now returns the current time from the clock.
+func (c *Clock) Now() time.Time {
+	return c.atomicTime.Load().(time.Time)
 }
 
-// Stop stops the fast clock's background goroutine.
-func (fc *FastClock) Stop() {
-	if fc.interval > 0 {
-		close(fc.stop)
-		fc.wg.Wait()
+// Stop stops the clock's background goroutine.
+func (c *Clock) Stop() {
+	if c.interval > 0 {
+		close(c.stop)
+		c.wg.Wait()
 	}
 }
 
-// Metrics returns the clock's performance metrics
-func (fc *FastClock) Metrics() *ClockMetrics {
-	return fc.metrics
+// Metrics returns the clock's metrics
+func (c *Clock) Metrics() *ClockMetrics {
+	return c.metrics
 }
 
 // UpdateCount returns the number of times the clock has been updated
@@ -130,18 +130,18 @@ func (cm *ClockMetrics) ErrorCount() int64 {
 }
 
 // Manual byte manipulation for time formatting
-func (fc *FastClock) TimeToBytes() []byte {
-	t := fc.Now()
+func (c *Clock) TimeToBytes() []byte {
+	t := c.Now()
 	// Get pre-allocated buffer from pool for zero allocation
 	buf := timeBufferPool.Get().([]byte)
 	buf = buf[:0] // Reset buffer length without reallocating
-	
+
 	// Manual formatting to avoid fmt overhead
 	year, month, day := t.Date()
 	hour, min, sec := t.Clock()
-	
+
 	// Format: YYYY-MM-DD HH:MM:SS
-	buf = append(buf, 
+	buf = append(buf,
 		byte(year/1000)+'0', byte((year/100)%10)+'0', byte((year/10)%10)+'0', byte(year%10)+'0',
 		'-',
 		byte(month/10)+'0', byte(month%10)+'0',
@@ -154,19 +154,19 @@ func (fc *FastClock) TimeToBytes() []byte {
 		':',
 		byte(sec/10)+'0', byte(sec%10)+'0',
 	)
-	
+
 	return buf
 }
 
-// Global fast clock instance
-var globalFastClock = NewFastClock(DefaultInterval)
+// Global clock instance
+var globalClock = NewClock(DefaultInterval)
 
-// Now returns the current time from the global fast clock
+// Now returns the current time from the global clock
 func Now() time.Time {
-	return globalFastClock.Now()
+	return globalClock.Now()
 }
 
 // ReleaseTimeBuffer returns the buffer to the pool after use
-func (fc *FastClock) ReleaseTimeBuffer(buf []byte) {
+func (c *Clock) ReleaseTimeBuffer(buf []byte) {
 	timeBufferPool.Put(buf[:0]) // Reset before putting back
 }

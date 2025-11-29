@@ -59,7 +59,7 @@ func main() {
 		BufferSize:        logger.DEFAULT_BUFFER_SIZE,
 		FlushInterval:     logger.DEFAULT_FLUSH_INTERVAL,
 		AsyncWorkerCount:  4,
-		FastClockInterval: 10 * time.Millisecond,
+		ClockInterval: 10 * time.Millisecond,
 		Formatter: &formatter.TextFormatter{
 			EnableColors:      true,
 			ShowTimestamp:     true,

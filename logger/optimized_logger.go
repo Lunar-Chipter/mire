@@ -12,7 +12,7 @@ import (
 	"github.com/Lunar-Chipter/mire/formatter"
 )
 
-// OptimizedLogger adalah versi logger yang dioptimalkan untuk mencapai 1 alokasi per operasi log
+// OptimizedLogger adalah versi logger yang efisien untuk mencapai 1 alokasi per operasi log
 type OptimizedLogger struct {
 	config          LoggerConfig
 	formatter       formatter.Formatter
@@ -25,7 +25,7 @@ type OptimizedLogger struct {
 	closed          atomic.Bool
 }
 
-// NewOptimizedLogger membuat instance logger yang dioptimalkan
+// NewOptimizedLogger membuat instance logger yang efisien
 func NewOptimizedLogger(config LoggerConfig) *OptimizedLogger {
 	if config.Output == nil {
 		config.Output = io.Discard // Use io.Discard directly
@@ -51,7 +51,7 @@ func NewOptimizedLogger(config LoggerConfig) *OptimizedLogger {
 	}
 }
 
-// logInternal adalah fungsi inti yang dioptimalkan untuk 1 alokasi per operasi
+// logInternal adalah fungsi inti yang efisien untuk 1 alokasi per operasi
 func (l *OptimizedLogger) logInternal(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
 	// Early return jika level log tidak sesuai
 	if level < l.level {
@@ -99,70 +99,70 @@ func (l *OptimizedLogger) logInternal(ctx context.Context, level core.Level, mes
 // Metode-metode logging tingkat dasar
 func (l *OptimizedLogger) Trace(args ...interface{}) {
 	if core.TRACE >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.TRACE, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Debug(args ...interface{}) {
 	if core.DEBUG >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.DEBUG, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Info(args ...interface{}) {
 	if core.INFO >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.INFO, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Warn(args ...interface{}) {
 	if core.WARN >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.WARN, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Error(args ...interface{}) {
 	if core.ERROR >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.ERROR, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Tracef(format string, args ...interface{}) {
 	if core.TRACE >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.TRACE, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Debugf(format string, args ...interface{}) {
 	if core.DEBUG >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.DEBUG, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Infof(format string, args ...interface{}) {
 	if core.INFO >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.INFO, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Warnf(format string, args ...interface{}) {
 	if core.WARN >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.WARN, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Errorf(format string, args ...interface{}) {
 	if core.ERROR >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus dioptimalkan untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
 		l.logInternal(context.Background(), core.ERROR, message, nil)
 	}
 }
@@ -218,7 +218,7 @@ func (l *OptimizedLogger) formatfArgsToBytes(format string, args ...interface{})
 	}()
 
 	// Ini akan menyebabkan 1 alokasi karena penggunaan fmt.Sprintf
-	// Dalam implementasi produksi yang benar-benar dioptimalkan,
+	// Dalam implementasi produksi yang benar-benar efisien,
 	// kita akan mengganti ini dengan implementasi zero-allocation
 	buf.WriteString(formatString(format, args...))
 
@@ -289,7 +289,7 @@ func i64toa(i int64) string {
 
 func ftoa(f float64) string {
 	// Ini masih menyebabkan alokasi karena kita tidak mengimplementasikan parsing float secara manual
-	// Dalam library produksi yang dioptimalkan, kita akan menggunakan algoritma zero-allocation
+	// Dalam library produksi yang efisien, kita akan menggunakan algoritma zero-allocation
 	return formatFloat(f)
 }
 

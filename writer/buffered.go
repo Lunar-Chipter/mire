@@ -26,7 +26,7 @@ func (e *wrappedError) Unwrap() error {
 	return e.cause
 }
 
-// BufferedWriter is a high-performance buffered writer with batch processing
+// BufferedWriter is a buffered writer with batch processing
 // BufferedWriter adalah writer yang di-buffer berkinerja tinggi dengan pemrosesan batch
 type BufferedWriter struct {
 	writer        io.Writer
