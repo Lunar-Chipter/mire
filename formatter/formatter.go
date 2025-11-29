@@ -12,3 +12,12 @@ type Formatter interface {
 	// Format memformat entri log menjadi slice byte
 	Format(buf *bytes.Buffer, entry *core.LogEntry) error
 }
+
+// AllFormatter interface defines additional methods for formatters that support various options
+type AllFormatter interface {
+	Formatter
+	// SetOptions allows setting formatter-specific options
+	SetOptions(options interface{}) error
+	// GetOptions returns the current formatter options
+	GetOptions() interface{}
+}

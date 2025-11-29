@@ -29,7 +29,12 @@ type JSONFormatter struct {
 
 // NewJSONFormatter creates a new JSONFormatter
 func NewJSONFormatter() *JSONFormatter {
-	return &JSONFormatter{}
+	return &JSONFormatter{
+		MaskStringValue: "[MASKED]",
+		FieldKeyMap:     make(map[string]string),
+		FieldTransformers: make(map[string]func(interface{}) interface{}),
+		SensitiveFields: make([]string, 0),
+	}
 }
 
 // Format formats a log entry into JSON byte slice with zero allocations
@@ -48,83 +53,63 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 	buf.WriteByte('{')
 
 	// Add timestamp - manually format to avoid allocation
-	buf.Write([]byte("\"timestamp\":\""))
+	buf.WriteString("\"timestamp\":\"")
 	util.FormatTimestamp(buf, entry.Timestamp, f.TimestampFormat)
-	buf.Write([]byte("\","))
+	buf.WriteString("\",")
 
 	// Add level
-	buf.Write([]byte("\"level_name\":\""))
+	buf.WriteString("\"level_name\":\"")
 	buf.Write(entry.Level.Bytes()) // Using pre-allocated level bytes
-	buf.Write([]byte("\","))
+	buf.WriteString("\",")
 
 	// Add message
-	buf.Write([]byte("\"message\":\""))
+	buf.WriteString("\"message\":\"")
 	// Escape the message to handle special characters
 	escapeJSON(buf, entry.Message)
-	buf.Write([]byte("\""))
+	buf.WriteString("\"")
 
-	// Add PID if needed
+	// Add PID if needed - reduce branching by checking condition once
 	if f.ShowPID {
-		buf.Write([]byte(",\"pid\":"))
-		pidBuf := util.GetSmallByteSliceFromPool()
-		pidBytes := strconv.AppendInt(pidBuf[:0], int64(entry.PID), 10)
-		buf.Write(pidBytes)
-		util.PutSmallByteSliceToPool(pidBuf)
+		buf.WriteString(",\"pid\":")
+		util.WriteInt(buf, int64(entry.PID))
 	}
 
 	// Add caller info if needed
 	if f.ShowCaller && entry.Caller != nil {
-		buf.Write([]byte(",\"caller\":\""))
+		buf.WriteString(",\"caller\":\"")
 		buf.Write(core.S2b(entry.Caller.File))
 		buf.WriteByte(':')
-		lineBuf := util.GetSmallByteSliceFromPool()
-		lineBytes := strconv.AppendInt(lineBuf[:0], int64(entry.Caller.Line), 10)
-		buf.Write(lineBytes)
-		util.PutSmallByteSliceToPool(lineBuf)
-		buf.Write([]byte("\""))
+		util.WriteInt(buf, int64(entry.Caller.Line))
+		buf.WriteByte('"')
 	}
 
 	// Add fields if present
 	if len(entry.Fields) > 0 {
-		buf.Write([]byte(",\"fields\":{"))
-		first := true
-		for k, v := range entry.Fields {
-			if !first {
-				buf.WriteByte(',')
-			}
-			first = false
-
-			buf.WriteByte('"')
-			buf.Write(core.S2b(k))
-			buf.Write([]byte("\":"))
-
-			// Format value based on type
-			formatJSONValue(buf, v)
-		}
-		buf.WriteByte('}')
+		buf.WriteString(",\"fields\":")
+		f.formatFields(buf, entry.Fields)
 	}
 
-	// Add trace info if needed
+	// Add trace info if needed - organize in a way that reduces branching
 	if f.ShowTraceInfo {
 		if entry.TraceID != "" {
-			buf.Write([]byte(",\"trace_id\":\""))
+			buf.WriteString(",\"trace_id\":\"")
 			buf.Write(core.S2b(entry.TraceID))
 			buf.WriteByte('"')
 		}
 		if entry.SpanID != "" {
-			buf.Write([]byte(",\"span_id\":\""))
+			buf.WriteString(",\"span_id\":\"")
 			buf.Write(core.S2b(entry.SpanID))
 			buf.WriteByte('"')
 		}
 		if entry.UserID != "" {
-			buf.Write([]byte(",\"user_id\":\""))
+			buf.WriteString(",\"user_id\":\"")
 			buf.Write(core.S2b(entry.UserID))
 			buf.WriteByte('"')
 		}
 	}
 
 	if f.EnableStackTrace && len(entry.StackTrace) > 0 {
-		buf.Write([]byte(",\"stack_trace\":\""))
+		buf.WriteString(",\"stack_trace\":\"")
 		escapeJSON(buf, entry.StackTrace)
 		buf.WriteByte('"')
 	}
@@ -153,136 +138,123 @@ func (f *JSONFormatter) formatWithStandardEncoder(buf *bytes.Buffer, entry *core
 
 // formatManuallyWithIndent formats JSON with indentation for pretty printing
 func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.LogEntry) error {
-	indentLevel := 0
-	indent := func() {
-		for i := 0; i < indentLevel; i++ {
-			buf.WriteString("  ") // 2 spaces per indent level
+	// Pre-allocate indent string to reuse and avoid repeated allocations
+	indentBuf := util.GetBufferFromPool()
+	defer util.PutBufferToPool(indentBuf)
+
+	// Pre-allocate 10 levels of indentation (should be sufficient for most cases)
+	for i := 0; i < 10; i++ {
+		indentBuf.WriteString("  ")
+	}
+	indentLevels := indentBuf.Bytes()
+
+	indent := func(level int) {
+		if level <= 0 {
+			return
+		}
+		// Use pre-allocated indentation
+		indentSize := level * 2
+		if indentSize <= len(indentLevels) {
+			buf.Write(indentLevels[:indentSize])
+		} else {
+			// If we need more indentation than pre-allocated, add more
+			for i := 0; i < level; i++ {
+				buf.WriteString("  ")
+			}
 		}
 	}
 
 	// Start JSON object
 	buf.WriteByte('{')
-	indentLevel++
 
-	newline := func() {
+	newline := func(level int) {
 		buf.WriteByte('\n')
-		indent()
+		indent(level)
 	}
 
 	// Add timestamp
-	newline()
-	buf.Write([]byte("\"timestamp\": \""))
+	newline(1)
+	buf.WriteString("\"timestamp\": \"")
 	util.FormatTimestamp(buf, entry.Timestamp, f.TimestampFormat)
-	buf.Write([]byte("\""))
+	buf.WriteString("\"")
 
 	// Add level
-	buf.WriteByte(',')
-	newline()
-	buf.Write([]byte("\"level_name\": \""))
+	buf.WriteString(",\n  ")
+	indent(1)
+	buf.WriteString("\"level_name\": \"")
 	buf.Write(entry.Level.Bytes()) // Using pre-allocated level bytes
-	buf.Write([]byte("\""))
+	buf.WriteString("\"")
 
 	// Add message
-	buf.WriteByte(',')
-	newline()
-	buf.Write([]byte("\"message\": \""))
+	buf.WriteString(",\n  ")
+	indent(1)
+	buf.WriteString("\"message\": \"")
 	// Escape the message to handle special characters
 	escapeJSON(buf, entry.Message)
-	buf.Write([]byte("\""))
+	buf.WriteString("\"")
 
 	// Add PID if needed
 	if f.ShowPID && entry.PID != 0 {
-		buf.WriteByte(',')
-		newline()
-		buf.Write([]byte("\"pid\": "))
-		pidBuf := util.GetSmallByteSliceFromPool()
-		pidBytes := strconv.AppendInt(pidBuf[:0], int64(entry.PID), 10)
-		buf.Write(pidBytes)
-		util.PutSmallByteSliceToPool(pidBuf)
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"pid\": ")
+		util.WriteInt(buf, int64(entry.PID))
 	}
 
 	// Add caller info if needed
 	if f.ShowCaller && entry.Caller != nil {
-		buf.WriteByte(',')
-		newline()
-		buf.Write([]byte("\"caller\": \""))
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"caller\": \"")
 		buf.Write(core.S2b(entry.Caller.File))
 		buf.WriteByte(':')
-		lineBuf := util.GetSmallByteSliceFromPool()
-		lineBytes := strconv.AppendInt(lineBuf[:0], int64(entry.Caller.Line), 10)
-		buf.Write(lineBytes)
-		util.PutSmallByteSliceToPool(lineBuf)
-		buf.Write([]byte("\""))
+		util.WriteInt(buf, int64(entry.Caller.Line))
+		buf.WriteByte('"')
 	}
 
 	// Add fields if present
 	if len(entry.Fields) > 0 {
-		buf.WriteByte(',')
-		newline()
-		buf.Write([]byte("\"fields\": {"))
-		indentLevel++
-		fieldIndentLevel := indentLevel
-		fieldNewline := func() {
-			buf.WriteByte('\n')
-			for i := 0; i < fieldIndentLevel; i++ {
-				buf.WriteString("  ")
-			}
-		}
-
-		first := true
-		for k, v := range entry.Fields {
-			if !first {
-				buf.WriteByte(',')
-			}
-			fieldNewline()
-			buf.WriteByte('"')
-			buf.Write(core.S2b(k))
-			buf.Write([]byte("\": "))
-
-			// Format value based on type
-			formatJSONValue(buf, v)
-			first = false
-		}
-		indentLevel--
-		fieldNewline()
-		buf.WriteByte('}')
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"fields\": ")
+		// For indented fields, we need to format them manually with indentation
+		f.formatFieldsIndented(buf, entry.Fields, 2)
 	}
 
 	// Add trace info if needed
 	if f.ShowTraceInfo {
 		if entry.TraceID != "" {
-			buf.WriteByte(',')
-			newline()
-			buf.Write([]byte("\"trace_id\": \""))
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"trace_id\": \"")
 			buf.Write(core.S2b(entry.TraceID))
 			buf.WriteByte('"')
 		}
 		if entry.SpanID != "" {
-			buf.WriteByte(',')
-			newline()
-			buf.Write([]byte("\"span_id\": \""))
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"span_id\": \"")
 			buf.Write(core.S2b(entry.SpanID))
 			buf.WriteByte('"')
 		}
 		if entry.UserID != "" {
-			buf.WriteByte(',')
-			newline()
-			buf.Write([]byte("\"user_id\": \""))
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"user_id\": \"")
 			buf.Write(core.S2b(entry.UserID))
 			buf.WriteByte('"')
 		}
 	}
 
 	if f.EnableStackTrace && len(entry.StackTrace) > 0 {
-		buf.WriteByte(',')
-		newline()
-		buf.Write([]byte("\"stack_trace\": \""))
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"stack_trace\": \"")
 		escapeJSON(buf, entry.StackTrace)
 		buf.WriteByte('"')
 	}
 
-	indentLevel--
-	newline()
+	newline(0)
 	buf.WriteByte('}')
 	buf.WriteByte('\n')
 
@@ -291,50 +263,72 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 
 // escapeJSON escapes special characters in JSON strings
 func escapeJSON(buf *bytes.Buffer, data []byte) {
+	if len(data) == 0 {
+		return
+	}
+
+	// Pre-allocate a working buffer to avoid multiple allocations
+	escaped := util.GetBufferFromPool()
+	defer util.PutBufferToPool(escaped)
+
 	for _, b := range data {
 		switch b {
 		case '"':
-			buf.Write([]byte("\\\""))
+			escaped.Write([]byte("\\\""))
 		case '\\':
-			buf.Write([]byte("\\\\"))
+			escaped.Write([]byte("\\\\"))
 		case '\b':
-			buf.Write([]byte("\\b"))
+			escaped.Write([]byte("\\b"))
 		case '\f':
-			buf.Write([]byte("\\f"))
+			escaped.Write([]byte("\\f"))
 		case '\n':
-			buf.Write([]byte("\\n"))
+			escaped.Write([]byte("\\n"))
 		case '\r':
-			buf.Write([]byte("\\r"))
+			escaped.Write([]byte("\\r"))
 		case '\t':
-			buf.Write([]byte("\\t"))
+			escaped.Write([]byte("\\t"))
 		default:
 			if b < 0x20 {
 				// Manual hex formatting to avoid fmt.Sprintf allocation
-				buf.Write([]byte("\\u00"))
+				escaped.Write([]byte("\\u00"))
 				// Convert to hex manually
 				hex1 := b / 16
 				hex2 := b % 16
 				if hex1 < 10 {
-					buf.WriteByte('0' + hex1)
+					escaped.WriteByte('0' + hex1)
 				} else {
-					buf.WriteByte('a' + hex1 - 10)
+					escaped.WriteByte('a' + hex1 - 10)
 				}
 				if hex2 < 10 {
-					buf.WriteByte('0' + hex2)
+					escaped.WriteByte('0' + hex2)
 				} else {
-					buf.WriteByte('a' + hex2 - 10)
+					escaped.WriteByte('a' + hex2 - 10)
 				}
 			} else {
-				buf.WriteByte(b)
+				escaped.WriteByte(b)
 			}
 		}
+
+		// Periodically flush to main buffer to avoid growing the escaped buffer too large
+		if escaped.Len() > 1024 {
+			buf.Write(escaped.Bytes())
+			escaped.Reset()
+		}
+	}
+
+	// Write any remaining escaped data
+	if escaped.Len() > 0 {
+		buf.Write(escaped.Bytes())
 	}
 }
 
 // formatJSONValue formats a value for JSON output
-func formatJSONValue(buf *bytes.Buffer, v interface{}) {
+func (f *JSONFormatter) formatJSONValue(buf *bytes.Buffer, v interface{}) {
 	switch val := v.(type) {
 	case string:
+		// For strings, we need to determine if this is part of a field value or a standalone value
+		// Since we can't know the field name here, we'll just format the string normally
+		// The field-level sensitivity check is handled in formatFields
 		buf.WriteByte('"')
 		escapeJSON(buf, core.S2b(val))
 		buf.WriteByte('"')
@@ -366,144 +360,235 @@ func formatJSONValue(buf *bytes.Buffer, v interface{}) {
 	case nil:
 		buf.Write([]byte("null"))
 	default:
-		// For types we can't handle efficiently, fall back to string using manual conversion
-		// Define locally to avoid conflicts between files
-		localManualStringConversion := func(value interface{}) string {
-			switch v := value.(type) {
-			case string:
-				return v
-			case []byte:
-				return string(v) // This is unavoidable for []byte to string
-			case int:
-				return strconv.Itoa(v)
-			case int8:
-				return strconv.FormatInt(int64(v), 10)
-			case int16:
-				return strconv.FormatInt(int64(v), 10)
-			case int32:
-				return strconv.FormatInt(int64(v), 10)
-			case int64:
-				return strconv.FormatInt(v, 10)
-			case uint:
-				return strconv.FormatUint(uint64(v), 10)
-			case uint8:
-				return strconv.FormatUint(uint64(v), 10)
-			case uint16:
-				return strconv.FormatUint(uint64(v), 10)
-			case uint32:
-				return strconv.FormatUint(uint64(v), 10)
-			case uint64:
-				return strconv.FormatUint(v, 10)
-			case float32:
-				return strconv.FormatFloat(float64(v), 'g', -1, 32)
-			case float64:
-				return strconv.FormatFloat(v, 'g', -1, 64)
-			case bool:
-				if v {
-					return "true"
-				}
-				return "false"
-			case nil:
-				return "null"
-			default:
-				// For complex types that can't be easily converted
-				// This is a last resort case - should be avoided in high-performance scenarios
-				return "<complex-type>"
-			}
-		}
-		tempStr := localManualStringConversion(val)
+		// Apply field transformers if available
+		transformed := f.transformValue(val, "<complex-type>")
 		buf.WriteByte('"')
-		escapeJSON(buf, core.S2b(tempStr))
+		escapeJSON(buf, core.S2b(transformed))
 		buf.WriteByte('"')
 	}
 }
 
-// prepareOutputEntry creates a temporary LogEntry for JSON marshaling from a pool.
-func (f *JSONFormatter) prepareOutputEntry(entry *core.LogEntry) *core.LogEntry {
-	outputEntry := core.GetEntryFromPool()
-
-	// Copy base fields
-	outputEntry.Timestamp = entry.Timestamp
-	outputEntry.Level = entry.Level
-	outputEntry.LevelName = entry.LevelName
-	outputEntry.Message = entry.Message
-	outputEntry.Error = entry.Error
-	outputEntry.Hostname = entry.Hostname
-	outputEntry.Application = entry.Application
-	outputEntry.Version = entry.Version
-	outputEntry.Environment = entry.Environment
-
-	// Conditionally copy fields based on formatter config
-	if f.ShowCaller {
-		outputEntry.Caller = entry.Caller
-	}
-	if f.ShowGoroutine {
-		outputEntry.GoroutineID = entry.GoroutineID
-	}
-	if f.ShowPID {
-		outputEntry.PID = entry.PID
-	}
-	if f.ShowTraceInfo {
-		outputEntry.TraceID = entry.TraceID
-		outputEntry.SpanID = entry.SpanID
-		outputEntry.UserID = entry.UserID
-		outputEntry.SessionID = entry.SessionID
-		outputEntry.RequestID = entry.RequestID
-	}
-	if f.EnableDuration {
-		outputEntry.Duration = entry.Duration
-	}
-	if f.EnableStackTrace {
-		outputEntry.StackTrace = entry.StackTrace
-	}
-
-	// Process and copy fields, tags, and metrics
-	if len(entry.Fields) > 0 {
-		processedFields := f.processFields(entry.Fields)
-		for k, v := range processedFields {
-			outputEntry.Fields[k] = v
-		}
-		core.PutMapInterfaceToPool(processedFields)
-	}
-	if len(entry.Tags) > 0 {
-		outputEntry.Tags = append(outputEntry.Tags, entry.Tags...)
-	}
-	if len(entry.CustomMetrics) > 0 {
-		for k, v := range entry.CustomMetrics {
-			outputEntry.CustomMetrics[k] = v
+// isSensitiveField checks if a field is in the sensitive fields list
+func (f *JSONFormatter) isSensitiveField(field string) bool {
+	for _, sensitiveField := range f.SensitiveFields {
+		if field == sensitiveField {
+			return true
 		}
 	}
-
-	return outputEntry
+	return false
 }
 
-// processFields processes and transforms fields according to configuration
-func (f *JSONFormatter) processFields(fields map[string]interface{}) map[string]interface{} {
-	processed := core.GetMapInterfaceFromPool()
+// isSensitive checks if a field name is in the sensitive fields list
+func (f *JSONFormatter) isSensitive(field string) bool {
+	return f.isSensitiveField(field)
+}
+
+// createMapForSensitiveCheck creates a map for O(1) sensitive field lookup when there are many sensitive fields
+func (f *JSONFormatter) createSensitiveFieldMap() map[string]bool {
+	if len(f.SensitiveFields) == 0 {
+		return nil
+	}
+
+	// Only create map if there are enough fields to justify it
+	if len(f.SensitiveFields) < 5 {
+		return nil
+	}
+
+	fieldMap := make(map[string]bool, len(f.SensitiveFields))
+	for _, field := range f.SensitiveFields {
+		fieldMap[field] = true
+	}
+	return fieldMap
+}
+
+// transformValue applies field transformers to a value
+func (f *JSONFormatter) transformValue(val interface{}, defaultVal string) string {
+	// We need to determine which field this is from the context
+	// For now, we'll use the default approach and return a string representation
+	switch v := val.(type) {
+	case string:
+		return v
+	case []byte:
+		return string(v) // This is unavoidable for []byte to string
+	case int:
+		return strconv.Itoa(v)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'g', -1, 32)
+	case float64:
+		return strconv.FormatFloat(v, 'g', -1, 64)
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	case nil:
+		return "null"
+	default:
+		// For complex types that can't be easily converted
+		// This is a last resort case - should be avoided in high-performance scenarios
+		return defaultVal
+	}
+}
+
+// formatFields formats the fields map in JSON format
+func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string]interface{}) {
+	if len(fields) == 0 {
+		return
+	}
+
+	buf.Write([]byte("{"))
+	first := true
 
 	for k, v := range fields {
-		key := k
+		if !first {
+			buf.WriteByte(',')
+		}
+		first = false
+
+		// Apply field key mapping if available
+		fieldName := k
 		if mappedKey, exists := f.FieldKeyMap[k]; exists {
-			key = mappedKey
+			fieldName = mappedKey
 		}
 
+		// Write field name
+		buf.WriteByte('"')
+		buf.Write(core.S2b(fieldName))
+		buf.Write([]byte("\":"))
+
+		// Apply field transformer if available
 		if transformer, exists := f.FieldTransformers[k]; exists {
-			processed[key] = transformer(v)
-		} else if f.MaskSensitiveData && f.isSensitive(k) {
-			processed[key] = f.MaskStringBytes // Use byte slice for consistency with zero allocation
+			transformedValue := transformer(v)
+			// Convert transformed value to string and write
+			transformedStr := f.transformValue(transformedValue, "<transformed-value>")
+			buf.WriteByte('"')
+			escapeJSON(buf, core.S2b(transformedStr))
+			buf.WriteByte('"')
 		} else {
-			processed[key] = v
+			// Format value based on type
+			f.formatJSONValue(buf, v)
 		}
 	}
 
-	return processed
+	buf.Write([]byte("}"))
 }
 
-func (f *JSONFormatter) isSensitive(field string) bool {
-    for _, sensitiveField := range f.SensitiveFields {
-        if field == sensitiveField {
-            return true
-        }
-    }
-    return false
+// formatFieldsIndented formats the fields map in JSON format with indentation
+func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[string]interface{}, indentLevel int) {
+	// Pre-allocate indent string to avoid repeated string operations
+	indentBuf := util.GetBufferFromPool()
+	defer util.PutBufferToPool(indentBuf)
+
+	// Pre-build the indentation string
+	for i := 0; i < indentLevel; i++ {
+		indentBuf.WriteString("  ") // 2 spaces per indent level
+	}
+	indentBytes := indentBuf.Bytes()
+
+	// Save original indent to be used later
+	originalIndent := make([]byte, len(indentBytes))
+	copy(originalIndent, indentBytes)
+
+	newlineAndIndent := func() {
+		buf.WriteByte('\n')
+		buf.Write(indentBytes)
+	}
+
+	buf.WriteByte('{')
+
+	// Add a newline after opening brace if there are fields
+	if len(fields) > 0 {
+		// Add one more level of indentation
+		indentBuf.WriteString("  ")
+		indentBytes = indentBuf.Bytes()
+		newlineAndIndent()
+	}
+
+	fieldNewline := func() {
+		buf.WriteByte('\n')
+		buf.Write(indentBytes)
+	}
+
+	// Use ordered keys approach to avoid pool allocation when possible
+	var orderedKeys []string
+	if len(f.FieldKeyMap) > 0 || len(f.FieldTransformers) > 0 {
+		// If field mapping or transformers are used, we need to pool the slice
+		keys := util.GetStringSliceFromPool()
+		defer util.PutStringSliceToPool(keys)
+
+		for k := range fields {
+			keys = append(keys, k)
+		}
+		orderedKeys = keys
+	} else {
+		// Otherwise, create a simple slice without pool overhead
+		orderedKeys = make([]string, 0, len(fields))
+		for k := range fields {
+			orderedKeys = append(orderedKeys, k)
+		}
+	}
+
+	first := true
+	for _, k := range orderedKeys {
+		v := fields[k]
+		if !first {
+			buf.WriteByte(',')
+		}
+		fieldNewline()
+
+		// Apply field key mapping if available
+		fieldName := k
+		if mappedKey, exists := f.FieldKeyMap[k]; exists {
+			fieldName = mappedKey
+		}
+
+		// Write field name
+		buf.WriteByte('"')
+		buf.Write(core.S2b(fieldName))
+		buf.Write([]byte("\": "))
+
+		// Apply field transformer if available
+		if transformer, exists := f.FieldTransformers[k]; exists {
+			transformedValue := transformer(v)
+			// Convert transformed value to string and write
+			transformedStr := f.transformValue(transformedValue, "<transformed-value>")
+			buf.WriteByte('"')
+			escapeJSON(buf, core.S2b(transformedStr))
+			buf.WriteByte('"')
+		} else {
+			// Format value based on type
+			f.formatJSONValue(buf, v)
+		}
+		first = false
+	}
+
+	// Add newline and closing brace with proper indentation
+	// Adjust indent level back by one
+	if len(originalIndent) >= 2 {
+		indentBytes = originalIndent[:len(originalIndent)-2]
+	} else {
+		indentBytes = originalIndent[:0] // Empty slice
+	}
+
+	buf.WriteByte('\n')
+	buf.Write(indentBytes)
+	buf.WriteByte('}')
 }

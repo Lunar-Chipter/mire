@@ -33,6 +33,7 @@ type TextFormatter struct {
 	MaskSensitiveData   bool                                       // Whether to mask sensitive data
 	MaskStringValue     string                                     // String value to use for masking
 	MaskStringBytes     []byte                                     // Byte slice for masking (zero-allocation)
+	DisableHTMLEscape   bool                                       // Disable HTML escaping in text
 }
 
 var ResetColorBytes = []byte("\033[0m")
@@ -48,6 +49,14 @@ var fieldValueColorBytes = []byte("\033[38;5;159m")// Light cyan for field value
 var tagsColorBytes = []byte("\033[38;5;135m")      // Purple for tags
 var metricsColorBytes = []byte("\033[38;5;85m")    // Green for metrics
 
+// NewTextFormatter creates a new TextFormatter
+func NewTextFormatter() *TextFormatter {
+	return &TextFormatter{
+		MaskStringValue: "[MASKED]",
+		FieldTransformers: make(map[string]func(interface{}) string),
+		SensitiveFields: make([]string, 0),
+	}
+}
 
 // Format formats a log entry into a byte slice
 func (f *TextFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
@@ -270,16 +279,41 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string]interf
 	}
 	buf.WriteByte('{')
 
-	keys := util.GetStringSliceFromPool()
-	defer util.PutStringSliceToPool(keys)
+	// Determine field order: either custom order or map order
+	var orderedKeys []string
+	if len(f.CustomFieldOrder) > 0 {
+		// Use custom order for fields that exist in the entry
+		// This avoids string slice allocation if custom order is not used
+		orderedKeys = make([]string, 0, len(fields))
+		// Add fields in custom order
+		for _, field := range f.CustomFieldOrder {
+			if _, exists := fields[field]; exists {
+				orderedKeys = append(orderedKeys, field)
+			}
+		}
 
-	// Key ordering logic
-	for k := range fields {
-		keys = append(keys, k)
+		// Add any remaining fields that weren't in the custom order
+		for field := range fields {
+			existsInCustom := false
+			for _, customField := range orderedKeys {
+				if field == customField {
+					existsInCustom = true
+					break
+				}
+			}
+			if !existsInCustom {
+				orderedKeys = append(orderedKeys, field)
+			}
+		}
+	} else {
+		// Use natural map order - avoid extra slice allocation where possible
+		orderedKeys = make([]string, 0, len(fields))
+		for k := range fields {
+			orderedKeys = append(orderedKeys, k)
+		}
 	}
-	// A more sophisticated key ordering can be implemented here if needed
 
-	for i, k := range keys {
+	for i, k := range orderedKeys {
 		v := fields[k]
 		if i > 0 {
 			buf.WriteByte(' ')
@@ -296,12 +330,13 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string]interf
 		}
 
 		// Apply field transformer or mask sensitive data
-		if transformer, exists := f.FieldTransformers[k]; exists {
-			// Transformer might cause allocations - ideally should be pre-allocated
-			buf.WriteString(transformer(v))
-		} else if f.MaskSensitiveData && contains(f.SensitiveFields, k) {
+		if f.MaskSensitiveData && f.isSensitiveField(k) {
 			// Use byte slice for mask value to avoid string allocation
-			buf.Write(f.MaskStringBytes) // Use byte slice instead of string
+			buf.Write(core.S2b(f.MaskStringValue)) // Use string to byte conversion
+		} else if transformer, exists := f.FieldTransformers[k]; exists {
+			// Apply field transformer
+			transformedValue := transformer(v)
+			buf.Write(core.S2b(transformedValue)) // Convert string to byte slice without allocation
 		} else {
 			// Use optimized FormatValue that minimizes allocations
 			util.FormatValue(buf, v, f.MaxFieldWidth)
@@ -381,6 +416,15 @@ func shortIDBytes(id string) []byte {
 		return core.S2b(id[:8])
 	}
 	return core.S2b(id)
+}
+
+func (f *TextFormatter) isSensitiveField(field string) bool {
+	for _, sensitiveField := range f.SensitiveFields {
+		if field == sensitiveField {
+			return true
+		}
+	}
+	return false
 }
 
 func contains(slice []string, item string) bool {
