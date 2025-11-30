@@ -3,7 +3,7 @@
 ![Go Version](https://img.shields.io/badge/Go-1.25.4-blue.svg)
 ![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Go-informational.svg)
-![Performance](https://img.shields.io/badge/Performance-61,350k+%2B%20logs%2Fsec-brightgreen.svg)
+![Performance](https://img.shields.io/badge/Performance-61,350+%2B%20logs%2Fsec-brightgreen.svg)
 ![Status](https://img.shields.io/badge/Status-Beta-yellow.svg)
 ![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg)
 ![Maintained](https://img.shields.io/badge/Maintained-Yes-blue.svg)
@@ -46,7 +46,7 @@
 
 ## ✨ Features
 
-- **Optimized Performance**: Optimized for 61,350k++logs/second with zero-allocation design
+- **Optimized Performance**: Optimized for 61,350++logs/second with zero-allocation design
 - **Zero-Allocation**: Internal redesign with []byte fields eliminating string conversion overhead
 - **Context-Aware**: Automatic extraction of trace IDs, user IDs, and request IDs from context
 - **Multiple Formatters**: Text, JSON, and CSV formatters with custom options
