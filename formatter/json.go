@@ -91,19 +91,19 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 
 	// Add trace info if needed - organize in a way that reduces branching
 	if f.ShowTraceInfo {
-		if entry.TraceID != "" {
+		if entry.TraceID != nil {
 			buf.WriteString(",\"trace_id\":\"")
-			buf.Write(core.StringToBytes(entry.TraceID))
+			buf.Write(entry.TraceID)
 			buf.WriteByte('"')
 		}
-		if entry.SpanID != "" {
+		if entry.SpanID != nil {
 			buf.WriteString(",\"span_id\":\"")
-			buf.Write(core.StringToBytes(entry.SpanID))
+			buf.Write(entry.SpanID)
 			buf.WriteByte('"')
 		}
-		if entry.UserID != "" {
+		if entry.UserID != nil {
 			buf.WriteString(",\"user_id\":\"")
-			buf.Write(core.StringToBytes(entry.UserID))
+			buf.Write(entry.UserID)
 			buf.WriteByte('"')
 		}
 	}
@@ -223,25 +223,25 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 
 	// Add trace info if needed
 	if f.ShowTraceInfo {
-		if entry.TraceID != "" {
+		if entry.TraceID != nil {
 			buf.WriteString(",\n  ")
 			indent(1)
 			buf.WriteString("\"trace_id\": \"")
-			buf.Write(core.StringToBytes(entry.TraceID))
+			buf.Write(entry.TraceID)
 			buf.WriteByte('"')
 		}
-		if entry.SpanID != "" {
+		if entry.SpanID != nil {
 			buf.WriteString(",\n  ")
 			indent(1)
 			buf.WriteString("\"span_id\": \"")
-			buf.Write(core.StringToBytes(entry.SpanID))
+			buf.Write(entry.SpanID)
 			buf.WriteByte('"')
 		}
-		if entry.UserID != "" {
+		if entry.UserID != nil {
 			buf.WriteString(",\n  ")
 			indent(1)
 			buf.WriteString("\"user_id\": \"")
-			buf.Write(core.StringToBytes(entry.UserID))
+			buf.Write(entry.UserID)
 			buf.WriteByte('"')
 		}
 	}

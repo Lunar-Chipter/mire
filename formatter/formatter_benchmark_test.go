@@ -18,10 +18,10 @@ func BenchmarkCSVFormatter(b *testing.B) {
 	
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
-	entry.LevelName = "INFO"
+	entry.LevelName = core.StringToBytes("INFO")
 	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
-	entry.TraceID = "trace-12345"
+	entry.TraceID = core.StringToBytes("trace-12345")
 	entry.Fields = map[string]interface{}{
 		"user_id": 123,
 		"action":  "login",
@@ -46,10 +46,10 @@ func BenchmarkJSONFormatter(b *testing.B) {
 	
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
-	entry.LevelName = "INFO"
+	entry.LevelName = core.StringToBytes("INFO")
 	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
-	entry.TraceID = "trace-12345"
+	entry.TraceID = core.StringToBytes("trace-12345")
 	entry.Fields = map[string]interface{}{
 		"user_id": 123,
 		"action":  "login",
@@ -74,10 +74,10 @@ func BenchmarkJSONFormatterPretty(b *testing.B) {
 	
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
-	entry.LevelName = "INFO"
+	entry.LevelName = core.StringToBytes("INFO")
 	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
-	entry.TraceID = "trace-12345"
+	entry.TraceID = core.StringToBytes("trace-12345")
 	entry.Fields = map[string]interface{}{
 		"user_id": 123,
 		"action":  "login",
@@ -104,10 +104,10 @@ func BenchmarkTextFormatter(b *testing.B) {
 	
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
-	entry.LevelName = "INFO"
+	entry.LevelName = core.StringToBytes("INFO")
 	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
-	entry.TraceID = "trace-12345"
+	entry.TraceID = core.StringToBytes("trace-12345")
 	entry.Fields = map[string]interface{}{
 		"user_id": 123,
 		"action":  "login",
@@ -140,10 +140,10 @@ func BenchmarkAllFormatters(b *testing.B) {
 			
 			entry.Timestamp = time.Now()
 			entry.Level = core.INFO
-			entry.LevelName = "INFO"
+			entry.LevelName = core.StringToBytes("INFO")
 			entry.Message = core.StringToBytes("Test message for benchmark")
 			entry.PID = 12345
-			entry.TraceID = "trace-12345"
+			entry.TraceID = core.StringToBytes("trace-12345")
 			entry.Fields = map[string]interface{}{
 				"user_id": 123,
 				"action":  "login",

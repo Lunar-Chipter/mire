@@ -5,7 +5,7 @@ import (
 	"strconv" // Re-added strconv import
 	"time"
 
-	"github.com/Lunar-Chipter/mire/core" // Added import for core.S2b and core.ErrorAppender
+	"github.com/Lunar-Chipter/mire/core"
 )
 
 // FormatValue formats a given value into a byte buffer, with an optional max width.

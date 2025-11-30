@@ -72,7 +72,7 @@ func (l *OptimizedLogger) logInternal(ctx context.Context, level core.Level, mes
 	// Isi entry dengan data yang diperlukan
 	entry.Timestamp = time.Now()
 	entry.Level = level
-	entry.LevelName = level.String()
+	entry.LevelName = level.ToBytes()
 	entry.Message = message
 
 	// Tambahkan fields dari logger

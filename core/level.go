@@ -138,6 +138,14 @@ func (l Level) Bytes() []byte {
 	return []byte("UNKNOWN") // Allocate in this rare case
 }
 
+// ToBytes returns the byte slice representation of the level for use in LogEntry
+func (l Level) ToBytes() []byte {
+	if l >= TRACE && l <= PANIC {
+		return LevelBytes[l]
+	}
+	return []byte("UNKNOWN") // Allocate in this rare case
+}
+
 // s2b converts a string to a byte slice without memory allocation.
 // WARNING: The returned byte slice shares memory with the string. It is read-only.
 func s2b(s string) (b []byte) {

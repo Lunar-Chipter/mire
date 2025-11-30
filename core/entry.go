@@ -12,29 +12,29 @@ import (
 // LogEntry represents a single log entry with all its metadata
 // LogEntry merepresentasikan entri log tunggal dengan semua metadata-nya
 type LogEntry struct {
-	Timestamp     time.Time     `json:"timestamp"`              // When the log was created
-	Level         Level         `json:"level"`                  // Log severity level
-	LevelName     string        `json:"level_name"`             // String representation of level
-	Message       []byte                 `json:"message"`                // Log message
-	Caller        *CallerInfo            `json:"caller,omitempty"`       // Caller information
-	Fields        map[string]interface{} `json:"fields,omitempty"`       // Additional fields
-	PID           int                    `json:"pid"`                    // Process ID
-	GoroutineID   string                 `json:"goroutine_id,omitempty"` // Goroutine ID
-	TraceID       string                 `json:"trace_id,omitempty"`     // Trace ID for distributed tracing
-	SpanID        string                 `json:"span_id,omitempty"`      // Span ID for distributed tracing
-	UserID        string                 `json:"user_id,omitempty"`      // User ID
-	SessionID     string                 `json:"session_id,omitempty"`   // Session ID
-	RequestID     string                 `json:"request_id,omitempty"`   // Request ID
-	Duration      time.Duration          `json:"duration,omitempty"`     // Operation duration
-	Error         error                  `json:"error,omitempty"`        // Error information
-	StackTrace    []byte                 `json:"stack_trace,omitempty"`  // Stack trace
-	StackTraceBufPtr *[]byte               `json:"-"`                      // Pointer to the pooled buffer for StackTrace
-	Hostname      string                 `json:"hostname,omitempty"`     // Hostname
-	Application   string                 `json:"application,omitempty"`  // Application name
-	Version       string                 `json:"version,omitempty"`      // Application version
-	Environment   string                 `json:"environment,omitempty"`  // Environment (dev/prod/etc)
-	CustomMetrics map[string]float64     `json:"custom_metrics,omitempty"` // Custom metrics
-	Tags          []string               `json:"tags,omitempty"`         // Tags for categorization
+	Timestamp     time.Time            `json:"timestamp"`              // When the log was created
+	Level         Level                `json:"level"`                  // Log severity level
+	LevelName     []byte               `json:"level_name"`             // Byte representation of level for zero-allocation formatting
+	Message       []byte               `json:"message"`                // Log message
+	Caller        *CallerInfo          `json:"caller,omitempty"`       // Caller information
+	Fields        map[string]interface{} `json:"fields,omitempty"`     // Additional fields
+	PID           int                  `json:"pid"`                    // Process ID
+	GoroutineID   []byte               `json:"goroutine_id,omitempty"` // Goroutine ID as byte slice
+	TraceID       []byte               `json:"trace_id,omitempty"`     // Trace ID for distributed tracing as byte slice
+	SpanID        []byte               `json:"span_id,omitempty"`      // Span ID for distributed tracing as byte slice
+	UserID        []byte               `json:"user_id,omitempty"`      // User ID as byte slice
+	SessionID     []byte               `json:"session_id,omitempty"`   // Session ID as byte slice
+	RequestID     []byte               `json:"request_id,omitempty"`   // Request ID as byte slice
+	Duration      time.Duration        `json:"duration,omitempty"`     // Operation duration
+	Error         error                `json:"error,omitempty"`        // Error information
+	StackTrace    []byte               `json:"stack_trace,omitempty"`  // Stack trace
+	StackTraceBufPtr *[]byte           `json:"-"`                      // Pointer to the pooled buffer for StackTrace
+	Hostname      []byte               `json:"hostname,omitempty"`     // Hostname as byte slice
+	Application   []byte               `json:"application,omitempty"`  // Application name as byte slice
+	Version       []byte               `json:"version,omitempty"`      // Application version as byte slice
+	Environment   []byte               `json:"environment,omitempty"`  // Environment (dev/prod/etc) as byte slice
+	CustomMetrics map[string]float64   `json:"custom_metrics,omitempty"` // Custom metrics
+	Tags          [][]byte             `json:"tags,omitempty"`         // Tags for categorization as byte slices
 	_             [64 - unsafe.Sizeof(time.Time{})%64]byte // Padding for cache alignment
 }
 
@@ -151,41 +151,32 @@ func PutStringSliceToPool(s *[]string) {
 	stringSlicePool.Put(s)
 }
 
-// Metrics for observability
-type EntryMetrics struct {
-	createdCount    atomic.Int64
-	reusedCount     atomic.Int64
-	poolMissCount   atomic.Int64
-	serializedCount atomic.Int64
-	lastOperation   atomic.Int64
-}
-
-// Global metrics instance
-var globalEntryMetrics = &EntryMetrics{}
+// Global metrics instance - sekarang menggunakan CoreMetrics
+var globalEntryMetrics = GetCoreMetrics()
 
 // GetEntryMetrics returns the global entry metrics
-func GetEntryMetrics() *EntryMetrics {
+func GetEntryMetrics() *CoreMetrics {
 	return globalEntryMetrics
 }
 
 // CreatedCount returns the number of entries created
-func (em *EntryMetrics) CreatedCount() int64 {
-	return em.createdCount.Load()
+func (em *CoreMetrics) CreatedCount() int64 {
+	return em.EntryCreatedCount.Load()
 }
 
 // ReusedCount returns the number of entries reused from pool
-func (em *EntryMetrics) ReusedCount() int64 {
-	return em.reusedCount.Load()
+func (em *CoreMetrics) ReusedCount() int64 {
+	return em.EntryReusedCount.Load()
 }
 
 // PoolMissCount returns the number of pool misses
-func (em *EntryMetrics) PoolMissCount() int64 {
-	return em.poolMissCount.Load()
+func (em *CoreMetrics) PoolMissCount() int64 {
+	return em.EntryPoolMissCount.Load()
 }
 
 // SerializedCount returns the number of entries serialized
-func (em *EntryMetrics) SerializedCount() int64 {
-	return em.serializedCount.Load()
+func (em *CoreMetrics) SerializedCount() int64 {
+	return em.EntrySerializedCount.Load()
 }
 
 // clearMap clears a map
@@ -207,6 +198,11 @@ func clearStringSlice(s []string) []string {
 	return s[:0]
 }
 
+// clearByteSliceSlice clears a byte slice slice
+func clearByteSliceSlice(s [][]byte) [][]byte {
+	return s[:0]
+}
+
 
 // Object pool for reusing LogEntry objects to reduce memory allocation
 // Pool objek untuk menggunakan kembali objek LogEntry mengurangi alokasi memori
@@ -214,10 +210,15 @@ var entryPool = sync.Pool{
 	New: func() interface{} {
 		// Use pooled resources for slices and maps within the LogEntry
 		tags := GetStringSliceFromPool()
+		// Convert []string to [][]byte for the Tags field
+		tagsAsBytes := make([][]byte, 0, len(*tags))
+		for _, tag := range *tags {
+			tagsAsBytes = append(tagsAsBytes, StringToBytes(tag))
+		}
 		return &LogEntry{
 			Fields:        GetMapInterfaceFromPool(),
 			CustomMetrics: GetMapFloatFromPool(),
-			Tags:          *tags,
+			Tags:          tagsAsBytes,
 		}
 	},
 }
@@ -258,41 +259,41 @@ func GetEntryFromPool() *LogEntry {
 // Mendapatkan LogEntry langsung dari pool global
 func GetEntryFromGlobalPool() *LogEntry {
 	entry := entryPool.Get().(*LogEntry)
-	
+
 	// Update metrics
 	if entry.Timestamp.IsZero() {
 		// Entry baru dibuat (pool miss)
-		globalEntryMetrics.poolMissCount.Add(1)
-		globalEntryMetrics.createdCount.Add(1)
+		globalEntryMetrics.IncEntryPoolMiss()
+		globalEntryMetrics.IncEntryCreated()
 	} else {
 		// Entry digunakan ulang
-		globalEntryMetrics.reusedCount.Add(1)
+		globalEntryMetrics.IncEntryReused()
 	}
-	
+
 	// Reset fields to avoid data leakage
 	entry.Timestamp = time.Time{}
 	entry.Level = INFO
-	entry.LevelName = ""
+	entry.LevelName = nil
 	entry.Message = nil
 	entry.Caller = nil
 	clearMap(entry.Fields)
 	clearFloatMap(entry.CustomMetrics)
-	entry.Tags = clearStringSlice(entry.Tags)
+	entry.Tags = clearByteSliceSlice(entry.Tags)
 	entry.PID = 0
-	entry.GoroutineID = ""
-	entry.TraceID = ""
-	entry.SpanID = ""
-	entry.UserID = ""
-	entry.SessionID = ""
-	entry.RequestID = ""
+	entry.GoroutineID = nil
+	entry.TraceID = nil
+	entry.SpanID = nil
+	entry.UserID = nil
+	entry.SessionID = nil
+	entry.RequestID = nil
 	entry.Duration = 0
 	entry.Error = nil
 	entry.StackTrace = nil
-	entry.Hostname = ""
-	entry.Application = ""
-	entry.Version = ""
-	entry.Environment = ""
-	
+	entry.Hostname = nil
+	entry.Application = nil
+	entry.Version = nil
+	entry.Environment = nil
+
 	return entry
 }
 
@@ -334,39 +335,38 @@ func (g *GoroutineLocalEntryPool) GetEntryFromLocalPool() *LogEntry {
 		// Reset fields to avoid data leakage
 		entry.Timestamp = time.Time{}
 		entry.Level = INFO
-		entry.LevelName = ""
+		entry.LevelName = nil
 		entry.Message = nil
 		entry.Caller = nil
 		clearMap(entry.Fields)
 		clearFloatMap(entry.CustomMetrics)
-		entry.Tags = clearStringSlice(entry.Tags)
+		entry.Tags = clearByteSliceSlice(entry.Tags)
 		entry.PID = 0
-		entry.GoroutineID = ""
-		entry.TraceID = ""
-		entry.SpanID = ""
-		entry.UserID = ""
-		entry.SessionID = ""
-		entry.RequestID = ""
+		entry.GoroutineID = nil
+		entry.TraceID = nil
+		entry.SpanID = nil
+		entry.UserID = nil
+		entry.SessionID = nil
+		entry.RequestID = nil
 		entry.Duration = 0
 		entry.Error = nil
 		entry.StackTrace = nil
-		entry.Hostname = ""
-		entry.Application = ""
-		entry.Version = ""
-		entry.Environment = ""
-		
+		entry.Hostname = nil
+		entry.Application = nil
+		entry.Version = nil
+		entry.Environment = nil
+
 		// Update metrics
-		globalEntryMetrics.reusedCount.Add(1)
+		globalEntryMetrics.IncEntryReused()
 		return entry
 	default:
 		// Pool kosong, buat entry baru dari pool global
-		entry := GetEntryFromGlobalPool() 
+		entry := GetEntryFromGlobalPool()
 		// globalEntryMetrics.poolMissCount.Add(1) // GetEntryFromGlobalPool already increments this
 		return entry
 	}
 }
 
-// PutEntryToLocalPool mengembalikan entry ke pool lokal goroutine
 // PutEntryToPool returns a LogEntry to the pool
 // Mengembalikan LogEntry ke pool
 func PutEntryToPool(entry *LogEntry) {
@@ -389,43 +389,59 @@ func (le *LogEntry) ZeroAllocJSONSerialize() []byte {
 	// Dapatkan buffer dari pool untuk zero allocation
 	bufPtr := GetBufferFromPool()
 	buf := *bufPtr
-	
+
 	// Mulai dengan kurung kurawal
 	buf = append(buf, '{')
-	
+
 	// Serialisasi field-field penting
-	buf = le.serializeField(buf, "timestamp", le.Timestamp.Format(time.RFC3339))
+	buf = le.serializeTimestamp(buf, "timestamp", le.Timestamp)
 	buf = append(buf, ',')
-	
-	// Serialisasi field-field penting
-	buf = le.serializeField(buf, "level", le.LevelName)
+
+	// Serialisasi field-field penting - sekarang LevelName adalah []byte
+	buf = le.serializeByteSliceField(buf, "level", le.LevelName)
 	buf = append(buf, ',')
-	
+
 	buf = le.serializeByteSliceField(buf, "message", le.Message)
-	
+
 	// Tambahkan field lain jika ada
 	if le.PID != 0 {
 		buf = append(buf, ',')
 		buf = le.serializeIntField(buf, "pid", le.PID)
 	}
-	
-	if le.GoroutineID != "" {
+
+	if le.GoroutineID != nil {
 		buf = append(buf, ',')
-		buf = le.serializeField(buf, "goroutine_id", le.GoroutineID)
+		buf = le.serializeByteSliceField(buf, "goroutine_id", le.GoroutineID)
 	}
-	
+
 	// Tutup dengan kurung kurawal
 	buf = append(buf, '}')
-	
+
 	// Simpan hasil dan kembalikan buffer ke pool
 	result := make([]byte, len(buf))
 	copy(result, buf)
-	
+
 	// Reset buffer dan kembalikan ke pool
 	*bufPtr = (*bufPtr)[:0]
 	PutBufferToPool(bufPtr)
-	
+
 	return result
+}
+
+// serializeTimestamp serializes a timestamp field
+func (le *LogEntry) serializeTimestamp(buf []byte, key string, value time.Time) []byte {
+	buf = append(buf, '"')
+	buf = append(buf, key...)
+	buf = append(buf, '"')
+	buf = append(buf, ':')
+	buf = append(buf, '"')
+
+	// Format timestamp secara manual tanpa alokasi
+	ts := value.Format(time.RFC3339)
+	buf = append(buf, ts...)
+
+	buf = append(buf, '"')
+	return buf
 }
 
 // serializeField serializes a string field
@@ -440,37 +456,6 @@ func (le *LogEntry) serializeField(buf []byte, key, value string) []byte {
 	return buf
 }
 
-// serializeIntField serializes an int field
-func (le *LogEntry) serializeIntField(buf []byte, key string, value int) []byte {
-	buf = append(buf, '"')
-	buf = append(buf, key...)
-	buf = append(buf, '"')
-	buf = append(buf, ':')
-	
-	// Konversi int ke string tanpa alokasi
-	var temp [20]byte
-	i := len(temp)
-	val := value
-	
-	if val == 0 {
-		buf = append(buf, '0')
-		return buf
-	}
-	
-	if val < 0 {
-		buf = append(buf, '-')
-		val = -val
-	}
-	
-	for val > 0 && i > 0 {
-		i--
-		temp[i] = byte(val%10) + '0'
-		val /= 10
-	}
-	
-	return append(buf, temp[i:]...)
-}
-
 // serializeByteSliceField serializes a byte slice field
 func (le *LogEntry) serializeByteSliceField(buf []byte, key string, value []byte) []byte {
 	buf = append(buf, '"')
@@ -478,9 +463,44 @@ func (le *LogEntry) serializeByteSliceField(buf []byte, key string, value []byte
 	buf = append(buf, '"')
 	buf = append(buf, ':')
 	buf = append(buf, '"')
-	buf = append(buf, value...)
+	if value != nil {
+		buf = append(buf, value...)
+	} else {
+		buf = append(buf, []byte("null")...)
+	}
 	buf = append(buf, '"')
 	return buf
+}
+
+// serializeIntField serializes an int field
+func (le *LogEntry) serializeIntField(buf []byte, key string, value int) []byte {
+	buf = append(buf, '"')
+	buf = append(buf, key...)
+	buf = append(buf, '"')
+	buf = append(buf, ':')
+
+	// Konversi int ke string tanpa alokasi
+	var temp [20]byte
+	i := len(temp)
+	val := value
+
+	if val == 0 {
+		buf = append(buf, '0')
+		return buf
+	}
+
+	if val < 0 {
+		buf = append(buf, '-')
+		val = -val
+	}
+
+	for val > 0 && i > 0 {
+		i--
+		temp[i] = byte(val%10) + '0'
+		val /= 10
+	}
+
+	return append(buf, temp[i:]...)
 }
 
 // ErrorAppender is an optional interface that errors can implement to write
@@ -489,16 +509,6 @@ type ErrorAppender interface {
 	AppendError(buf *bytes.Buffer)
 }
 
-// StringToBytes converts a string to a byte slice without memory allocation.
-// WARNING: The returned byte slice shares memory with the string. It is read-only.
-func StringToBytes(s string) (b []byte) {
-	bh := (*[3]int)(unsafe.Pointer(&b))
-	sh := (*[2]int)(unsafe.Pointer(&s))
-	bh[0] = sh[0]
-	bh[1] = sh[1]
-	bh[2] = sh[1]
-	return b
-}
 
 // formatLogToBytes menulis data log secara manual ke buffer byte untuk efisiensi maksimal
 func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
@@ -509,7 +519,7 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	buf = append(buf, ts...)
 	buf = append(buf, ' ')
 
-	// Menulis level
+	// Menulis level - sekarang LevelName adalah []byte
 	buf = append(buf, le.LevelName...)
 	buf = append(buf, ' ')
 
@@ -532,6 +542,8 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 			switch val := v.(type) {
 			case string:
 				buf = append(buf, val...)
+			case []byte:
+				buf = append(buf, val...)
 			case int:
 				buf = le.intToBytes(buf, val)
 			case int64:
@@ -547,51 +559,63 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 			default:
 				// Gunakan konversi manual untuk menghindari alokasi fmt.Sprintf
 				// Gunakan fungsi konversi lokal untuk menghindari circular import
-				localStringConversion := func(value interface{}) string {
+				localStringConversion := func(value interface{}) []byte {
 					switch v := value.(type) {
 					case string:
-						return v
+						return StringToBytes(v)
 					case []byte:
-						return string(v) // This is unavoidable for []byte to string
+						return v
 					case int:
-						return strconv.Itoa(v)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendInt(buf, int64(v), 10)
 					case int8:
-						return strconv.FormatInt(int64(v), 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendInt(buf, int64(v), 10)
 					case int16:
-						return strconv.FormatInt(int64(v), 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendInt(buf, int64(v), 10)
 					case int32:
-						return strconv.FormatInt(int64(v), 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendInt(buf, int64(v), 10)
 					case int64:
-						return strconv.FormatInt(v, 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendInt(buf, v, 10)
 					case uint:
-						return strconv.FormatUint(uint64(v), 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendUint(buf, uint64(v), 10)
 					case uint8:
-						return strconv.FormatUint(uint64(v), 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendUint(buf, uint64(v), 10)
 					case uint16:
-						return strconv.FormatUint(uint64(v), 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendUint(buf, uint64(v), 10)
 					case uint32:
-						return strconv.FormatUint(uint64(v), 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendUint(buf, uint64(v), 10)
 					case uint64:
-						return strconv.FormatUint(v, 10)
+						buf := make([]byte, 0, 20)
+						return strconv.AppendUint(buf, v, 10)
 					case float32:
-						return strconv.FormatFloat(float64(v), 'g', -1, 32)
+						buf := make([]byte, 0, 32)
+						return strconv.AppendFloat(buf, float64(v), 'g', -1, 32)
 					case float64:
-						return strconv.FormatFloat(v, 'g', -1, 64)
+						buf := make([]byte, 0, 32)
+						return strconv.AppendFloat(buf, v, 'g', -1, 64)
 					case bool:
 						if v {
-							return "true"
+							return StringToBytes("true")
 						}
-						return "false"
+						return StringToBytes("false")
 					case nil:
-						return "null"
+						return StringToBytes("null")
 					default:
 						// For complex types that can't be easily converted
 						// This is a last resort case - should be avoided in demanding scenarios
-						return "<complex-type>"
+						return StringToBytes("<complex-type>")
 					}
 				}
-				tempStr := localStringConversion(val)
-				buf = append(buf, tempStr...)
+				tempBytes := localStringConversion(val)
+				buf = append(buf, tempBytes...)
 			}
 			first = false
 		}
@@ -674,6 +698,12 @@ func GetByteSliceFromPool() []byte {
 	return byteSlicePool.Get().([]byte)
 }
 
+// MaxSmallSlicePoolSize constant for compile-time configuration
+const (
+	MaxSmallSlicePoolSize = 1024 // 1KB limit for small slices in pool
+	DefaultBufferSize     = MediumEntryBufferSize
+)
+
 // PutByteSliceToPool returns a byte slice to the pool
 func PutByteSliceToPool(b []byte) {
 	b = b[:0] // Reset length but keep capacity
@@ -699,8 +729,8 @@ func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
 	}
 	
 	// Update metrics
-	globalEntryMetrics.serializedCount.Add(1)
-	globalEntryMetrics.lastOperation.Store(time.Now().UnixNano())
+	globalEntryMetrics.IncEntrySerialized()
+	globalEntryMetrics.SetLastOperationTime(time.Now())
 	
 	// Coba masukkan ke pool lokal
 	select {

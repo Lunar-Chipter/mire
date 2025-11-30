@@ -144,15 +144,15 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 		util.WriteInt(buf, int64(entry.PID))
 		buf.WriteByte('"')
 	case "goroutine_id":
-		f.writeCSVValue(buf, entry.GoroutineID)
+		f.writeCSVValueBytes(buf, entry.GoroutineID)
 	case "trace_id":
-		f.writeCSVValue(buf, entry.TraceID)
+		f.writeCSVValueBytes(buf, entry.TraceID)
 	case "span_id":
-		f.writeCSVValue(buf, entry.SpanID)
+		f.writeCSVValueBytes(buf, entry.SpanID)
 	case "user_id":
-		f.writeCSVValue(buf, entry.UserID)
+		f.writeCSVValueBytes(buf, entry.UserID)
 	case "request_id":
-		f.writeCSVValue(buf, entry.RequestID)
+		f.writeCSVValueBytes(buf, entry.RequestID)
 	case "file":
 		if entry.Caller != nil {
 			f.writeCSVValue(buf, entry.Caller.File)

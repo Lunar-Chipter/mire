@@ -126,11 +126,11 @@ func (f *TextFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 }
 
 func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
-	if f.ShowHostname && entry.Hostname != "" {
-		f.writeMetaPart(buf, entry.Hostname)
+	if f.ShowHostname && entry.Hostname != nil {
+		f.writeMetaPartBytes(buf, entry.Hostname)
 	}
-	if f.ShowApplication && entry.Application != "" {
-		f.writeMetaPart(buf, entry.Application)
+	if f.ShowApplication && entry.Application != nil {
+		f.writeMetaPartBytes(buf, entry.Application)
 	}
 	if f.ShowPID {
 		// Use pooled byte slice for AppendInt
@@ -148,11 +148,11 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 		}
 		buf.WriteByte(' ')
 	}
-	if f.ShowGoroutine && entry.GoroutineID != "" {
+	if f.ShowGoroutine && entry.GoroutineID != nil {
 		// Create GID string more efficiently using a temporary buffer
 		gidPrefix := []byte("GID:")
 		buf.Write(gidPrefix)
-		buf.Write(core.StringToBytes(entry.GoroutineID))
+		buf.Write(entry.GoroutineID)  // entry.GoroutineID is already a byte slice
 		buf.WriteByte(' ')
 	}
 	if f.ShowTraceInfo {
@@ -206,15 +206,26 @@ func (f *TextFormatter) writeMetaPart(buf *bytes.Buffer, part string) {
 	buf.WriteByte(' ')
 }
 
+func (f *TextFormatter) writeMetaPartBytes(buf *bytes.Buffer, part []byte) {
+	if f.EnableColors {
+		buf.Write(metaColorBytes)
+	}
+	buf.Write(part) // part is already a byte slice
+	if f.EnableColors {
+		buf.Write(ResetColorBytes)
+	}
+	buf.WriteByte(' ')
+}
+
 func (f *TextFormatter) writeTraceInfo(buf *bytes.Buffer, entry *core.LogEntry) {
-	if entry.TraceID != "" {
-		f.writeTracePart(buf, []byte("TRACE"), shortenID(entry.TraceID))
+	if entry.TraceID != nil {
+		f.writeTracePartBytes(buf, []byte("TRACE"), shortIDToBytes(string(entry.TraceID)))
 	}
-	if entry.SpanID != "" {
-		f.writeTracePart(buf, []byte("SPAN"), shortenID(entry.SpanID))
+	if entry.SpanID != nil {
+		f.writeTracePartBytes(buf, []byte("SPAN"), shortIDToBytes(string(entry.SpanID)))
 	}
-	if entry.RequestID != "" {
-		f.writeTracePart(buf, []byte("REQ"), shortenID(entry.RequestID))
+	if entry.RequestID != nil {
+		f.writeTracePartBytes(buf, []byte("REQ"), shortIDToBytes(string(entry.RequestID)))
 	}
 }
 
@@ -225,6 +236,19 @@ func (f *TextFormatter) writeTracePart(buf *bytes.Buffer, key []byte, value stri
 	buf.Write(key)
 	buf.WriteByte(':')
 	buf.Write(core.StringToBytes(value)) // Use zero-allocation string to byte conversion
+	if f.EnableColors {
+		buf.Write(ResetColorBytes)
+	}
+	buf.WriteByte(' ')
+}
+
+func (f *TextFormatter) writeTracePartBytes(buf *bytes.Buffer, key []byte, value []byte) {
+	if f.EnableColors {
+		buf.Write(traceColorBytes)
+	}
+	buf.Write(key)
+	buf.WriteByte(':')
+	buf.Write(value) // value is already a byte slice
 	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
@@ -255,7 +279,7 @@ func (f *TextFormatter) writePostMessage(buf *bytes.Buffer, entry *core.LogEntry
 	}
 	if len(entry.Tags) > 0 {
 		buf.WriteByte(' ')
-		f.formatTags(buf, entry.Tags)
+		f.formatTagsBytes(buf, entry.Tags)
 	}
 	if len(entry.CustomMetrics) > 0 {
 		buf.WriteByte(' ')
@@ -362,6 +386,23 @@ func (f *TextFormatter) formatTags(buf *bytes.Buffer, tags []string) {
 			buf.WriteByte(',')
 		}
 		buf.Write(core.StringToBytes(tag)) // Use zero-allocation string to byte conversion
+	}
+	buf.WriteByte(']')
+	if f.EnableColors {
+		buf.Write(ResetColorBytes)
+	}
+}
+
+func (f *TextFormatter) formatTagsBytes(buf *bytes.Buffer, tags [][]byte) {
+	if f.EnableColors {
+		buf.Write(tagsColorBytes)
+	}
+	buf.WriteByte('[')
+	for i, tag := range tags {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+		buf.Write(tag) // tag is already a byte slice
 	}
 	buf.WriteByte(']')
 	if f.EnableColors {

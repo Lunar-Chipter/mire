@@ -493,7 +493,7 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
     }
 
 	entry.Level = level
-	entry.LevelName = level.String()
+	entry.LevelName = level.ToBytes()
 	entry.Message = message
 	entry.PID = l.pid
 
@@ -517,11 +517,11 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
         contextData := util.ExtractFromContext(ctx)
         for k, v := range contextData {
             switch k {
-            case "trace_id": entry.TraceID = v
-            case "span_id": entry.SpanID = v
-            case "user_id": entry.UserID = v
-            case "session_id": entry.SessionID = v
-            case "request_id": entry.RequestID = v
+            case "trace_id": entry.TraceID = core.StringToBytes(v)
+            case "span_id": entry.SpanID = core.StringToBytes(v)
+            case "user_id": entry.UserID = core.StringToBytes(v)
+            case "session_id": entry.SessionID = core.StringToBytes(v)
+            case "request_id": entry.RequestID = core.StringToBytes(v)
             }
         }
         util.PutMapStringToPool(contextData)
