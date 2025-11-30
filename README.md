@@ -46,7 +46,7 @@
 
 ## ✨ Features
 
-- **Optimized Performance**: Optimized for +1M logs/second with zero-allocation design
+- **Optimized Performance**: Optimized for 61,350k++logs/second with zero-allocation design
 - **Zero-Allocation**: Internal redesign with []byte fields eliminating string conversion overhead
 - **Context-Aware**: Automatic extraction of trace IDs, user IDs, and request IDs from context
 - **Multiple Formatters**: Text, JSON, and CSV formatters with custom options
