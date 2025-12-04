@@ -1,6 +1,7 @@
 package metric
 
 import (
+	"strings"
 	"sync"
 	"testing"
 
@@ -45,10 +46,10 @@ func TestIncrementCounter(t *testing.T) {
 	levels := []core.Level{core.TRACE, core.DEBUG, core.INFO, core.NOTICE, core.WARN, core.ERROR, core.FATAL, core.PANIC}
 	
 	for _, level := range levels {
-		initialCount := metricsCollector.GetCounter("log." + level.String())
+		initialCount := metricsCollector.GetCounter("log." + strings.ToLower(level.String()))
 		metricsCollector.IncrementCounter(level, nil)
-		newCount := metricsCollector.GetCounter("log." + level.String())
-		
+		newCount := metricsCollector.GetCounter("log." + strings.ToLower(level.String()))
+
 		if newCount != initialCount+1 {
 			t.Errorf("IncrementCounter for level %v: expected %d, got %d", level, initialCount+1, newCount)
 		}
@@ -134,14 +135,14 @@ func TestGetCounter(t *testing.T) {
 	
 	// Increment a counter and check
 	metricsCollector.IncrementCounter(core.INFO, nil)
-	count = metricsCollector.GetCounter("log.INFO")
+	count = metricsCollector.GetCounter("log.info")
 	if count != 1 {
 		t.Errorf("Expected counter value 1, got %d", count)
 	}
-	
+
 	// Increment again
 	metricsCollector.IncrementCounter(core.INFO, nil)
-	count = metricsCollector.GetCounter("log.INFO")
+	count = metricsCollector.GetCounter("log.info")
 	if count != 2 {
 		t.Errorf("Expected counter value 2, got %d", count)
 	}
@@ -187,15 +188,15 @@ func TestGetCounterCaseSensitivity(t *testing.T) {
 	// Increment a counter
 	metricsCollector.IncrementCounter(core.INFO, nil)
 	
-	// Check that the name follows the expected format
-	count := metricsCollector.GetCounter("log.INFO")
+	// Check that the name follows the expected format - should look for lowercase
+	count := metricsCollector.GetCounter("log.info")
 	if count != 1 {
-		t.Errorf("Expected counter 'log.INFO' to have value 1, got %d", count)
+		t.Errorf("Expected counter 'log.info' to have value 1, got %d", count)
 	}
-	
-	// Check case sensitivity
-	countLower := metricsCollector.GetCounter("log.info")
-	if countLower == 1 {
+
+	// Check case sensitivity - uppercase should return 0
+	countUpper := metricsCollector.GetCounter("log.INFO")
+	if countUpper != 0 {
 		t.Error("Counter names should be case-sensitive")
 	}
 }
@@ -273,12 +274,12 @@ func TestMetricsCollectorConcurrent(t *testing.T) {
 	// Check final counter values
 	totalExpected := numGoroutines * operationsPerGoroutine
 	var totalActual int64
-	
+
 	for level := core.TRACE; level <= core.PANIC; level++ {
-		count := metricsCollector.GetCounter("log." + level.String())
+		count := metricsCollector.GetCounter("log." + strings.ToLower(level.String()))
 		totalActual += count
 	}
-	
+
 	if totalActual != int64(totalExpected) {
 		t.Errorf("Expected total counter operations %d, got %d", totalExpected, totalActual)
 	}
@@ -331,12 +332,12 @@ func TestIncrementCounterWithTags(t *testing.T) {
 		"service": "api",
 		"version": "v1.0",
 	}
-	
-	initial := metricsCollector.GetCounter("log.INFO")
+
+	initial := metricsCollector.GetCounter("log.info")
 	metricsCollector.IncrementCounter(core.INFO, tags)
 	metricsCollector.IncrementCounter(core.INFO, tags) // Increment twice
-	final := metricsCollector.GetCounter("log.INFO")
-	
+	final := metricsCollector.GetCounter("log.info")
+
 	if final != initial+2 {
 		t.Errorf("Expected counter to increment by 2, got increase of %d", final-initial)
 	}

@@ -287,7 +287,7 @@ func TestSamplingLoggerWithDifferentLevels(t *testing.T) {
 	// Log messages with different levels
 	levels := []core.Level{core.TRACE, core.DEBUG, core.INFO, core.WARN, core.ERROR, core.FATAL, core.PANIC}
 	
-	for i, level := range levels {
+	for _, level := range levels {
 		sampler.Log(ctx, level, []byte("level test"), map[string]interface{}{"level": level.String()})
 	}
 	

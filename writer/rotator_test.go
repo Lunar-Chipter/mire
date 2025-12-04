@@ -245,7 +245,7 @@ func TestRotatingFileWriterWithSpecialCharacters(t *testing.T) {
 	defer rotatingWriter.Close()
 	
 	// Write data with special characters
-	specialData := []byte("Log with special chars: \n \t \r \" \' & < > 日本語 Ελληνικά\n")
+	specialData := []byte("Log with special chars: \n \t \r \" ' & < > 日本語 Ελληνικά\n")
 	
 	n, err := rotatingWriter.Write(specialData)
 	if err != nil {

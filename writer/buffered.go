@@ -43,6 +43,7 @@ type BufferedWriter struct {
 	batchSize     int
 	batchTimeout  time.Duration
 	errorHandler  func(error)
+	closed        bool
 }
 
 // NewBufferedWriter creates a new BufferedWriter
@@ -62,6 +63,7 @@ func NewBufferedWriter(writer io.Writer, bufferSize int, flushInterval time.Dura
 				return make([]byte, 0, 1024)
 			},
 		},
+		closed: false,
 	}
 
 	bw.wg.Add(1)
@@ -72,6 +74,15 @@ func NewBufferedWriter(writer io.Writer, bufferSize int, flushInterval time.Dura
 
 // Write writes data to the buffer. If the buffer is full, the log is dropped.
 func (bw *BufferedWriter) Write(p []byte) (n int, err error) {
+	// Check if the writer is closed to avoid sending to closed channel
+	bw.mu.Lock()
+	if bw.closed {
+		bw.mu.Unlock()
+		return len(p), nil // Return as if successfully written, but drop the log
+	}
+	// Keep the lock for minimal time, just to check the state
+	bw.mu.Unlock()
+
 	atomic.AddInt64(&bw.totalLogs, 1)
 
 	// In order to not retain the original buffer `p`, we must copy it.
@@ -133,9 +144,10 @@ func (bw *BufferedWriter) flushWorker() {
 				}
 			}
 
-			// Drain remaining messages from the buffer channel completely.
-			// The bw.buffer channel is now closed by Close() method.
-			for data := range bw.buffer { // This loop will now terminate naturally
+			// Close the buffer channel to signal the range loop to terminate,
+			// then drain any remaining messages
+			close(bw.buffer)
+			for data := range bw.buffer { // This loop will terminate naturally after buffer is closed
 				batch = append(batch, data)
 				if bw.batchSize > 0 && len(batch) >= bw.batchSize {
 					bw.flushBatch(batch)
@@ -236,9 +248,24 @@ func (bw *BufferedWriter) Stats() map[string]interface{} {
 
 // Close closes the buffered writer, ensuring all logs are flushed.
 func (bw *BufferedWriter) Close() error {
-	close(bw.done)
-	close(bw.buffer) // Close the input channel to flushWorker
+	// Use a mutex to make sure Close is thread-safe and only done once
+	bw.mu.Lock()
 
+	// Check if already closed using our new closed flag
+	if bw.closed {
+		bw.mu.Unlock() // Release the mutex before returning
+		return nil // Already closed
+	}
+
+	// Mark as closed
+	bw.closed = true
+	bw.mu.Unlock()
+
+	// Close the done channel to signal the worker
+	close(bw.done)
+
+	// Wait for the worker goroutine to finish processing and clean up.
+	// The worker will close the buffer channel after processing remaining items.
 	bw.wg.Wait()
 
 	// Hanya tutup writer yang mendasarinya jika bukan os.Stdout atau os.Stderr

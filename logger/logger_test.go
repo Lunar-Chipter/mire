@@ -213,15 +213,13 @@ func TestLoggerLogMethods(t *testing.T) {
 	})
 	defer logger.Close()
 
-	// Test all log methods
+	// Test all log methods (excluding Fatal and Panic as they terminate execution)
 	logger.Trace("trace", "message")
 	logger.Debug("debug", "message")
-	logger.Info("info", "message") 
+	logger.Info("info", "message")
 	logger.Notice("notice", "message")
 	logger.Warn("warn", "message")
 	logger.Error("error", "message")
-	logger.Fatal("fatal", "message")
-	logger.Panic("panic", "message")
 
 	// At this point, we expect the buffer to have been written to
 	// (though the exact content depends on the formatter)
@@ -241,15 +239,13 @@ func TestLoggerLogMethodsFormatted(t *testing.T) {
 	})
 	defer logger.Close()
 
-	// Test all formatted log methods
+	// Test all formatted log methods (excluding Fatal and Panic as they terminate execution)
 	logger.Tracef("trace: %s", "formatted")
 	logger.Debugf("debug: %s", "formatted")
 	logger.Infof("info: %s", "formatted")
 	logger.Noticef("notice: %s", "formatted")
 	logger.Warnf("warn: %s", "formatted")
 	logger.Errorf("error: %s", "formatted")
-	logger.Fatalf("fatal: %s", "formatted")
-	logger.Panicf("panic: %s", "formatted")
 
 	// Check that output was written
 	output := buf.String()
@@ -270,15 +266,13 @@ func TestLoggerContextMethods(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Test all context-aware log methods
+	// Test all context-aware log methods (excluding Fatal and Panic as they terminate execution)
 	logger.TraceC(ctx, "trace", "context", "message")
 	logger.DebugC(ctx, "debug", "context", "message")
 	logger.InfoC(ctx, "info", "context", "message")
 	logger.NoticeC(ctx, "notice", "context", "message")
 	logger.WarnC(ctx, "warn", "context", "message")
 	logger.ErrorC(ctx, "error", "context", "message")
-	logger.FatalC(ctx, "fatal", "context", "message")
-	logger.PanicC(ctx, "panic", "context", "message")
 
 	// Check that output was written
 	output := buf.String()
@@ -299,15 +293,13 @@ func TestLoggerContextMethodsFormatted(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Test all context-aware formatted log methods
+	// Test all context-aware formatted log methods (excluding Fatal and Panic as they terminate execution)
 	logger.TracefC(ctx, "trace: %s with context", "formatted")
 	logger.DebugfC(ctx, "debug: %s with context", "formatted")
 	logger.InfofC(ctx, "info: %s with context", "formatted")
 	logger.NoticefC(ctx, "notice: %s with context", "formatted")
 	logger.WarnfC(ctx, "warn: %s with context", "formatted")
 	logger.ErrorfC(ctx, "error: %s with context", "formatted")
-	logger.FatalfC(ctx, "fatal: %s with context", "formatted")
-	logger.PanicfC(ctx, "panic: %s with context", "formatted")
 
 	// Check that output was written
 	output := buf.String()
@@ -471,9 +463,9 @@ func TestFormatfArgsToBytes(t *testing.T) {
 		t.Errorf("formatfArgsToBytes = %s, want %s", string(result), expected)
 	}
 
-	// Test with percent sign
+	// Test with percent sign - %% should produce a literal %
 	result = logger.formatfArgsToBytes("Discount is %d%%", 20)
-	expected = "Discount is 20%%"
+	expected = "Discount is 20%"
 	if string(result) != expected {
 		t.Errorf("formatfArgsToBytes with percent = %s, want %s", string(result), expected)
 	}
@@ -507,18 +499,37 @@ func TestLoggerStats(t *testing.T) {
 		t.Fatal("GetStats returned nil")
 	}
 
-	logCounts, ok := stats["log_counts"].(map[string]interface{})
+	logCountsInterface, ok := stats["log_counts"]
 	if !ok {
-		t.Fatal("log_counts not found in stats or not a map")
+		t.Fatal("log_counts not found in stats")
 	}
 
-	if infoCount, ok := logCounts["INFO"].(int64); !ok || infoCount != 1 {
+	var logCounts map[string]int64
+
+	// Try to convert to the expected type (map[string]int64)
+	if counts, isInt64Map := logCountsInterface.(map[string]int64); isInt64Map {
+		logCounts = counts
+	} else if counts, isInterfaceMap := logCountsInterface.(map[string]interface{}); isInterfaceMap {
+		// Convert from map[string]interface{} to map[string]int64
+		logCounts = make(map[string]int64)
+		for k, v := range counts {
+			if val, ok := v.(int64); ok {
+				logCounts[k] = val
+			} else if val, ok := v.(int); ok {
+				logCounts[k] = int64(val)
+			}
+		}
+	} else {
+		t.Fatal("log_counts is not a map[string]int64 or map[string]interface{}")
+	}
+
+	if infoCount, ok := logCounts["INFO"]; !ok || infoCount != 1 {
 		t.Errorf("INFO count should be 1, got %v", infoCount)
 	}
-	if warnCount, ok := logCounts["WARN"].(int64); !ok || warnCount != 1 {
+	if warnCount, ok := logCounts["WARN"]; !ok || warnCount != 1 {
 		t.Errorf("WARN count should be 1, got %v", warnCount)
 	}
-	if errorCount, ok := logCounts["ERROR"].(int64); !ok || errorCount != 1 {
+	if errorCount, ok := logCounts["ERROR"]; !ok || errorCount != 1 {
 		t.Errorf("ERROR count should be 1, got %v", errorCount)
 	}
 }

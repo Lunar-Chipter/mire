@@ -105,6 +105,11 @@ func (al *AsyncLogger) worker() {
 
 // Log queues a log job for asynchronous processing
 func (al *AsyncLogger) Log(level core.Level, msg []byte, fields map[string]interface{}, ctx context.Context) {
+	// Don't try to log if the logger is closed
+	if al.closed.Load() {
+		return
+	}
+
 	msgCopy := make([]byte, len(msg))
 	copy(msgCopy, msg)
 

@@ -3,9 +3,7 @@ package hook
 import (
 	"bytes"
 	"errors"
-	"io"
 	"os"
-	"sync"
 	"testing"
 
 	"github.com/Lunar-Chipter/mire/core"
@@ -258,16 +256,6 @@ func (w *failingTestWriter) Write(p []byte) (n int, err error) {
 
 // TestHookInterfaceImplementation tests that SimpleFileHook implements the Hook interface
 func TestHookInterfaceImplementation(t *testing.T) {
-	var h Hook
-	h = &SimpleFileHook{}
-	
-	// Create a log entry for testing
-	entry := core.GetEntryFromPool()
-	defer core.PutEntryToPool(entry)
-	entry.Level = core.ERROR
-	entry.Message = []byte("test")
-	entry.Timestamp = core.GetEntryFromPool().Timestamp
-	
 	// Create a temporary file for the test
 	tempFile := "test_interface_hook.log"
 	hook, err := NewFileHook(tempFile)
@@ -278,13 +266,24 @@ func TestHookInterfaceImplementation(t *testing.T) {
 		hook.Close()
 		os.Remove(tempFile)
 	}()
-	
+
+	// Assign to interface variable for interface testing
+	var h Hook
+	h = hook
+
+	// Create a log entry for testing
+	entry := core.GetEntryFromPool()
+	defer core.PutEntryToPool(entry)
+	entry.Level = core.ERROR
+	entry.Message = []byte("test")
+	entry.Timestamp = core.GetEntryFromPool().Timestamp
+
 	// Verify that the Fire method works through the interface
 	err = h.Fire(entry)
 	if err != nil {
 		t.Errorf("Hook.Fire returned error: %v", err)
 	}
-	
+
 	// Verify that the Close method works through the interface
 	err = h.Close()
 	if err != nil {

@@ -155,10 +155,14 @@ func TestAsyncLoggerMultipleLogs(t *testing.T) {
 // TestAsyncLoggerBufferFull tests behavior when the log channel is full
 func TestAsyncLoggerBufferFull(t *testing.T) {
 	// Create a mock processor with error handling
-	errChan := make(chan error, 1)
+	errChan := make(chan error, 10) // Increased capacity to handle multiple errors
 	processor := &mockLogProcessor{
 		errorHandler: func(err error) {
-			errChan <- err
+			select {
+			case errChan <- err:
+			default:
+				// Don't block if error channel is full
+			}
 		},
 		errOut: nil, // We'll use custom error handling
 		errOutMu: &sync.Mutex{},

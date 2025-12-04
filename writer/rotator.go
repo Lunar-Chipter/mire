@@ -2,6 +2,8 @@ package writer
 
 import (
 	"os"
+	"sync"
+
 	"github.com/Lunar-Chipter/mire/config" // Updated import
 )
 
@@ -9,7 +11,9 @@ import (
 // The implementation details for rotation (e.g., based on size, time) would go here.
 // This is a placeholder as the original file did not contain its implementation.
 type RotatingFileWriter struct {
-	file *os.File
+	file   *os.File
+	closed bool
+	mu     sync.Mutex
 	// Add other fields needed for rotation logic, e.g:
 	// filename string
 	// maxSize int64
@@ -25,7 +29,10 @@ func NewRotatingFileWriter(filename string, conf *config.RotationConfig) (*Rotat
 	if err != nil {
 		return nil, err
 	}
-	return &RotatingFileWriter{file: f}, nil
+	return &RotatingFileWriter{
+		file:   f,
+		closed: false,
+	}, nil
 }
 
 // Write writes data to the file, handling rotation if necessary.
@@ -44,7 +51,16 @@ func (w *RotatingFileWriter) Write(p []byte) (n int, err error) {
 
 // Close closes the underlying file.
 func (w *RotatingFileWriter) Close() error {
-	return w.file.Close()
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	if w.closed {
+		return nil // Already closed
+	}
+
+	err := w.file.Close()
+	w.closed = true
+	return err
 }
 
 // rotate would handle the process of renaming the current log file

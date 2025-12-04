@@ -131,7 +131,12 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 	switch field {
 	case "timestamp":
 		timestamp := util.GetBufferFromPool()
-		util.FormatTimestamp(timestamp, entry.Timestamp, f.TimestampFormat)
+		// Use default format if none is specified
+		format := f.TimestampFormat
+		if format == "" {
+			format = "2006-01-02 15:04:05.000" // Default timestamp format
+		}
+		util.FormatTimestamp(timestamp, entry.Timestamp, format)
 		f.writeCSVValueBytes(buf, timestamp.Bytes())
 		util.PutBufferToPool(timestamp)
 	case "level":

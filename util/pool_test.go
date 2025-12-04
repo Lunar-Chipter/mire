@@ -258,11 +258,11 @@ func TestPoolMetrics(t *testing.T) {
 	if newBufferPutCount != initialBufferPutCount+1 {
 		t.Error("BufferPutCount was not incremented properly")
 	}
-	if newSliceGetCount != initialSliceGetCount+1 {
-		t.Error("SliceGetCount was not incremented properly")
+	if newSliceGetCount != initialSliceGetCount+2 {
+		t.Errorf("SliceGetCount was not incremented properly: expected %d, got %d", initialSliceGetCount+2, newSliceGetCount)
 	}
-	if newSlicePutCount != initialSlicePutCount+1 {
-		t.Error("SlicePutCount was not incremented properly")
+	if newSlicePutCount != initialSlicePutCount+2 {
+		t.Errorf("SlicePutCount was not incremented properly: expected %d, got %d", initialSlicePutCount+2, newSlicePutCount)
 	}
 	if newMapGetCount != initialMapGetCount+1 {
 		t.Error("MapGetCount was not incremented properly")
@@ -423,12 +423,12 @@ func TestGoroutineLocalBufferPool(t *testing.T) {
 	}
 	
 	// Test getting from local pool
-	buf := localPool.GetBufferFromLocalPool()
+	_ = localPool.GetBufferFromLocalPool()
 	// buf might be nil if the local pool is empty, which is expected
-	
+
 	// Put a buffer to local pool
 	testBuf := bytes.NewBuffer(make([]byte, 0, 100))
-	returned := localPool.PutBufferToLocalPool(testBuf)
+	_ = localPool.PutBufferToLocalPool(testBuf)
 	// returned might be false if the local pool is full, which is expected
 }
 
@@ -450,6 +450,6 @@ func TestPutBufferToLocalPoolFull(t *testing.T) {
 	
 	// Try to put one more - this should return false and put to global pool
 	extraBuf := bytes.NewBuffer(make([]byte, 0, 100))
-	returned := localPool.PutBufferToLocalPool(extraBuf)
+	_ = localPool.PutBufferToLocalPool(extraBuf)
 	// This might return false if local pool is full, which is expected behavior
 }

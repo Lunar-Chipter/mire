@@ -104,7 +104,13 @@ func (c *Clock) Now() time.Time {
 // Stop stops the clock's background goroutine.
 func (c *Clock) Stop() {
 	if c.interval > 0 {
-		close(c.stop)
+		// Use a select statement to avoid panic if channel is already closed
+		select {
+		case <-c.stop:
+			// Channel is already closed, nothing to do
+		default:
+			close(c.stop)
+		}
 		c.wg.Wait()
 	}
 }

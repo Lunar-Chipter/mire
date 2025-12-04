@@ -110,16 +110,31 @@ func (b *LogBuffer) WriteBytes(data []byte) error {
 	if b.available() < len(data) {
 		return ErrBufferFull
 	}
-	b.buf = append(b.buf, data...)
-	// BUKAN: fmt.Fprintf(buffer, "%s", data) // Yang menyebabkan allocation
+	// Ensure the underlying slice is long enough to handle the copy
+	// Extend the slice to accommodate all data if necessary
+	if len(b.buf) < b.len+len(data) {
+		// Extend the slice length to the required size (but within capacity)
+		newLen := b.len + len(data)
+		b.buf = b.buf[:newLen]
+	}
+	// Copy data to the current logical end of the buffer
+	copy(b.buf[b.len:], data)
+	// Update the logical length
+	b.len += len(data)
+	// BUKAN: fmt.Fprintf(buffer, "%s", data) // Yang menyababkan allocation
 	return nil
 }
 
 // WriteByte writes a single byte to the buffer with O(1) performance
 // Semua operasi O(1), tidak ada yang O(n)
 func (b *LogBuffer) WriteByte(c byte) error {
-	if b.len >= len(b.buf) {
+	if b.available() < 1 {
 		return ErrBufferFull
+	}
+	// Ensure the underlying slice is long enough to add the byte
+	if len(b.buf) <= b.len {
+		// Extend the slice to include this position
+		b.buf = b.buf[:b.len+1]
 	}
 	b.buf[b.len] = c
 	b.len++
@@ -128,7 +143,7 @@ func (b *LogBuffer) WriteByte(c byte) error {
 
 // available returns the available space in the buffer
 func (b *LogBuffer) available() int {
-	return len(b.buf) - b.len
+	return cap(b.buf) - b.len
 }
 
 // Bytes returns the buffer content
