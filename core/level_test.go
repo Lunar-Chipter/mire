@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestLevel_String(t *testing.T) {
+func TestLevelString(t *testing.T) {
 	tests := []struct {
 		level    Level
 		expected string
@@ -17,19 +17,20 @@ func TestLevel_String(t *testing.T) {
 		{ERROR, "ERROR"},
 		{FATAL, "FATAL"},
 		{PANIC, "PANIC"},
-		{(Level(99)), "UNKNOWN"}, // Test out-of-range level
+		{-1, "UNKNOWN"},
+		{8, "UNKNOWN"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {
 			if got := tt.level.String(); got != tt.expected {
-				t.Errorf("Level.String() for %v = %v, want %v", tt.level, got, tt.expected)
+				t.Errorf("Level.String() = %v, want %v", got, tt.expected)
 			}
 		})
 	}
 }
 
-func TestLevel_Bytes(t *testing.T) {
+func TestLevelBytes(t *testing.T) {
 	tests := []struct {
 		level    Level
 		expected []byte
@@ -42,13 +43,52 @@ func TestLevel_Bytes(t *testing.T) {
 		{ERROR, []byte("ERROR")},
 		{FATAL, []byte("FATAL")},
 		{PANIC, []byte("PANIC")},
-		{(Level(99)), []byte("UNKNOWN")}, // Test out-of-range level
+		{-1, []byte("UNKNOWN")},
+		{8, []byte("UNKNOWN")},
 	}
 
 	for _, tt := range tests {
 		t.Run(string(tt.expected), func(t *testing.T) {
-			if got := tt.level.Bytes(); string(got) != string(tt.expected) {
-				t.Errorf("Level.Bytes() for %v = %v, want %v", tt.level, string(got), string(tt.expected))
+			got := tt.level.Bytes()
+			if len(got) != len(tt.expected) {
+				t.Errorf("Level.Bytes() length = %v, want %v", len(got), len(tt.expected))
+			}
+			for i := range got {
+				if got[i] != tt.expected[i] {
+					t.Errorf("Level.Bytes()[%d] = %v, want %v", i, got[i], tt.expected[i])
+				}
+			}
+		})
+	}
+}
+
+func TestLevelToBytes(t *testing.T) {
+	tests := []struct {
+		level    Level
+		expected []byte
+	}{
+		{TRACE, []byte("TRACE")},
+		{DEBUG, []byte("DEBUG")},
+		{INFO, []byte("INFO")},
+		{NOTICE, []byte("NOTICE")},
+		{WARN, []byte("WARN")},
+		{ERROR, []byte("ERROR")},
+		{FATAL, []byte("FATAL")},
+		{PANIC, []byte("PANIC")},
+		{-1, []byte("UNKNOWN")},
+		{8, []byte("UNKNOWN")},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.expected), func(t *testing.T) {
+			got := tt.level.ToBytes()
+			if len(got) != len(tt.expected) {
+				t.Errorf("Level.ToBytes() length = %v, want %v", len(got), len(tt.expected))
+			}
+			for i := range got {
+				if got[i] != tt.expected[i] {
+					t.Errorf("Level.ToBytes()[%d] = %v, want %v", i, got[i], tt.expected[i])
+				}
 			}
 		})
 	}
@@ -56,33 +96,37 @@ func TestLevel_Bytes(t *testing.T) {
 
 func TestParseLevel(t *testing.T) {
 	tests := []struct {
-		name        string
-		input       string
-		expected    Level
-		expectError bool
+		input    string
+		expected Level
+		hasError bool
 	}{
-		{"Valid TRACE", "TRACE", TRACE, false},
-		{"Valid DEBUG lower", "debug", DEBUG, false},
-		{"Valid INFO mixed", "Info", INFO, false},
-		{"Valid NOTICE", "NOTICE", NOTICE, false},
-		{"Valid WARN", "WARN", WARN, false},
-		{"Valid ERROR", "ERROR", ERROR, false},
-		{"Valid FATAL", "FATAL", FATAL, false},
-		{"Valid PANIC", "PANIC", PANIC, false},
-		{"Special WARNING", "WARNING", WARN, false},
-		{"Invalid Level", "UNKNOWN", INFO, true}, // Should return INFO and an error
-		{"Empty String", "", INFO, true},         // Should return INFO and an error
+		{"trace", TRACE, false},
+		{"DEBUG", DEBUG, false},
+		{"info", INFO, false},
+		{"Notice", NOTICE, false},
+		{"warn", WARN, false},
+		{"WARNING", WARN, false},
+		{"error", ERROR, false},
+		{"fatal", FATAL, false},
+		{"panic", PANIC, false},
+		{"invalid", INFO, true}, // Should return INFO as default with error
+		{"", INFO, true},        // Should return INFO as default with error
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.input, func(t *testing.T) {
 			got, err := ParseLevel(tt.input)
-			if (err != nil) != tt.expectError {
-				t.Errorf("ParseLevel() error status = %v, expectError %v", err != nil, tt.expectError)
-				return
-			}
-			if got != tt.expected {
-				t.Errorf("ParseLevel() = %v, want %v for input %q", got, tt.expected, tt.input)
+			if tt.hasError {
+				if err == nil {
+					t.Errorf("ParseLevel(%q) expected error, got nil", tt.input)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("ParseLevel(%q) expected no error, got %v", tt.input, err)
+				}
+				if got != tt.expected {
+					t.Errorf("ParseLevel(%q) = %v, want %v", tt.input, got, tt.expected)
+				}
 			}
 		})
 	}
