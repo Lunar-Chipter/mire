@@ -17,7 +17,7 @@
   <a href="#-contributing">Contributing</a>
 </p>
 
-![Go Version](https://img.shields.io/badge/Go-1.25.4-blue.svg)
+![Go Version](https://img.shields.io/badge/Go-1.21-blue.svg)
 ![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Go-informational.svg)
 ![Performance](https://img.shields.io/badge/Performance-1M%2B%20logs%2Fsec-brightgreen.svg)
@@ -74,7 +74,7 @@
 
 ### Prerequisites
 
-- Go 1.25 or later
+- Go 1.21 or later
 - Git (for dependency management)
 
 ### Getting Started
@@ -105,7 +105,7 @@ go get github.com/Lunar-Chipter/mire@abc1234
 
 ### Minimum Version Requirement
 
-Mire requires Go 1.25 or higher for optimal performance. Using older versions may result in reduced performance or compilation errors.
+Mire requires Go 1.21 or higher for optimal performance. Using older versions may result in reduced performance or compilation errors.
 
 ## ⚡ Quick Start
 
@@ -244,69 +244,6 @@ config := logger.LoggerConfig{
 }
 ```
 
-### Text Formatter Options
-
-```go
-textFormatter := &formatter.TextFormatter{
-    EnableColors:        true,                  // Enable ANSI colors
-    ShowTimestamp:       true,                  // Show timestamp
-    ShowCaller:          true,                  // Show caller info
-    ShowGoroutine:       false,                 // Show goroutine ID
-    ShowPID:             false,                 // Show process ID
-    ShowTraceInfo:       true,                  // Show trace info
-    ShowHostname:        false,                 // Show hostname
-    ShowApplication:     false,                 // Show application name
-    FullTimestamp:       false,                 // Show full timestamp
-    TimestampFormat:     logger.DEFAULT_TIMESTAMP_FORMAT, // Timestamp format
-    IndentFields:        false,                 // Indent fields
-    MaxFieldWidth:       100,                   // Maximum field width
-    EnableStackTrace:    true,                  // Enable stack trace
-    StackTraceDepth:     32,                    // Stack trace depth
-    EnableDuration:      false,                 // Show duration
-    CustomFieldOrder:    []string{},            // Custom field order
-    EnableColorsByLevel: true,                  // Color by log level
-    FieldTransformers:   map[string]func(interface{}) string{}, // Field transformers
-    SensitiveFields:     []string{"password", "token"}, // Sensitive fields
-    MaskSensitiveData:   true,                  // Mask sensitive data
-    MaskStringValue:     "[MASKED]",            // Mask string value
-}
-```
-
-### CSV Formatter Options
-
-```go
-csvFormatter := &formatter.CSVFormatter{
-    IncludeHeader:         true,                           // Include header row in output
-    FieldOrder:            []string{"timestamp", "level", "message"}, // Order of fields in CSV
-    TimestampFormat:       "2006-01-02T15:04:05",          // Custom timestamp format
-    SensitiveFields:       []string{"password", "token"},  // List of sensitive field names to mask
-    MaskSensitiveData:     true,                           // Whether to mask sensitive data
-    MaskStringValue:       "[MASKED]",                     // String value to use for masking
-    FieldTransformers:     map[string]func(interface{}) string{}, // Functions to transform field values
-}
-```
-
-### JSON Formatter Options
-
-```go
-jsonFormatter := &formatter.JSONFormatter{
-    PrettyPrint:         false,                 // Pretty print output
-    TimestampFormat:     "2006-01-02T15:04:05.000Z07:00", // Timestamp format
-    ShowCaller:          true,                  // Show caller info
-    ShowGoroutine:       false,                 // Show goroutine ID
-    ShowPID:             false,                 // Show process ID
-    ShowTraceInfo:       true,                  // Show trace info
-    EnableStackTrace:    true,                  // Enable stack trace
-    EnableDuration:      false,                 // Show duration
-    FieldKeyMap:         map[string]string{},   // Field name remapping
-    DisableHTMLEscape:   false,                 // Disable HTML escaping
-    SensitiveFields:     []string{"password", "token"}, // Sensitive fields
-    MaskSensitiveData:   true,                  // Mask sensitive data
-    MaskStringValue:     "[MASKED]",            // Mask string value
-    FieldTransformers:   map[string]func(interface{}) interface{}{}, // Transform functions
-}
-```
-
 ## 🏗️ Architecture
 
 Mire follows a modular, high-performance architecture designed for zero-allocation logging at scale.
@@ -419,588 +356,62 @@ The Mire logging library is optimized for high-load applications requiring minim
 
 ## 📚 Examples
 
-### Comprehensive Zero-Allocation Example
+For complete examples of how to use Mire, check out the `example` directory:
 
-```go
-package main
-
-import (
-    "context"
-    "os"
-    "time"
-
-    "github.com/Lunar-Chipter/mire/core"
-    "github.com/Lunar-Chipter/mire/formatter"
-    "github.com/Lunar-Chipter/mire/logger"
-    "github.com/Lunar-Chipter/mire/util"
-)
-
-func main() {
-    // Create a high-performance logger optimized for zero-allocation
-    log := logger.New(logger.LoggerConfig{
-        Level:   core.INFO,
-        Output:  os.Stdout,
-        Formatter: &formatter.TextFormatter{
-            EnableColors:    true,
-            ShowTimestamp:   true,
-            ShowCaller:      true,
-            ShowTraceInfo:   true,
-        },
-        AsyncLogging:        true,
-        AsyncWorkerCount:    4,
-        AsyncLogChannelBufferSize: 2000,
-    })
-    defer log.Close()
-
-    // Context with trace information
-    ctx := context.Background()
-    ctx = util.WithTraceID(ctx, "trace-12345")
-    ctx = util.WithUserID(ctx, "user-67890")
-
-    // Zero-allocation logging using []byte internally
-    log.WithFields(map[string]interface{}{
-        "user_id": 12345,
-        "action":  "purchase",
-        "amount":  99.99,
-    }).Info("Transaction completed")
-
-    // Context-aware logging with distributed tracing
-    log.InfoC(ctx, "Processing request") // Includes trace_id and user_id automatically
-}
-```
-
-### CSV Formatter Usage
-
-```go
-package main
-
-import (
-    "os"
-    "github.com/Lunar-Chipter/mire/core"
-    "github.com/Lunar-Chipter/mire/formatter"
-    "github.com/Lunar-Chipter/mire/logger"
-)
-
-func main() {
-    // Create a CSV logger to write to a file
-    file, err := os.Create("app.csv")
-    if err != nil {
-        panic(err)
-    }
-    defer file.Close()
-
-    csvLogger := logger.New(logger.LoggerConfig{
-        Level:   core.INFO,
-        Output:  file,
-        Formatter: &formatter.CSVFormatter{
-            IncludeHeader:   true,                    // Include CSV header row
-            FieldOrder:      []string{"timestamp", "level", "message", "user_id", "action"}, // Custom field order
-            TimestampFormat: "2006-01-02T15:04:05",   // Custom timestamp format
-            SensitiveFields: []string{"password", "token"}, // Fields to mask
-            MaskSensitiveData: true,                  // Enable masking
-            MaskStringValue: "[MASKED]",             // Mask value
-        },
-    })
-    defer csvLogger.Close()
-
-    csvLogger.WithFields(map[string]interface{}{
-        "user_id": 123,
-        "action":  "login",
-        "status":  "success",
-    }).Info("User login event")
-
-    csvLogger.WithFields(map[string]interface{}{
-        "user_id": 456,
-        "action":  "purchase",
-        "amount":  99.99,
-    }).Info("Purchase completed")
-}
-```
-
-### Asynchronous Logging
-
-```go
-asyncLogger := logger.New(logger.LoggerConfig{
-    Level:                core.INFO,
-    Output:              os.Stdout,
-    AsyncLogging:        true,
-    AsyncWorkerCount:    4,
-    AsyncLogChannelBufferSize: 1000,
-    LogProcessTimeout:   time.Second,
-    Formatter: &formatter.TextFormatter{
-        EnableColors:    true,
-        ShowTimestamp:   true,
-        ShowCaller:      true,
-    },
-})
-defer asyncLogger.Close()
-
-// This will be processed asynchronously
-for i := 0; i < 1000; i++ {
-    asyncLogger.WithFields(map[string]interface{}{
-        "iteration": i,
-    }).Info("Async log message")
-}
-```
-
-### Context-Aware Logging with Distributed Tracing
-
-```go
-func myHandler(w http.ResponseWriter, r *http.Request) {
-    // Extract tracing information from request context
-    ctx := r.Context()
-    ctx = util.WithTraceID(ctx, generateTraceID())
-    ctx = util.WithRequestID(ctx, generateRequestID())
-
-    // Use context-aware logging methods
-    log.InfoC(ctx, "Processing HTTP request")
-
-    // Add user-specific context
-    ctx = util.WithUserID(ctx, getUserID(r))
-
-    log.WithFields(map[string]interface{}{
-        "path": r.URL.Path,
-        "method": r.Method,
-    }).InfofC(ctx, "Request details")
-}
-```
-
-### Custom Hook Integration
-
-```go
-// Implement a custom hook
-type CustomHook struct {
-    endpoint string
-}
-
-func (h *CustomHook) Fire(entry *core.LogEntry) error {
-    // Send log entry to external service
-    payload, err := json.Marshal(entry)
-    if err != nil {
-        return err
-    }
-
-    resp, err := http.Post(h.endpoint, "application/json", bytes.NewBuffer(payload))
-    if err != nil {
-        return err
-    }
-    defer resp.Body.Close()
-
-    return nil
-}
-
-func (h *CustomHook) Close() error {
-    // Cleanup resources
-    return nil
-}
-
-// Use the custom hook
-customHook := &CustomHook{endpoint: "https://logs.example.com/api"}
-log := logger.New(logger.LoggerConfig{
-    Level: core.INFO,
-    Output: os.Stdout,
-    Hooks: []hook.Hook{customHook},
-    Formatter: &formatter.TextFormatter{
-        EnableColors:  true,
-        ShowTimestamp: true,
-    },
-})
-```
-
-### Log Rotation Configuration
-
-```go
-rotationConfig := &config.RotationConfig{
-    MaxSize:    100, // 100MB
-    MaxAge:     30,  // 30 days
-    MaxBackups: 5,   // Keep 5 old files
-    Compress:   true, // Compress rotated files
-}
-
-logger := logger.New(logger.LoggerConfig{
-    Level:          core.INFO,
-    Output:         os.Stdout,
-    EnableRotation: true,
-    RotationConfig: rotationConfig,
-    Formatter: &formatter.JSONFormatter{
-        TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
-    },
-})
-```
-
-### Advanced Configuration by Environment
-
-```go
-func getLoggerForEnv(env string) *logger.Logger {
-    baseConfig := logger.LoggerConfig{
-        Formatter: &formatter.JSONFormatter{
-            ShowTimestamp: true,
-            ShowCaller:    true,
-        },
-        ShowHostname:    true,
-        ShowApplication: true,
-        Environment:     env,
-    }
-
-    switch env {
-    case "production":
-        baseConfig.Level = core.INFO
-        baseConfig.Output = os.Stdout
-        baseConfig.Formatter = &formatter.JSONFormatter{
-            PrettyPrint: false,
-            ShowTimestamp: true,
-        }
-    case "development":
-        baseConfig.Level = core.DEBUG
-        baseConfig.Formatter = &formatter.TextFormatter{
-            EnableColors:    true,
-            ShowTimestamp:   true,
-            ShowCaller:      true,
-        }
-    case "testing":
-        baseConfig.Level = core.WARN
-        baseConfig.Output = io.Discard
-    }
-
-    return logger.New(baseConfig)
-}
-```
-
-### Custom Field Transformers
-
-```go
-// Create a transformer to format sensitive data
-func createPasswordTransformer() func(interface{}) string {
-    return func(v interface{}) string {
-        if s, ok := v.(string); ok {
-            if len(s) > 3 {
-                return s[:3] + "***"
-            }
-            return "***"
-        }
-        return "[HIDDEN]"
-    }
-}
-
-// Use in configuration
-textFormatter := &formatter.TextFormatter{
-    FieldTransformers: map[string]func(interface{}) string{
-        "password": createPasswordTransformer(),
-        "token":    createPasswordTransformer(),
-    },
-    SensitiveFields:   []string{"password", "token"},
-    MaskSensitiveData: true,
-}
-```
-
-### Custom Context Extractor
-
-```go
-func customContextExtractor(ctx context.Context) map[string]string {
-    result := make(map[string]string)
-
-    if traceID, ok := ctx.Value("custom_trace_id").(string); ok {
-        result["trace_id"] = traceID
-    }
-
-    if user, ok := ctx.Value("user").(string); ok {
-        result["user"] = user
-    }
-
-    if reqID, ok := ctx.Value("request_id").(string); ok {
-        result["request_id"] = reqID
-    }
-
-    return result
-}
-
-logger := logger.New(logger.LoggerConfig{
-    ContextExtractor: customContextExtractor,
-    // ... other config
-})
-```
+- `example/example.go` - Basic usage patterns and best practices
+- `example/advanced_example.go` - Advanced features like custom formatters and hooks
 
 ## 🧪 Testing
 
-The library includes comprehensive tests and benchmarks:
+Mire includes comprehensive tests to ensure reliability and performance:
 
 ```bash
 # Run all tests
 go test ./...
 
-# Run with coverage
-go test -coverprofile=coverage.out ./...
-go tool cover -html=coverage.out
+# Run with verbose output
+go test -v ./...
 
-# Run benchmarks
-go test -bench=. ./benchmark_test.go
-
-# Run the example
-go run main.go
+# Run performance tests
+go test -run=".*Performance.*" -v ./logger
 ```
-
-### Benchmark Results
-
-| Operation | Time per op | Allocs per op | Bytes per op |
-|-----------|-------------|---------------|--------------|
-| TextFormatter (Direct) | 126ns/op | 0 allocs/op | 0 B/op |
-| JSONFormatter (Direct) | 2,636ns/op | 0 allocs/op | 0 B/op |
-| Logger.Info() | 15,362ns/op | 1 allocs/op | 32 B/op |
-| Logger.Info() with Fields | 27,644ns/op | 2 allocs/op | 64 B/op |
-| Logger.JSON File | 29,369ns/op | 1 allocs/op | 48 B/op |
 
 ## 🔧 Advanced Configuration
 
-### Environment-Based Configuration
-
-```go
-func getLoggerForEnv(env string) *logger.Logger {
-    baseConfig := logger.LoggerConfig{
-        Formatter: &formatter.JSONFormatter{
-            ShowTimestamp: true,
-            ShowCaller:    true,
-        },
-        ShowHostname:    true,
-        ShowApplication: true,
-        Environment:     env,
-    }
-
-    switch env {
-    case "production":
-        baseConfig.Level = core.INFO
-        baseConfig.Output = os.Stdout
-        baseConfig.Formatter = &formatter.JSONFormatter{
-            PrettyPrint: false,
-            ShowTimestamp: true,
-        }
-    case "development":
-        baseConfig.Level = core.DEBUG
-        baseConfig.Formatter = &formatter.TextFormatter{
-            EnableColors:    true,
-            ShowTimestamp:   true,
-            ShowCaller:      true,
-        }
-    case "testing":
-        baseConfig.Level = core.WARN
-        baseConfig.Output = io.Discard
-    }
-
-    return logger.New(baseConfig)
-}
-```
-
-### Custom Field Transformers
-
-```go
-// Create a transformer to format sensitive data
-func createPasswordTransformer() func(interface{}) string {
-    return func(v interface{}) string {
-        if s, ok := v.(string); ok {
-            if len(s) > 3 {
-                return s[:3] + "***"
-            }
-            return "***"
-        }
-        return "[HIDDEN]"
-    }
-}
-
-// Use in configuration
-textFormatter := &formatter.TextFormatter{
-    FieldTransformers: map[string]func(interface{}) string{
-        "password": createPasswordTransformer(),
-        "token":    createPasswordTransformer(),
-    },
-    SensitiveFields:   []string{"password", "token"},
-    MaskSensitiveData: true,
-}
-```
-
-### Custom Context Extractor
-
-```go
-func customContextExtractor(ctx context.Context) map[string]string {
-    result := make(map[string]string)
-
-    if traceID, ok := ctx.Value("custom_trace_id").(string); ok {
-        result["trace_id"] = traceID
-    }
-
-    if user, ok := ctx.Value("user").(string); ok {
-        result["user"] = user
-    }
-
-    if reqID, ok := ctx.Value("request_id").(string); ok {
-        result["request_id"] = reqID
-    }
-
-    return result
-}
-
-logger := logger.New(logger.LoggerConfig{
-    ContextExtractor: customContextExtractor,
-    // ... other config
-})
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how you can help:
-
-### Getting Started
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests if applicable
-5. Run the test suite (`go test ./...`)
-6. Run benchmarks (`go test -bench=. ./...`)
-7. Commit your changes (`git commit -m 'Add amazing feature'`)
-8. Push to the branch (`git push origin feature/amazing-feature`)
-9. Open a pull request
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/Lunar-Chipter/mire.git
-cd mire
-
-# Setup module
-go mod tidy
-
-# Run tests
-go test ./...
-
-# Run benchmarks
-go test -bench=. ./benchmark_test.go
-
-# Run the example
-go run main.go
-```
-
-### Guidelines
-
-- Write clear, concise commit messages
-- Add tests for new features
-- Document new public APIs
-- Follow Go idioms and best practices
-- Ensure benchmarks still pass after changes
-
-### Code Quality
-
-- Run `gofmt` to format code
-- Use `golint` for style checking
-- Run `go vet` for static analysis
-- Ensure 100% test coverage for new functionality
-- Follow the existing code style and patterns
-
-### Reporting Issues
-
-When reporting issues, please include:
-- Go version (`go version`)
-- Operating system
-- Mire version
-- Expected behavior
-- Actual behavior
-- Steps to reproduce
-- Any relevant logs or error messages
+See `USAGE.md` for detailed information on advanced configuration patterns and best practices.
 
 ## 🗺️ Roadmap
 
-### Planned Enhancements
+- [ ] Add structured logging with log levels
+- [ ] Implement more advanced sampling strategies
+- [ ] Add more formatter options
+- [ ] Performance optimization for specific use cases
+- [ ] Enhanced security features for sensitive data
+- [ ] Integration with popular monitoring solutions
 
-#### Performance & Reliability
-- [ ] Perfect goroutine ID detection for truly scalable local storage
-- [ ] Implement advanced memory prefetching strategies
-- [ ] Optimize memory layout to further reduce cache misses
-- [ ] Enhance error handling for extreme resource exhaustion scenarios
+## 🤝 Contributing
 
-#### Advanced Features
-- [ ] Add structured query capabilities on log entries
-- [ ] Implement log compression for storage efficiency
-- [ ] Create custom formatter plugin system
-- [ ] Develop real-time log streaming and monitoring
+We welcome contributions to Mire! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started.
 
-#### Integration & Ecosystem
-- [ ] Add exporters for popular metric systems (Prometheus, OpenTelemetry)
-- [ ] Create comprehensive API documentation
-- [ ] Develop integration guides for various Go frameworks
-- [ ] Implement sensitive data masking and security mechanisms
+### Development Setup
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for your changes
+5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-Copyright 2025 Mire Contributors
+## 📄 Documentation
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-## 📞 Support
-
-If you encounter issues or have questions:
-
-- Check the [existing issues](https://github.com/Lunar-Chipter/mire/issues)
-- Create a new issue with detailed information
-- Include your Go version and platform information
-- Provide minimal code to reproduce the issue
-
-### Community
-
-- Join our [Discussions](https://github.com/Lunar-Chipter/mire/discussions) for Q&A
-- Follow us for updates and announcements
-
-## 📄 Changelog
-
-### v0.0.4
-- **Zero-Allocation Improvements**: Overhauled `LogEntry` structure to use `[]byte` instead of `string` for critical fields
-- **Enhanced Performance**: Direct byte slice operations reducing memory allocations
-- **Formatter Efficiency**: All formatters updated to handle `[]byte` fields directly
-- **API Compatibility**: Maintained backward compatibility with internal performance improvements
-
-### v0.0.3
-- Enhanced function naming consistency across all packages for improved readability
-- Renamed `S2b` function to `StringToBytes` in both `core` and `util` packages for clearer semantics
-- Renamed `ManualByteWrite` to `formatLogToBytes` in core package for better clarity
-- Renamed buffer conversion functions: `writeIntToBuffer`, `writeInt64ToBuffer`, `writeFloatToBuffer` to `intToBytes`, `int64ToBytes`, `floatToBytes`
-- Renamed utility functions: `shortID` to `shortenID` and `shortIDBytes` to `shortIDToBytes` in formatter package
-- Improved code maintainability with more consistent and intuitive function names
-- Optimized zero-allocation performance with enhanced string-to-byte conversion functions
-- Standardized exported function naming conventions across all packages
-
-### v0.0.2
-- Major performance improvements with zero-allocation formatters
-- TextFormatter now runs at ~0.13μs/op
-- JSONFormatter now runs at ~2.4μs/op
-- Added complete CSV formatter with zero-allocation implementation
-- Added field transformers support for all formatters
-- Added comprehensive sensitive data masking capabilities
-- Improved object pooling for high memory efficiency
-- Added clock implementation for timestamp operations
-- Updated README with comprehensive examples for all formatters
-- Added formatter benchmark tests with updated performance metrics
-- Improved cache-friendly memory access patterns
-- Enhanced branch prediction optimizations
-- Added utility functions for zero-allocation operations
-
-## 🔍 Related Projects
-
-- [zap](https://github.com/uber-go/zap) - Blazing fast, structured, leveled logging in Go
-- [logrus](https://github.com/sirupsen/logrus) - Structured, pluggable logging for Go
-- [zerolog](https://github.com/rs/zerolog) - Zero-allocation JSON logger
+- [USAGE.md](USAGE.md) - Comprehensive usage guide
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture documentation
 
 ## 🙏 Acknowledgments
 
-- Inspired by other efficient logging libraries
-- Thanks to the Go community for performance optimization techniques
-- Special thanks to contributors and early adopters
+- The Go team for the excellent language and tooling
+- The logging community for inspiration and best practices
+- All contributors who help make Mire better
