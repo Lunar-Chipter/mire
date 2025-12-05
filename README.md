@@ -1076,24 +1076,8 @@ logger := logger.New(logger.LoggerConfig{
     ContextExtractor: customContextExtractor,
     // ... other config
 })
+
 ```
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how you can help:
-
-### Getting Started
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests if applicable
-5. Run the test suite (`go test ./...`)
-6. Run benchmarks (`go test -bench=. ./...`)
-7. Commit your changes (`git commit -m 'Add amazing feature'`)
-8. Push to the branch (`git push origin feature/amazing-feature`)
-9. Open a pull request
-
 ### Development Setup
 
 ```bash
@@ -1123,10 +1107,9 @@ Mire follows a modular architecture with clear separation of concerns:
                         |    rotating)        |
                         +---------------------+
                         |   Hooks             |
-                        |   (custom          |
+                        |   (custom           |
                         |    processing)      |
                         +---------------------+
-```
 
 ### Key Components
 
