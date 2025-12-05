@@ -1546,23 +1546,6 @@ Need help? Join our community:
 - Structured logging with fields
 - Simple configuration options
 
-
-### Guidelines
-
-- Write clear, concise commit messages
-- Add tests for new features
-- Document new public APIs
-- Follow Go idioms and best practices
-- Ensure benchmarks still pass after changes
-
-### Code Quality
-
-- Run `gofmt` to format code
-- Use `golint` for style checking
-- Run `go vet` for static analysis
-- Ensure 100% test coverage for new functionality
-- Follow the existing code style and patterns
-
 ### Reporting Issues
 
 When reporting issues, please include:
