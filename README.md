@@ -863,7 +863,6 @@ Need help? Join our community:
 - Context-aware logging with trace IDs
 - Structured logging with fields
 - Simple configuration options
-```
 
 ### Benchmark Results
 
