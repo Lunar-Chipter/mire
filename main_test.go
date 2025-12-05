@@ -49,18 +49,32 @@ func TestMainFunction(t *testing.T) {
 		}
 	}
 
-	// Check that certain log messages appear
-	expectedContent := []string{
-		"Ada 2 peringatan di sistem",
-		"Terjadi error sederhana",
-		"Memproses permintaan otorisasi",
-		"Transaksi berhasil diproses",
-		"level: INFO",
+	// Check for content that should definitely appear in console output
+	// Note: Some logs go to files (like JSON logs) and won't appear in stdout
+	definitelyExpectedContent := []string{
+		"Ada 2 peringatan di sistem", // Console output from default logger
+		"Terjadi error sederhana",    // Console output from default logger
 	}
-	
-	for _, content := range expectedContent {
+
+	for _, content := range definitelyExpectedContent {
 		if !strings.Contains(output, content) {
-			t.Logf("Expected content not found in output (this may be normal due to logging configuration): %s", content)
+			t.Errorf("Required content not found in output: %s", content)
+			t.Logf("Actual output was: %s", output)
+		}
+	}
+
+	// Log info for content that might not appear in console but is expected in logs
+	// (These might go to file logs or have different formatting)
+	possibleExpectedContent := []string{
+		"token-ABC",                  // From context-aware logging (might be in output)
+		"Memproses permintaan otorisasi", // Part of context log message
+		"Transaksi berhasil diproses",     // From JSON file logging (might not be in console)
+		"level: INFO",                     // Might not be in console output
+	}
+
+	for _, content := range possibleExpectedContent {
+		if !strings.Contains(output, content) {
+			t.Logf("Content not found in console output (may appear in file logs or have different format): %s", content)
 		}
 	}
 }
