@@ -8,12 +8,10 @@ import (
 	"unsafe"
 )
 
-// ZeroAllocBuffer represents a zero-allocation buffer for efficient logging
-// Prinsip: "No hidden costs, no runtime surprises"
 type ZeroAllocBuffer struct {
 	buf []byte
 	len int
-	_   [64 - unsafe.Sizeof(int(0))]byte // Cache line alignment
+	_   [64 - unsafe.Sizeof(int(0))]byte // Padding untuk cache alignment
 }
 
 // Error definitions
@@ -21,14 +19,11 @@ var (
 	ErrBufferOverflow = errors.New("buffer overflow")
 )
 
-// WriteBytes writes bytes to the buffer with manual byte manipulation
-// Prinsip: "Control over every byte"
-//go:inline
 func (b *ZeroAllocBuffer) WriteBytes(data []byte) error {
 	if b.available() < len(data) {
 		return ErrBufferOverflow
 	}
-	
+
 	// Manual byte copying untuk performa maksimal
 	copy(b.buf[b.len:], data)
 	b.len += len(data)
@@ -36,7 +31,6 @@ func (b *ZeroAllocBuffer) WriteBytes(data []byte) error {
 }
 
 // WriteByte writes a single byte to the buffer with O(1) performance
-// Prinsip: "Predictable performance under all conditions"
 func (b *ZeroAllocBuffer) WriteByte(c byte) error {
 	if b.len >= len(b.buf) {
 		return ErrBufferOverflow
@@ -72,7 +66,6 @@ func (b *ZeroAllocBuffer) Reset() {
 }
 
 // ZeroAllocBufferPool is a pool of ZeroAllocBuffer instances
-// Prinsip: "All pre-allocated and reusable"
 var ZeroAllocBufferPool = sync.Pool{
 	New: func() interface{} {
 		return &ZeroAllocBuffer{
@@ -94,7 +87,6 @@ func PutZeroAllocBuffer(buf *ZeroAllocBuffer) {
 }
 
 // ColorByteSlice represents pre-allocated color byte slices
-// Prinsip: "Beautiful logs without performance tax"
 var (
 	ErrorColor   = []byte("\x1b[38;5;196m")
 	WarnColor    = []byte("\x1b[38;5;220m")
@@ -118,4 +110,9 @@ func StringToBytes(s string) (b []byte) {
 // WARNING: The returned string shares memory with the byte slice. Do not modify the bytes.
 func B2s(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+// BytesToString is a wrapper for B2s that converts byte slice to string
+func BytesToString(b []byte) string {
+	return B2s(b)
 }

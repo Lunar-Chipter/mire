@@ -6,135 +6,134 @@ import (
 	"time"
 )
 
-// TestFormatValue tests the FormatValue function
 func TestFormatValue(t *testing.T) {
 	buf := &bytes.Buffer{}
-	
+
 	// Test string formatting
 	buf.Reset()
 	FormatValue(buf, "hello", 0)
 	if buf.String() != "hello" {
 		t.Errorf("FormatValue with string 'hello' = %s, want 'hello'", buf.String())
 	}
-	
+
 	// Test []byte formatting
 	buf.Reset()
 	FormatValue(buf, []byte("hello"), 0)
 	if buf.String() != "hello" {
 		t.Errorf("FormatValue with []byte 'hello' = %s, want 'hello'", buf.String())
 	}
-	
+
 	// Test int formatting
 	buf.Reset()
 	FormatValue(buf, 42, 0)
 	if buf.String() != "42" {
 		t.Errorf("FormatValue with int 42 = %s, want '42'", buf.String())
 	}
-	
+
 	// Test int8 formatting
 	buf.Reset()
 	FormatValue(buf, int8(8), 0)
 	if buf.String() != "8" {
 		t.Errorf("FormatValue with int8 8 = %s, want '8'", buf.String())
 	}
-	
+
 	// Test int16 formatting
 	buf.Reset()
 	FormatValue(buf, int16(16), 0)
 	if buf.String() != "16" {
 		t.Errorf("FormatValue with int16 16 = %s, want '16'", buf.String())
 	}
-	
+
 	// Test int32 formatting
 	buf.Reset()
 	FormatValue(buf, int32(32), 0)
 	if buf.String() != "32" {
 		t.Errorf("FormatValue with int32 32 = %s, want '32'", buf.String())
 	}
-	
+
 	// Test int64 formatting
 	buf.Reset()
 	FormatValue(buf, int64(64), 0)
 	if buf.String() != "64" {
 		t.Errorf("FormatValue with int64 64 = %s, want '64'", buf.String())
 	}
-	
+
 	// Test uint formatting
 	buf.Reset()
 	FormatValue(buf, uint(42), 0)
 	if buf.String() != "42" {
 		t.Errorf("FormatValue with uint 42 = %s, want '42'", buf.String())
 	}
-	
+
 	// Test uint8 formatting
 	buf.Reset()
 	FormatValue(buf, uint8(8), 0)
 	if buf.String() != "8" {
 		t.Errorf("FormatValue with uint8 8 = %s, want '8'", buf.String())
 	}
-	
+
 	// Test uint16 formatting
 	buf.Reset()
 	FormatValue(buf, uint16(16), 0)
 	if buf.String() != "16" {
 		t.Errorf("FormatValue with uint16 16 = %s, want '16'", buf.String())
 	}
-	
+
 	// Test uint32 formatting
 	buf.Reset()
 	FormatValue(buf, uint32(32), 0)
 	if buf.String() != "32" {
 		t.Errorf("FormatValue with uint32 32 = %s, want '32'", buf.String())
 	}
-	
+
 	// Test uint64 formatting
 	buf.Reset()
 	FormatValue(buf, uint64(64), 0)
 	if buf.String() != "64" {
 		t.Errorf("FormatValue with uint64 64 = %s, want '64'", buf.String())
 	}
-	
+
 	// Test float32 formatting
 	buf.Reset()
 	FormatValue(buf, float32(3.14), 0)
 	if buf.String() != "3.14" {
 		t.Errorf("FormatValue with float32 3.14 = %s, want '3.14'", buf.String())
 	}
-	
+
 	// Test float64 formatting
 	buf.Reset()
 	FormatValue(buf, float64(3.14159), 0)
 	if buf.String() != "3.14" { // The function formats to 2 decimal places
 		t.Errorf("FormatValue with float64 3.14159 = %s, want '3.14'", buf.String())
 	}
-	
+
 	// Test bool formatting
 	buf.Reset()
 	FormatValue(buf, true, 0)
 	if buf.String() != "true" {
 		t.Errorf("FormatValue with bool true = %s, want 'true'", buf.String())
 	}
-	
+
 	buf.Reset()
 	FormatValue(buf, false, 0)
 	if buf.String() != "false" {
 		t.Errorf("FormatValue with bool false = %s, want 'false'", buf.String())
 	}
-	
+
 	// Test nil formatting
 	buf.Reset()
 	FormatValue(buf, nil, 0)
 	if buf.String() != "null" {
 		t.Errorf("FormatValue with nil = %s, want 'null'", buf.String())
 	}
-	
+
 	// Test value with space (should be quoted)
 	buf.Reset()
 	FormatValue(buf, "hello world", 0)
 	if buf.String() != `"hello world"` {
 		t.Errorf("FormatValue with string containing space = %s, want '\"hello world\"'", buf.String())
 	}
-	
+
 	// Test value with max width
 	buf.Reset()
 	FormatValue(buf, "very long string that should be truncated", 10)
@@ -142,7 +141,7 @@ func TestFormatValue(t *testing.T) {
 	if len(result) > 13 { // 10 + 3 for "..."
 		t.Errorf("FormatValue with max width 10 produced string of length %d, should be max 13", len(result))
 	}
-	
+
 	// Test complex type (will return <complex-type>)
 	buf.Reset()
 	FormatValue(buf, struct{ A int }{A: 1}, 0)
@@ -151,19 +150,18 @@ func TestFormatValue(t *testing.T) {
 	}
 }
 
-// TestFormatTimestamp tests the FormatTimestamp function
 func TestFormatTimestamp(t *testing.T) {
 	buf := &bytes.Buffer{}
-	
+
 	timestamp := time.Date(2023, 1, 2, 15, 4, 5, 0, time.UTC)
-	
+
 	FormatTimestamp(buf, timestamp, "2006-01-02 15:04:05")
-	
+
 	expected := "2023-01-02 15:04:05"
 	if buf.String() != expected {
 		t.Errorf("FormatTimestamp = %s, want %s", buf.String(), expected)
 	}
-	
+
 	// Test with different format
 	buf.Reset()
 	FormatTimestamp(buf, timestamp, time.RFC3339)

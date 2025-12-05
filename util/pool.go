@@ -88,7 +88,6 @@ func (pm *PoolMetrics) DiscardedCount() int64 {
 }
 
 // Zero-allocation buffer pool with pre-allocated buffers
-// SEMUA di stack, TIDAK ADA heap allocation
 var bufferPool = sync.Pool{
 	New: func() interface{} {
 		// Pre-allocated buffer with fixed size to avoid fragmentation
@@ -97,15 +96,12 @@ var bufferPool = sync.Pool{
 }
 
 // LogBuffer represents a zero-allocation buffer for logging
-// Cache line alignment untuk menghindari false sharing
 type LogBuffer struct {
 	buf []byte
 	len int
 	_   [64 - unsafe.Sizeof(int(0))]byte // Padding untuk cache alignment
 }
 
-// WriteBytes writes bytes to the buffer with manual byte manipulation
-// Manual byte writing vs abstraksi standar
 func (b *LogBuffer) WriteBytes(data []byte) error {
 	if b.available() < len(data) {
 		return ErrBufferFull
@@ -121,12 +117,9 @@ func (b *LogBuffer) WriteBytes(data []byte) error {
 	copy(b.buf[b.len:], data)
 	// Update the logical length
 	b.len += len(data)
-	// BUKAN: fmt.Fprintf(buffer, "%s", data) // Yang menyababkan allocation
 	return nil
 }
 
-// WriteByte writes a single byte to the buffer with O(1) performance
-// Semua operasi O(1), tidak ada yang O(n)
 func (b *LogBuffer) WriteByte(c byte) error {
 	if b.available() < 1 {
 		return ErrBufferFull
@@ -151,38 +144,35 @@ func (b *LogBuffer) Bytes() []byte {
 	return b.buf[:b.len]
 }
 
-// Reset resets the buffer
 func (b *LogBuffer) Reset() {
 	b.len = 0
 }
 
-// GetBufferFromPool gets a byte buffer from the pool with zero lock contention
-// Zero contention antara goroutines dengan goroutine-local storage
+// GetBufferFromPool gets a byte buffer from the pool
 func GetBufferFromPool() *bytes.Buffer {
+	globalPoolMetrics.bufferGetCount++
 	// Try to get from goroutine-local pool first for zero lock contention
 	localPool := GetGoroutineLocalBufferPool()
 	buf := localPool.GetBufferFromLocalPool()
 	if buf != nil {
 		return buf
 	}
-	
+
 	// Fallback to global pool if local pool is empty
-	globalPoolMetrics.bufferGetCount++
 	return bufferPool.Get().(*bytes.Buffer)
 }
 
-// PutBufferToPool returns a byte buffer to the pool with zero lock contention
-// Zero contention antara goroutines dengan goroutine-local storage
+// PutBufferToPool returns a byte buffer to the pool
 func PutBufferToPool(buf *bytes.Buffer) {
+	globalPoolMetrics.bufferPutCount++
 	// Try to put to goroutine-local pool first for zero lock contention
 	localPool := GetGoroutineLocalBufferPool()
 	if localPool.PutBufferToLocalPool(buf) {
 		return
 	}
-	
+
 	// Fallback to global pool if local pool is full
 	buf.Reset()
-	globalPoolMetrics.bufferPutCount++
 	bufferPool.Put(buf)
 }
 
@@ -279,26 +269,24 @@ type localMapPool struct {
 }
 
 // getGoroutineID returns a pseudo goroutine ID for goroutine-local storage
-// Prinsip: "Share nothing, own everything"
 func getGoroutineID() uint64 {
 	// Simplified implementation - in production, use a more reliable method
 	return uint64(uintptr(unsafe.Pointer(&globalPoolMetrics)) % 1000000)
 }
 
 // GetGoroutineLocalBufferPool returns the buffer pool for the current goroutine
-// Zero lock contention dengan goroutine-local storage
 func GetGoroutineLocalBufferPool() *localBufferPool {
 	gid := getGoroutineID()
 	if pool, ok := goroutineBufferPools.Load(gid); ok {
 		return pool.(*localBufferPool)
 	}
-	
+
 	// Create a new local pool for this goroutine
 	newPool := &localBufferPool{
 		buffers: make(chan *bytes.Buffer, 10), // Buffered channel for 10 buffers
 	}
 	goroutineBufferPools.Store(gid, newPool)
-	
+
 	return newPool
 }
 
@@ -308,7 +296,6 @@ func (lp *localBufferPool) GetBufferFromLocalPool() *bytes.Buffer {
 	select {
 	case buf := <-lp.buffers:
 		buf.Reset()
-		globalPoolMetrics.bufferGetCount++
 		return buf
 	default:
 		// Local pool is empty, indicate to use global pool
@@ -322,7 +309,6 @@ func (lp *localBufferPool) GetBufferFromLocalPool() *bytes.Buffer {
 func (lp *localBufferPool) PutBufferToLocalPool(buf *bytes.Buffer) bool {
 	select {
 	case lp.buffers <- buf:
-		globalPoolMetrics.bufferPutCount++
 		return true
 	default:
 		// Local pool is full, indicate to use global pool

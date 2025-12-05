@@ -50,7 +50,7 @@ func BenchmarkFormatValueWithMaxWidth(b *testing.B) {
 func BenchmarkFormatTimestamp(b *testing.B) {
 	var buf bytes.Buffer
 	timestamp := time.Now()
-	format := DEFAULT_TIMESTAMP_FORMAT
+	format := "2006-01-02T15:04:05.000Z07:00" // Standard timestamp format
 
 	b.ResetTimer()
 
@@ -107,7 +107,7 @@ func BenchmarkWriteUint(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i < b.N++ {
+	for i := 0; i < b.N; i++ {
 		buf.Reset()
 		WriteUint(&buf, uint64(i))
 	}
@@ -132,7 +132,7 @@ func BenchmarkBufferPool(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf := GetBufferFromPool()
-		*buf = append(*buf, []byte("test data for buffer pool benchmark")...)
+		buf.Write([]byte("test data for buffer pool benchmark"))
 		PutBufferToPool(buf)
 	}
 }
@@ -143,7 +143,7 @@ func BenchmarkSmallByteSlicePool(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		slice := GetSmallByteSliceFromPool()
-		*slice = append(*slice, []byte("test")...)
+		slice = append(slice, []byte("test")...)
 		PutSmallByteSliceToPool(slice)
 	}
 }
@@ -213,7 +213,7 @@ func BenchmarkGetCallerInfo(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		info := GetCallerInfo(2) // Get info for calling function
 		if info != nil {
-			PutCallerInfoToPool(info)
+			core.PutCallerInfoToPool(info)
 		}
 	}
 }
@@ -225,7 +225,7 @@ func BenchmarkGetStackTrace(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		stackTrace, bufPtr := GetStackTrace(10)
 		if stackTrace != nil && bufPtr != nil {
-			PutBufferToPool(bufPtr)
+			core.PutBufferToPool(bufPtr)
 		}
 	}
 }
@@ -265,7 +265,7 @@ func BenchmarkStringSlicePool(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		slice := GetStringSliceFromPool()
-		*slice = append(*slice, "item1", "item2", "item3")
+		slice = append(slice, "item1", "item2", "item3")
 		PutStringSliceToPool(slice)
 	}
 }

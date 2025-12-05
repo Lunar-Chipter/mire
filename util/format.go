@@ -8,8 +8,6 @@ import (
 	"github.com/Lunar-Chipter/mire/core"
 )
 
-// FormatValue formats a given value into a byte buffer, with an optional max width.
-// This version is optimized to reduce string allocations.
 func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 	// Use a pooled byte slice for intermediate conversions
 	tempBuf := GetSmallByteSliceFromPool()
@@ -80,7 +78,6 @@ func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 	}
 }
 
-// FormatTimestamp formats a timestamp to a byte buffer with zero allocation
 func FormatTimestamp(buf *bytes.Buffer, t time.Time, format string) {
 	// Use a pooled byte slice for intermediate conversions
 	tempBuf := GetSmallByteSliceFromPool()

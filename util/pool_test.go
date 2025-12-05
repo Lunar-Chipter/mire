@@ -256,7 +256,7 @@ func TestPoolMetrics(t *testing.T) {
 		t.Error("BufferGetCount was not incremented properly")
 	}
 	if newBufferPutCount != initialBufferPutCount+1 {
-		t.Error("BufferPutCount was not incremented properly")
+		t.Errorf("BufferPutCount was not incremented properly: expected %d, got %d", initialBufferPutCount+1, newBufferPutCount)
 	}
 	if newSliceGetCount != initialSliceGetCount+2 {
 		t.Errorf("SliceGetCount was not incremented properly: expected %d, got %d", initialSliceGetCount+2, newSliceGetCount)
@@ -304,95 +304,90 @@ func TestPoolMetricsConcurrent(t *testing.T) {
 	}
 }
 
-// TestLogBuffer tests the LogBuffer type
 func TestLogBuffer(t *testing.T) {
 	buf := &LogBuffer{
 		buf: make([]byte, 0, 100),
 		len: 0,
 	}
-	
-	// Test WriteBytes
+
 	err := buf.WriteBytes([]byte("hello"))
 	if err != nil {
 		t.Errorf("WriteBytes returned error: %v", err)
 	}
-	
+
 	if buf.len != 5 {
 		t.Errorf("WriteBytes should update length to 5, got %d", buf.len)
 	}
-	
+
 	if string(buf.buf[:buf.len]) != "hello" {
 		t.Errorf("Buffer content should be 'hello', got '%s'", string(buf.buf[:buf.len]))
 	}
-	
-	// Test WriteByte
+
 	err = buf.WriteByte(' ')
 	if err != nil {
 		t.Errorf("WriteByte returned error: %v", err)
 	}
-	
+
 	err = buf.WriteByte('w')
 	if err != nil {
 		t.Errorf("WriteByte returned error: %v", err)
 	}
-	
+
 	err = buf.WriteByte('o')
 	if err != nil {
 		t.Errorf("WriteByte returned error: %v", err)
 	}
-	
+
 	err = buf.WriteByte('r')
 	if err != nil {
 		t.Errorf("WriteByte returned error: %v", err)
 	}
-	
+
 	err = buf.WriteByte('l')
 	if err != nil {
 		t.Errorf("WriteByte returned error: %v", err)
 	}
-	
+
 	err = buf.WriteByte('d')
 	if err != nil {
 		t.Errorf("WriteByte returned error: %v", err)
 	}
-	
+
 	expected := "hello world"
 	if string(buf.buf[:buf.len]) != expected {
 		t.Errorf("Buffer content should be '%s', got '%s'", expected, string(buf.buf[:buf.len]))
 	}
-	
+
 	// Test Bytes
 	result := buf.Bytes()
 	if string(result) != expected {
 		t.Errorf("Bytes() should return '%s', got '%s'", expected, string(result))
 	}
-	
-	// Test Reset
+
 	buf.Reset()
 	if buf.len != 0 {
 		t.Errorf("Reset should set length to 0, got %d", buf.len)
 	}
-	
+
 	// Test available
 	if buf.available() != cap(buf.buf) {
 		t.Errorf("available should return capacity %d, got %d", cap(buf.buf), buf.available())
 	}
 }
 
-// TestLogBufferFull tests the LogBuffer when it's full
 func TestLogBufferFull(t *testing.T) {
 	// Create a buffer with limited capacity
 	buf := &LogBuffer{
 		buf: make([]byte, 5), // capacity 5
 		len: 5,               // already at capacity
 	}
-	
+
 	// Try to write - should return error
 	err := buf.WriteBytes([]byte("extra data"))
 	if err == nil {
 		t.Error("WriteBytes should return error when buffer is full")
 	}
-	
+
 	// Try to write a single byte - should return error
 	err = buf.WriteByte('x')
 	if err == nil {
@@ -414,14 +409,13 @@ func TestSmallByteSlicePool(t *testing.T) {
 	// For now, just ensure it doesn't panic
 }
 
-// TestGoroutineLocalBufferPool tests the goroutine-local buffer pool
 func TestGoroutineLocalBufferPool(t *testing.T) {
 	// Get the local pool for the current goroutine
 	localPool := GetGoroutineLocalBufferPool()
 	if localPool == nil {
 		t.Fatal("GetGoroutineLocalBufferPool returned nil")
 	}
-	
+
 	// Test getting from local pool
 	_ = localPool.GetBufferFromLocalPool()
 	// buf might be nil if the local pool is empty, which is expected

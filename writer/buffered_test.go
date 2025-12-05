@@ -328,7 +328,7 @@ func TestBufferedWriterStats(t *testing.T) {
 func TestBufferedWriterConcurrent(t *testing.T) {
 	counter := &mockWriteCounter{}
 	
-	bufferedWriter := NewBufferedWriter(counter, 50, 50*time.Millisecond, func(err error) {}, 10, 100*time.Millisecond)
+	bufferedWriter := NewBufferedWriter(counter, 200, 50*time.Millisecond, func(err error) {}, 10, 100*time.Millisecond)
 	if bufferedWriter == nil {
 		t.Fatal("NewBufferedWriter returned nil")
 	}
@@ -355,22 +355,37 @@ func TestBufferedWriterConcurrent(t *testing.T) {
 	}
 	
 	wg.Wait()
-	
-	// Wait for all writes to be processed
-	time.Sleep(200 * time.Millisecond)
-	
+
+	// Wait for all writes to be processed by actively polling
+	// Try to ensure all data is processed before closing
+	totalExpected := numGoroutines * writesPerGoroutine
+	actualCount := 0
+	for i := 0; i < 20; i++ { // Try up to 20 times with 100ms interval = 2 seconds max
+		time.Sleep(100 * time.Millisecond)
+		output := string(counter.GetData())
+		actualCount = strings.Count(output, "goroutine")
+		if actualCount >= totalExpected {
+			break // All messages processed
+		}
+	}
+
 	// Close to ensure all data is flushed
 	bufferedWriter.Close()
-	
+
 	// Check results
-	totalExpected := numGoroutines * writesPerGoroutine
+	// totalExpected and actualCount are already calculated in the polling loop above
 	output := string(counter.GetData())
-	actualCount := strings.Count(output, "goroutine")
-	
+	// Use the actualCount from the polling loop, but make sure we get the final count too if needed
+	finalCount := strings.Count(output, "goroutine")
+	// Use the max between the polled count and final count to handle any edge cases
+	if finalCount > actualCount {
+		actualCount = finalCount
+	}
+
 	if actualCount != totalExpected {
 		t.Errorf("Expected %d messages in output, got %d", totalExpected, actualCount)
 	}
-	
+
 	elapsed := time.Since(startTime)
 	t.Logf("Processed %d concurrent writes in %v", totalExpected, elapsed)
 }

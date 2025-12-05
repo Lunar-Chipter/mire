@@ -339,7 +339,7 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 	// final write to output dengan zero-allocation optimizations
 func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
 	entry := l.buildEntry(ctx, level, message, fields)
-	
+
 	// Gunakan buffer yang efisien untuk zero-allocation
 	buf := util.GetBufferFromPool()
 	defer util.PutBufferToPool(buf)
@@ -349,7 +349,7 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 		core.PutEntryToPool(entry)
 		return
 	}
-    
+
     bytesToWrite := buf.Bytes()
 
 	// Optimized write with minimal locking - only lock when actually writing
@@ -481,7 +481,6 @@ func (l *Logger) formatfArgsToBytes(format string, args ...interface{}) []byte {
 }
 
 // buildEntry creates a log entry with minimal allocations
-// Principle: "Control over every byte" - Manual byte manipulation
 func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) *core.LogEntry {
     entry := core.GetEntryFromPool()
 
@@ -542,20 +541,18 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 	return entry
 }
 
-// runHooks executes hooks with zero lock contention
-// Zero lock contention dengan RLock
+// runHooks executes hooks with minimal lock contention
 func (l *Logger) runHooks(entry *core.LogEntry) {
-	// Gunakan RLock untuk read-only access dan zero lock contention
+	// Gunakan RLock untuk read-only access
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	
+
 	// Early return jika tidak ada hooks
 	if len(l.hooks) == 0 {
 		return
 	}
-	
+
 	// Execute hooks dengan graceful error handling
-	// Never let logging crash your application
 	for _, h := range l.hooks {
 		if err := h.Fire(entry); err != nil {
 			l.handleError(newErrorf("hook error: %v", err))
@@ -596,7 +593,6 @@ func (l *Logger) handleLevelActions(level core.Level, entry *core.LogEntry) {
 }
 
 // handleError handles errors gracefully without panicking
-// Prinsip: "Never let logging crash your application"
 func (l *Logger) handleError(err error) {
 	// Graceful error handling tanpa panic
 	if l.Config.ErrorHandler != nil {
@@ -669,7 +665,6 @@ func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 }
 
 // clone creates a copy of the logger with shared resources
-// Share nothing, own everything for zero lock contention
 func (l *Logger) clone() *Logger {
     l.mu.RLock()
     defer l.mu.RUnlock()
