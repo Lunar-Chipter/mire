@@ -473,9 +473,8 @@ func TestLogEntryZeroAllocJSONSerialize(t *testing.T) {
 	}
 
 	// Verify that the message is included
-	if len(result) < len(`{"timestamp":"2006-01-02T15:04:05.000Z07:00","level":"INFO","message":"test message","pid":1234}`) {
-		t.Log("Result may be valid, but it's shorter than expected. This is acceptable as the format might differ.")
-	}
+	// The length check was just informational and caused confusion, so removing it
+	// The test passes if the JSON is properly formatted and contains expected fields
 }
 
 // TestLogEntryFormatLogToBytes tests the formatLogToBytes method
