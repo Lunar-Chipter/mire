@@ -15,7 +15,7 @@ import (
 // LogProcessor defines the interface for the underlying logger that the AsyncLogger will use.
 // This helps to break the circular dependency between the writer and the main logger.
 type LogProcessor interface {
-	Log(ctx context.Context, level core.Level, msg []byte, fields map[string]interface{})
+	Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte)
 	ErrorHandler() func(error)
 	ErrOut() io.Writer
 	ErrOutMu() *sync.Mutex
@@ -36,7 +36,7 @@ type AsyncLogger struct {
 type logJob struct {
 	level  core.Level
 	msg    []byte
-	fields map[string]interface{}
+	fields map[string][]byte
 	ctx    context.Context
 }
 
@@ -104,8 +104,8 @@ func (al *AsyncLogger) worker() {
 }
 
 // Log queues a log job for asynchronous processing
-func (al *AsyncLogger) Log(level core.Level, msg []byte, fields map[string]interface{}, ctx context.Context) {
-	// Don't try to log if the logger is closed
+func (al *AsyncLogger) Log(level core.Level, msg []byte, fields map[string][]byte, ctx context.Context) {
+	// Don't try to log if logger is closed
 	if al.closed.Load() {
 		return
 	}

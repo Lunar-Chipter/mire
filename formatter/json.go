@@ -449,7 +449,7 @@ func (f *JSONFormatter) transformValue(val interface{}, defaultVal string) strin
 }
 
 // formatFields formats the fields map in JSON format
-func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string]interface{}) {
+func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte) {
 	if len(fields) == 0 {
 		return
 	}
@@ -463,36 +463,28 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string]interf
 		}
 		first = false
 
-		// Apply field key mapping if available
-		fieldName := k
-		if mappedKey, exists := f.FieldKeyMap[k]; exists {
-			fieldName = mappedKey
-		}
-
 		// Write field name
 		buf.WriteByte('"')
-		buf.Write(core.StringToBytes(fieldName))
+		buf.Write(core.StringToBytes(k))
 		buf.Write([]byte("\":"))
 
-		// Apply field transformer if available
-		if transformer, exists := f.FieldTransformers[k]; exists {
-			transformedValue := transformer(v)
-			// Convert transformed value to string and write
-			transformedStr := f.transformValue(transformedValue, "<transformed-value>")
-			buf.WriteByte('"')
-			escapeJSON(buf, core.StringToBytes(transformedStr))
-			buf.WriteByte('"')
+		// Write field value directly as JSON string since it's already []byte
+		buf.WriteByte('"')
+		if f.MaskSensitiveData && f.isSensitiveField(k) {
+			// Apply masking if needed
+			buf.Write(f.MaskStringBytes)
 		} else {
-			// Format value based on type
-			f.formatJSONValue(buf, v)
+			// Escape the byte value for JSON
+			escapeJSON(buf, v)
 		}
+		buf.WriteByte('"')
 	}
 
 	buf.Write([]byte("}"))
 }
 
 // formatFieldsIndented formats the fields map in JSON format with indentation
-func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[string]interface{}, indentLevel int) {
+func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[string][]byte, indentLevel int) {
 	// Pre-allocate indent string to avoid repeated string operations
 	indentBuf := util.GetBufferFromPool()
 	defer util.PutBufferToPool(indentBuf)
@@ -527,23 +519,10 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 		buf.Write(indentBytes)
 	}
 
-	// Use ordered keys approach to avoid pool allocation when possible
-	var orderedKeys []string
-	if len(f.FieldKeyMap) > 0 || len(f.FieldTransformers) > 0 {
-		// If field mapping or transformers are used, we need to pool the slice
-		keys := util.GetStringSliceFromPool()
-		defer util.PutStringSliceToPool(keys)
-
-		for k := range fields {
-			keys = append(keys, k)
-		}
-		orderedKeys = keys
-	} else {
-		// Otherwise, create a simple slice without pool overhead
-		orderedKeys = make([]string, 0, len(fields))
-		for k := range fields {
-			orderedKeys = append(orderedKeys, k)
-		}
+	// Create a simple slice for keys
+	orderedKeys := make([]string, 0, len(fields))
+	for k := range fields {
+		orderedKeys = append(orderedKeys, k)
 	}
 
 	first := true
@@ -554,29 +533,21 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 		}
 		fieldNewline()
 
-		// Apply field key mapping if available
-		fieldName := k
-		if mappedKey, exists := f.FieldKeyMap[k]; exists {
-			fieldName = mappedKey
-		}
-
 		// Write field name
 		buf.WriteByte('"')
-		buf.Write(core.StringToBytes(fieldName))
+		buf.Write(core.StringToBytes(k))
 		buf.Write([]byte("\": "))
 
-		// Apply field transformer if available
-		if transformer, exists := f.FieldTransformers[k]; exists {
-			transformedValue := transformer(v)
-			// Convert transformed value to string and write
-			transformedStr := f.transformValue(transformedValue, "<transformed-value>")
-			buf.WriteByte('"')
-			escapeJSON(buf, core.StringToBytes(transformedStr))
-			buf.WriteByte('"')
+		// Write field value directly as JSON string since it's already []byte
+		buf.WriteByte('"')
+		if f.MaskSensitiveData && f.isSensitiveField(k) {
+			// Apply masking if needed
+			buf.Write(f.MaskStringBytes)
 		} else {
-			// Format value based on type
-			f.formatJSONValue(buf, v)
+			// Escape the byte value for JSON
+			escapeJSON(buf, v)
 		}
+		buf.WriteByte('"')
 		first = false
 	}
 

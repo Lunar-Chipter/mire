@@ -346,8 +346,8 @@ func TestCSVFormatterWithFields(t *testing.T) {
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
 	entry.Message = []byte("with custom fields")
-	entry.Fields["custom_field1"] = "value1"
-	entry.Fields["custom_field2"] = 42
+	entry.Fields["custom_field1"] = core.StringToBytes("value1")
+	entry.Fields["custom_field2"] = core.StringToBytes("42")
 	
 	buf := &bytes.Buffer{}
 	err := cf.Format(buf, entry)

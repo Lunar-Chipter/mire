@@ -9,7 +9,7 @@ import (
 
 // LogSampler defines the interface for a logger that can be sampled.
 type LogSampler interface {
-	Log(ctx context.Context, level core.Level, msg []byte, fields map[string]interface{})
+	Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte)
 }
 
 // SamplingLogger provides log sampling to reduce volume
@@ -38,7 +38,7 @@ func (sl *SamplingLogger) ShouldLog() bool {
 }
 
 // Log logs a message if it passes the sampling rate.
-func (sl *SamplingLogger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string]interface{}) {
+func (sl *SamplingLogger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
     if sl.ShouldLog() {
         sl.processor.Log(ctx, level, msg, fields)
     }

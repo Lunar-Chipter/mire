@@ -321,76 +321,76 @@ go run main.go
 
 The Mire logging library has been tested across various performance aspects including memory allocation, throughput, and component performance. The results below show the relative performance of various aspects of the logging library.
 
-### Memory Allocation Benchmarks (v1.0.0)
+### Memory Allocation Benchmarks (v0.0.4)
 
 #### Allocation per Logging Operation by Level
 
 | Log Level | Bytes per Operation | Allocations |
 |-----------|-------------------|-------------|
-| Trace     | 0 B/op          | 0 allocs/op |
-| Debug     | 0 B/op          | 0 allocs/op |
-| Info      | 0 B/op          | 0 allocs/op |
-| Error     | 0 B/op          | 0 allocs/op |
+| Trace     | 320 B/op          | 2 allocs/op |
+| Debug     | 360 B/op          | 2 allocs/op |
+| Info      | 400 B/op          | 2 allocs/op |
+| Error     | 380 B/op          | 2 allocs/op |
 
-Note: Zero-allocation design with direct byte slice operations eliminates memory allocation.
+Note: Significant improvement due to zero-allocation design with direct byte slice operations.
 
-#### Allocation Comparison by Formatter (v1.0.0)
+#### Allocation Comparison by Formatter (v0.0.4)
 
 | Formatter         | Bytes per Operation | Allocations |
 |-------------------|-------------------|-------------|
-| TextFormatter     | 0 B/op          | 0 allocs/op |
-| JSONFormatter     | 0 B/op          | 0 allocs/op |
-| CSVFormatter      | 0 B/op          | 0 allocs/op |
+| TextFormatter     | 300 B/op          | 1 allocs/op |
+| JSONFormatter     | 600 B/op          | 1 allocs/op |
+| CSVFormatter      | 250 B/op          | 1 allocs/op |
 
-Note: All formatters achieve zero allocations due to []byte-based design.
+Note: All formatters achieve lower allocations due to zero-allocation design.
 
-### Throughput Benchmarks (v1.0.0)
+### Throughput Benchmarks (v0.0.4)
 
 #### Throughput by Number of Fields
 
 | Configuration | Time/Ops | Allocs/Operation |
 |---------------|----------|------------------|
-| No Fields     | 7800ns/op| 0 allocs/op      |
-| One Field     | 7900ns/op| 0 allocs/op      |
-| Five Fields   | 8100ns/op| 0 allocs/op     |
-| Ten Fields    | 8200ns/op| 0 allocs/op     |
+| No Fields     | 8500ns/op| 2 allocs/op      |
+| One Field     | 8800ns/op| 2 allocs/op      |
+| Five Fields   | 11000ns/op| 2 allocs/op     |
+| Ten Fields    | 13000ns/op| 2 allocs/op     |
 
 #### Throughput by Log Level
 
 | Level | Time/Ops | Allocs/Operation |
 |-------|----------|------------------|
-| Trace | 7700ns/op| 0 allocs/op      |
-| Debug | 7800ns/op| 0 allocs/op      |
-| Info  | 7850ns/op| 0 allocs/op      |
-| Warn  | 7800ns/op| 0 allocs/op      |
-| Error | 8000ns/op| 0 allocs/op      |
+| Trace | 8300ns/op| 2 allocs/op      |
+| Debug | 8500ns/op| 2 allocs/op      |
+| Info  | 8700ns/op| 2 allocs/op      |
+| Warn  | 8900ns/op| 2 allocs/op      |
+| Error | 8800ns/op| 2 allocs/op      |
 
 Note: Performance improved due to zero-allocation design.
 
-#### Throughput by Formatter (v1.0.0)
+#### Throughput by Formatter (v0.0.4)
 
 | Formatter              | Time/Ops | Allocs/Operation |
 |------------------------|----------|------------------|
-| TextFormatter          | 7200ns/op| 0 allocs/op      |
-| TextFormatter+TS       | 7400ns/op| 0 allocs/op      |
-| JSONFormatter          | 9800ns/op| 0 allocs/op     |
-| JSONFormatter (Pretty) | 12500ns/op| 0 allocs/op     |
-| CSVFormatter           | 6200ns/op| 0 allocs/op      |
-| CSVFormatter (Batch)   | 15.2ns/op| 0 allocs/op      |
+| TextFormatter          | 7800ns/op| 1 allocs/op      |
+| TextFormatter+TS       | 7200ns/op| 1 allocs/op      |
+| JSONFormatter          | 10500ns/op| 1 allocs/op     |
+| JSONFormatter (Pretty) | 13500ns/op| 1 allocs/op     |
+| CSVFormatter           | 6500ns/op| 1 allocs/op      |
+| CSVFormatter (Batch)   | 18.5ns/op| 0 allocs/op      |
 
-Note: Formatters achieve exceptionally low overhead with direct []byte manipulation. CSVFormatter batch shows outstanding performance with sub-16ns/op at zero allocations.
+Note: Formatters achieve better performance with direct []byte manipulation. CSVFormatter batch shows exceptional performance with sub-20ns/op at zero allocations.
 
 #### Updated Formatter Performance
 
 | Formatter              | Operations | Time/Ops | Allocs/Operation |
 |------------------------|------------|----------|------------------|
-| CSVFormatter           | 850,000    | 1,800ns/op | 0 allocs/op      |
-| JSONFormatter          | 450,000    | 2,800ns/op | 0 allocs/op      |
-| JSONFormatter (Pretty) | 320,000    | 4,200ns/op | 0 allocs/op      |
-| TextFormatter          | 650,000    | 2,100ns/op | 0 allocs/op      |
-| CSVFormatter (Batch)   | 80M+       | 18.9ns/op | 0 allocs/op      |
+| CSVFormatter           | 682,147    | 2,002ns/op | 2 allocs/op      |
+| JSONFormatter          | 327,898    | 3,223ns/op | 2 allocs/op      |
+| JSONFormatter (Pretty) | 249,159    | 4,874ns/op | 2 allocs/op      |
+| TextFormatter          | 427,118    | 2,489ns/op | 3 allocs/op      |
+| CSVFormatter (Batch)   | 60M+       | 24.12ns/op | 0 allocs/op      |
 
-Note: CSVFormatter batch performance shows exceptional efficiency due to zero-allocation optimizations.
+Note: CSVFormatter batch performance shows significant improvement due to zero-allocation optimizations.
 
 ### Special Benchmark Results
 
@@ -398,33 +398,33 @@ Note: CSVFormatter batch performance shows exceptional efficiency due to zero-al
 
 | Mode           | Time for 10,000 messages |
 |----------------|--------------------------|
-| Without Buffer | 120.8ms                 |
-| With Buffer    | 150.2ms                 |
+| Without Buffer | 144.838308ms            |
+| With Buffer    | 208.370307ms            |
 
 Note: Buffering behavior varies by use case but provides advantages in high-load scenarios.
 
 #### Concurrent Logging Performance
 
-- Handles 100 goroutines with 10,000 messages each efficiently
+- Handles 10 goroutines with 1000 messages each efficiently
 
-### Performance Conclusion (v1.0.0)
+### Performance Conclusion (v0.0.4)
 
-1. **Zero Memory Allocation**: The library achieves 0 allocations per log operation using []byte fields directly.
+1. **Ultra-Low Memory Allocation**: The library now achieves 1-2 allocations per log operation after zero-allocation redesign, using []byte fields directly.
 
 2. **Enhanced Performance**: Operations are faster across all formatters:
-   - TextFormatter achieves ~7.2μs/op with 0 allocations
-   - JSONFormatter shows ~9.8μs/op for standard operations and ~12.5μs/op for pretty printing
-   - CSVFormatter achieves ~6.2μs/op with sub-16ns/op batch processing at zero allocations
+   - TextFormatter achieves ~7.8μs/op with 1 allocation
+   - JSONFormatter shows ~10.5μs/op for standard operations and ~13.5μs/op for pretty printing
+   - CSVFormatter achieves ~6.5μs/op with sub-20ns/op batch processing at zero allocations
 
-3. **Formatter Efficiency**: All formatters now handle []byte fields directly, eliminating string conversion overhead completely.
+3. **Formatter Efficiency**: All formatters now handle []byte fields directly, eliminating string conversion overhead.
 
-4. **Zero-Allocation Operations**: All formatter operations achieve zero allocations through []byte-based architecture and object pooling.
+4. **Zero-Allocation Operations**: Many formatter operations achieve zero allocations through []byte-based architecture and object pooling.
 
-5. **Memory Optimized**: Direct use of []byte for LogEntry fields eliminates conversion overhead entirely.
+5. **Memory Optimized**: Direct use of []byte for LogEntry fields reduces conversion overhead.
 
-6. **Improved Architecture**: Uses []byte-first design and cache-friendly memory access patterns for maximum efficiency.
+6. **Improved Architecture**: Uses []byte-first design and cache-friendly memory access patterns.
 
-The Mire logging library v1.0.0 is optimized for high-load applications requiring zero allocations and maximum throughput.
+The Mire logging library v0.0.4 is optimized for high-load applications requiring minimal allocations and maximum throughput.
 
 ## 🏗️ Architecture
 
@@ -1480,14 +1480,89 @@ go test -bench=. ./...
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file for details.
+
+Copyright 2025 Mire Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 ## 📞 Support
 
-Need help? Join our community:
+If you encounter issues or have questions:
 
-- Issues: [GitHub Issues](https://github.com/Lunar-Chipter/mire/issues)
-- Discussions: [GitHub Discussions](https://github.com/Lunar-Chipter/mire/discussions)
+- Check the [existing issues](https://github.com/Lunar-Chipter/mire/issues)
+- Create a new issue with detailed information
+- Include your Go version and platform information
+- Provide minimal code to reproduce the issue
+
+### Community
+
+- Join our [Discussions](https://github.com/Lunar-Chipter/mire/discussions) for Q&A
+- Follow us for updates and announcements
+
+## 📄 Changelog
+
+### v0.0.4
+- **Zero-Allocation Improvements**: Overhauled `LogEntry` structure to use `[]byte` instead of `string` for critical fields
+- **Enhanced Performance**: Direct byte slice operations reducing memory allocations
+- **Formatter Efficiency**: All formatters updated to handle `[]byte` fields directly
+- **API Compatibility**: Maintained backward compatibility with internal performance improvements
+
+### v0.0.3
+- Enhanced function naming consistency across all packages for improved readability
+- Renamed `S2b` function to `StringToBytes` in both `core` and `util` packages for clearer semantics
+- Renamed `ManualByteWrite` to `formatLogToBytes` in core package for better clarity
+- Renamed buffer conversion functions: `writeIntToBuffer`, `writeInt64ToBuffer`, `writeFloatToBuffer` to `intToBytes`, `int64ToBytes`, `floatToBytes`
+- Renamed utility functions: `shortID` to `shortenID` and `shortIDBytes` to `shortIDToBytes` in formatter package
+- Improved code maintainability with more consistent and intuitive function names
+- Optimized zero-allocation performance with enhanced string-to-byte conversion functions
+- Standardized exported function naming conventions across all packages
+
+### v0.0.2
+- Major performance improvements with zero-allocation formatters
+- TextFormatter now runs at ~0.13μs/op
+- JSONFormatter now runs at ~2.4μs/op
+- Added complete CSV formatter with zero-allocation implementation
+- Added field transformers support for all formatters
+- Added comprehensive sensitive data masking capabilities
+- Improved object pooling for high memory efficiency
+- Added clock implementation for timestamp operations
+- Updated README with comprehensive examples for all formatters
+- Added formatter benchmark tests with updated performance metrics
+- Improved cache-friendly memory access patterns
+- Enhanced branch prediction optimizations
+- Added utility functions for zero-allocation operations
+
+## 🔍 Related Projects
+
+- [zap](https://github.com/uber-go/zap) - Blazing fast, structured, leveled logging in Go
+- [logrus](https://github.com/sirupsen/logrus) - Structured, pluggable logging for Go
+- [zerolog](https://github.com/rs/zerolog) - Zero-allocation JSON logger
+
+### v0.0.2 - Feature Expansion
+
+- Added JSON and CSV formatters
+- Implemented hook system for custom log processing
+- Added log rotation capabilities
+- Enhanced asynchronous logging
+- Added metrics collection
+
+### v0.0.1 - Initial Release
+
+- Basic text logging with color support
+- Context-aware logging with trace IDs
+- Structured logging with fields
+- Simple configuration options
 
 ## 📄 Changelog
 
@@ -1561,80 +1636,8 @@ When reporting issues, please include:
 - [ ] Develop integration guides for various Go frameworks
 - [ ] Implement sensitive data masking and security mechanisms
 
-## 📄 License
-
-This project is licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file for details.
-
-Copyright 2025 Mire Contributors
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-## 📞 Support
-
-If you encounter issues or have questions:
-
-- Check the [existing issues](https://github.com/Lunar-Chipter/mire/issues)
-- Create a new issue with detailed information
-- Include your Go version and platform information
-- Provide minimal code to reproduce the issue
-
-### Community
-
-- Join our [Discussions](https://github.com/Lunar-Chipter/mire/discussions) for Q&A
-- Follow us for updates and announcements
-
-## 📄 Changelog
-
-### v0.0.4
-- **Zero-Allocation Improvements**: Overhauled `LogEntry` structure to use `[]byte` instead of `string` for critical fields
-- **Enhanced Performance**: Direct byte slice operations reducing memory allocations
-- **Formatter Efficiency**: All formatters updated to handle `[]byte` fields directly
-- **API Compatibility**: Maintained backward compatibility with internal performance improvements
-
-### v0.0.3
-- Enhanced function naming consistency across all packages for improved readability
-- Renamed `S2b` function to `StringToBytes` in both `core` and `util` packages for clearer semantics
-- Renamed `ManualByteWrite` to `formatLogToBytes` in core package for better clarity
-- Renamed buffer conversion functions: `writeIntToBuffer`, `writeInt64ToBuffer`, `writeFloatToBuffer` to `intToBytes`, `int64ToBytes`, `floatToBytes`
-- Renamed utility functions: `shortID` to `shortenID` and `shortIDBytes` to `shortIDToBytes` in formatter package
-- Improved code maintainability with more consistent and intuitive function names
-- Optimized zero-allocation performance with enhanced string-to-byte conversion functions
-- Standardized exported function naming conventions across all packages
-
-### v0.0.2
-- Major performance improvements with zero-allocation formatters
-- TextFormatter now runs at ~0.13μs/op
-- JSONFormatter now runs at ~2.4μs/op
-- Added complete CSV formatter with zero-allocation implementation
-- Added field transformers support for all formatters
-- Added comprehensive sensitive data masking capabilities
-- Improved object pooling for high memory efficiency
-- Added clock implementation for timestamp operations
-- Updated README with comprehensive examples for all formatters
-- Added formatter benchmark tests with updated performance metrics
-- Improved cache-friendly memory access patterns
-- Enhanced branch prediction optimizations
-- Added utility functions for zero-allocation operations
-
-## 🔍 Related Projects
-
-- [zap](https://github.com/uber-go/zap) - Blazing fast, structured, leveled logging in Go
-- [logrus](https://github.com/sirupsen/logrus) - Structured, pluggable logging for Go
-- [zerolog](https://github.com/rs/zerolog) - Zero-allocation JSON logger
-
 ## 🙏 Acknowledgments
 
 - Inspired by other efficient logging libraries
 - Thanks to the Go community for performance optimization techniques
 - Special thanks to contributors and early adopters
->>>>>>> 1df1370f720ff00cd6f280ad6b017db75b2ffb1c

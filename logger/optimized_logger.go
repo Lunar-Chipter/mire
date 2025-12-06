@@ -77,11 +77,27 @@ func (l *OptimizedLogger) logInternal(ctx context.Context, level core.Level, mes
 
 	// Tambahkan fields dari logger
 	for k, v := range l.fields {
-		entry.Fields[k] = v
+		// Convert interface{} values to []byte when copying to entry.Fields
+		switch val := v.(type) {
+		case string:
+			entry.Fields[k] = core.StringToBytes(val)
+		case []byte:
+			entry.Fields[k] = val
+		default:
+			entry.Fields[k] = core.StringToBytes(stringify(val)) // Use existing stringify function with conversion
+		}
 	}
 	// Tambahkan fields spesifik untuk log ini
 	for k, v := range fields {
-		entry.Fields[k] = v
+		// Convert interface{} values to []byte when copying to entry.Fields
+		switch val := v.(type) {
+		case string:
+			entry.Fields[k] = core.StringToBytes(val)
+		case []byte:
+			entry.Fields[k] = val
+		default:
+			entry.Fields[k] = core.StringToBytes(stringify(val)) // Use existing stringify function with conversion
+		}
 	}
 
 	// Format entry ke buffer
@@ -325,7 +341,7 @@ func (l *OptimizedLogger) WithFields(fields map[string]interface{}) *OptimizedLo
 		level:      l.level,
 		bufferPool: l.bufferPool,
 	}
-	
+
 	// Salin field-field dari logger asli
 	newLogger.fields = make(map[string]interface{}, len(l.fields)+len(fields))
 	for k, v := range l.fields {
@@ -334,7 +350,29 @@ func (l *OptimizedLogger) WithFields(fields map[string]interface{}) *OptimizedLo
 	for k, v := range fields {
 		newLogger.fields[k] = v
 	}
-	
+
+	return newLogger
+}
+
+// WithFieldsBytes menambahkan field ke logger menggunakan []byte (zero-allocation)
+func (l *OptimizedLogger) WithFieldsBytes(fields map[string][]byte) *OptimizedLogger {
+	newLogger := &OptimizedLogger{
+		config:     l.config,
+		formatter:  l.formatter,
+		out:        l.out,
+		level:      l.level,
+		bufferPool: l.bufferPool,
+	}
+
+	// Salin field-field dari logger asli dan konversi ke interface{}
+	newLogger.fields = make(map[string]interface{}, len(l.fields)+len(fields))
+	for k, v := range l.fields {
+		newLogger.fields[k] = v
+	}
+	for k, v := range fields {
+		newLogger.fields[k] = v // This will be converted to []byte in logInternal
+	}
+
 	return newLogger
 }
 

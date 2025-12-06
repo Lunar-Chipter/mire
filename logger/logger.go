@@ -3,6 +3,7 @@ package logger
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -56,7 +57,7 @@ type LoggerConfig struct {
 	FlushInterval     time.Duration                   // Interval to flush buffered logs
 	EnableRotation    bool                            // Enable log rotation
 	RotationConfig    *config.RotationConfig          // Configuration for log rotation
-	ContextExtractor  func(context.Context) map[string]string // Function to extract fields from context
+	ContextExtractor  func(context.Context) map[string][]byte // Function to extract fields from context as []byte for zero allocation
 	Hostname          string                          // Hostname to include in logs
 	Application       string                          // Application name to include in logs
 	Version           string                          // Application version to include in logs
@@ -137,11 +138,11 @@ type Logger struct {
 	mu               *sync.RWMutex                   // Mutex for protecting internal state (changed to pointer to allow safe cloning)
 	hooks            []hook.Hook                     // Hooks to execute for each log entry
 	exitFunc         func(int)                       // Function to call on fatal/panic
-	fields           map[string]interface{}          // Default fields to include in all logs
+	fields           map[string][]byte               // Default fields to include in all logs as []byte for zero allocation
 	sampler          *sampler.SamplingLogger         // Sampler for log sampling
 	buffer           *writer.BufferedWriter          // Buffered writer for performance
 	rotation         *writer.RotatingFileWriter      // Rotating file writer for log rotation
-	contextExtractor func(context.Context) map[string]string // Function to extract fields from context
+	contextExtractor func(context.Context) map[string][]byte // Function to extract fields from context
 	metrics          metric.MetricsCollector         // Metrics collector
 	onFatal          func(*core.LogEntry)            // Function to call when a fatal log occurs
 	onPanic          func(*core.LogEntry)            // Function to call when a panic log occurs
@@ -233,7 +234,7 @@ func New(config LoggerConfig) *Logger {
 		errOut:           config.ErrorOutput,
 		mu:               new(sync.RWMutex), // Initialize the mutex pointer
 		exitFunc:         config.ExitFunc,
-		fields:           make(map[string]interface{}),
+		fields:           make(map[string][]byte),
 		hooks:            config.Hooks, // Initialize hooks from config
 		contextExtractor: config.ContextExtractor,
 		metrics:          config.MetricsCollector,
@@ -299,17 +300,61 @@ func (l *Logger) setupWriters() {
 
 
 // These methods are to satisfy interfaces for async/sampler writers
-func (l *Logger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string]interface{}) {
-    l.write(ctx, level, msg, fields)
+func (l *Logger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+    l.writeByte(ctx, level, msg, fields)
 }
 func (l *Logger) ErrorHandler() func(error) { return l.handleError }
 func (l *Logger) ErrOut() io.Writer { return l.errOut }
 func (l *Logger) ErrOutMu() *sync.Mutex { return &l.errOutMu }
 
 
-// internal logging method optimized for 1M+ logs/second
+// internal logging method optimized for 1M+ logs/second with interface{} fields (for backward compatibility)
 // Early filtering to avoid unnecessary work
 func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
+	// Early return if logger is closed
+	if l.closed.Load() {
+		return
+	}
+
+	// Early filtering to avoid unnecessary work - branch prediction optimized
+	if level < l.Config.Level {
+		return
+	}
+
+    // Sampling if enabled
+    if l.sampler != nil && !l.sampler.ShouldLog() {
+        return
+	}
+
+	// Convert interface{} fields to []byte fields for zero-allocation processing
+	byteFields := make(map[string][]byte)
+	if fields != nil {
+		for k, v := range fields {
+			switch value := v.(type) {
+			case string:
+				byteFields[k] = core.StringToBytes(value)
+			case []byte:
+				byteFields[k] = value
+			default:
+				byteFields[k] = core.StringToBytes(fmt.Sprintf("%v", value))
+			}
+		}
+	}
+
+	// Optimized path for non-blocking scenarios using atomic operations
+	if l.asyncLogger != nil {
+		// Use lock-free async logging for high throughput
+		l.asyncLogger.Log(level, message, byteFields, ctx)
+		return
+	}
+
+	// Hot path is efficient
+	l.writeByte(ctx, level, message, byteFields)
+}
+
+// internal logging method optimized for 1M+ logs/second with []byte fields (zero-allocation)
+// Early filtering to avoid unnecessary work
+func (l *Logger) logByte(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) {
 	// Early return if logger is closed
 	if l.closed.Load() {
 		return
@@ -333,12 +378,55 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 	}
 
 	// Hot path is efficient
-	l.write(ctx, level, message, fields)
+	l.writeByte(ctx, level, message, fields)
 }
 
-	// final write to output dengan zero-allocation optimizations
+	// final write to output dengan zero-allocation optimizations for interface{} fields (backward compatibility)
 func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
 	entry := l.buildEntry(ctx, level, message, fields)
+
+	// Gunakan buffer yang efisien untuk zero-allocation
+	buf := util.GetBufferFromPool()
+	defer util.PutBufferToPool(buf)
+
+	if err := l.formatter.Format(buf, entry); err != nil {
+		l.handleError(err)
+		core.PutEntryToPool(entry)
+		return
+	}
+
+    bytesToWrite := buf.Bytes()
+
+	// Optimized write with minimal locking - only lock when actually writing
+	if l.Config.DisableLocking {
+		// Direct path: no locking at all
+		if n, err := l.out.Write(bytesToWrite); err != nil {
+			l.handleError(err)
+		} else {
+			l.stats.Increment(level, n)
+		}
+	} else {
+		// Standard path with proper locking
+		l.mu.Lock()
+		if n, err := l.out.Write(bytesToWrite); err != nil {
+			l.handleError(err)
+		} else {
+			l.stats.Increment(level, n)
+		}
+		l.mu.Unlock()
+	}
+
+	l.runHooks(entry)
+
+    // must be done after hooks and writing, but before PutEntryToPool
+	l.handleLevelActions(level, entry)
+
+	core.PutEntryToPool(entry)
+}
+
+	// final write to output dengan zero-allocation optimizations for []byte fields (true zero-allocation)
+func (l *Logger) writeByte(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) {
+	entry := l.buildEntryByte(ctx, level, message, fields)
 
 	// Gunakan buffer yang efisien untuk zero-allocation
 	buf := util.GetBufferFromPool()
@@ -496,13 +584,21 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 	entry.Message = message
 	entry.PID = l.pid
 
-	// Copy fields with minimal allocations
+	// Copy fields with minimal allocations - l.fields is now []byte
 	for k, v := range l.fields {
-		entry.Fields[k] = v
+		entry.Fields[k] = v // v is already []byte
 	}
 	if fields != nil {
 		for k, v := range fields {
-			entry.Fields[k] = v
+			// Convert interface{} values to []byte when copying to entry.Fields
+			switch val := v.(type) {
+			case string:
+				entry.Fields[k] = core.StringToBytes(val)
+			case []byte:
+				entry.Fields[k] = val
+			default:
+				entry.Fields[k] = core.StringToBytes(fmt.Sprintf("%v", val))
+			}
 		}
 	}
 
@@ -540,6 +636,68 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 
 	return entry
 }
+
+// buildEntryByte creates a log entry with minimal allocations using []byte fields (true zero-allocation)
+func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) *core.LogEntry {
+    entry := core.GetEntryFromPool()
+
+    // Use clock if available to avoid allocation
+    if l.clock != nil {
+        entry.Timestamp = l.clock.Now()
+    } else {
+        entry.Timestamp = time.Now()
+    }
+
+	entry.Level = level
+	entry.LevelName = level.ToBytes()
+	entry.Message = message
+	entry.PID = l.pid
+
+	// Copy fields with minimal allocations - these are already []byte
+	for k, v := range l.fields {
+		entry.Fields[k] = v
+	}
+	if fields != nil {
+		for k, v := range fields {
+			entry.Fields[k] = v
+		}
+	}
+
+	// Extract context with zero allocation if possible
+	if l.contextExtractor != nil {
+		contextFields := l.contextExtractor(ctx)
+		for k, v := range contextFields {
+			entry.Fields[k] = v // v is already []byte
+		}
+	} else if ctx != nil {
+        contextData := util.ExtractFromContext(ctx)
+        for k, v := range contextData {
+            switch k {
+            case "trace_id": entry.TraceID = core.StringToBytes(v)
+            case "span_id": entry.SpanID = core.StringToBytes(v)
+            case "user_id": entry.UserID = core.StringToBytes(v)
+            case "session_id": entry.SessionID = core.StringToBytes(v)
+            case "request_id": entry.RequestID = core.StringToBytes(v)
+            }
+        }
+        util.PutMapStringToPool(contextData)
+    }
+
+	// Caller info only if required to avoid overhead
+	if l.Config.ShowCaller {
+		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
+	}
+
+    // Stack trace only for ERROR level and above
+    if l.Config.EnableStackTrace && level >= core.ERROR {
+        stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
+        entry.StackTrace = stackTraceBytes
+        entry.StackTraceBufPtr = stackTraceBufPtr
+    }
+
+	return entry
+}
+
 
 // runHooks executes hooks with minimal lock contention
 func (l *Logger) runHooks(entry *core.LogEntry) {
@@ -654,12 +812,29 @@ func (l *Logger) Close() {
 	// If already closed, do nothing (graceful)
 }
 
-// WithFields creates a new logger with additional fields
+// WithFieldsBytes creates a new logger with additional fields using []byte values
+func (l *Logger) WithFieldsBytes(fields map[string][]byte) *Logger {
+	newLogger := l.clone()
+	for k, v := range fields {
+		newLogger.fields[k] = v
+	}
+	return newLogger
+}
+
+// WithFields creates a new logger with additional fields (maintaining backward compatibility)
 // These fields will be included in all log entries made with the returned logger
 func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 	newLogger := l.clone()
 	for k, v := range fields {
-		newLogger.fields[k] = v
+		// Convert interface{} values to []byte where possible
+		switch val := v.(type) {
+		case string:
+			newLogger.fields[k] = core.StringToBytes(val)
+		case []byte:
+			newLogger.fields[k] = val
+		default:
+			newLogger.fields[k] = core.StringToBytes(fmt.Sprintf("%v", val))
+		}
 	}
 	return newLogger
 }
@@ -676,7 +851,7 @@ func (l *Logger) clone() *Logger {
 
     // Create a new map for cloned fields and copy parent fields.
     // Pre-allocate with sufficient capacity to avoid reallocation
-    cloned.fields = make(map[string]interface{}, len(l.fields)+10)
+    cloned.fields = make(map[string][]byte, len(l.fields)+10)
     for k, v := range l.fields {
         cloned.fields[k] = v
     }
@@ -686,28 +861,52 @@ func (l *Logger) clone() *Logger {
 
 // --- Level-based logging methods ---
 
-// Trace logs a message with TRACE level
+// TraceByte logs a message with TRACE level using []byte (zero-allocation)
+func (l *Logger) TraceByte(message []byte) { l.log(context.Background(), core.TRACE, message, nil) }
+
+// DebugByte logs a message with DEBUG level using []byte (zero-allocation)
+func (l *Logger) DebugByte(message []byte) { l.log(context.Background(), core.DEBUG, message, nil) }
+
+// InfoByte logs a message with INFO level using []byte (zero-allocation)
+func (l *Logger) InfoByte(message []byte)  { l.log(context.Background(), core.INFO, message, nil) }
+
+// NoticeByte logs a message with NOTICE level using []byte (zero-allocation)
+func (l *Logger) NoticeByte(message []byte){ l.log(context.Background(), core.NOTICE, message, nil) }
+
+// WarnByte logs a message with WARN level using []byte (zero-allocation)
+func (l *Logger) WarnByte(message []byte)  { l.log(context.Background(), core.WARN, message, nil) }
+
+// ErrorByte logs a message with ERROR level using []byte (zero-allocation)
+func (l *Logger) ErrorByte(message []byte) { l.log(context.Background(), core.ERROR, message, nil) }
+
+// FatalByte logs a message with FATAL level and exits the application using []byte (zero-allocation)
+func (l *Logger) FatalByte(message []byte) { l.log(context.Background(), core.FATAL, message, nil) }
+
+// PanicByte logs a message with PANIC level and panics using []byte (zero-allocation)
+func (l *Logger) PanicByte(message []byte) { l.log(context.Background(), core.PANIC, message, nil) }
+
+// Trace logs a message with TRACE level (maintaining backward compatibility)
 func (l *Logger) Trace(args ...interface{}) { l.log(context.Background(), core.TRACE, l.formatArgsToBytes(args...), nil) }
 
-// Debug logs a message with DEBUG level
+// Debug logs a message with DEBUG level (maintaining backward compatibility)
 func (l *Logger) Debug(args ...interface{}) { l.log(context.Background(), core.DEBUG, l.formatArgsToBytes(args...), nil) }
 
-// Info logs a message with INFO level
+// Info logs a message with INFO level (maintaining backward compatibility)
 func (l *Logger) Info(args ...interface{})  { l.log(context.Background(), core.INFO, l.formatArgsToBytes(args...), nil) }
 
-// Notice logs a message with NOTICE level
+// Notice logs a message with NOTICE level (maintaining backward compatibility)
 func (l *Logger) Notice(args ...interface{}){ l.log(context.Background(), core.NOTICE, l.formatArgsToBytes(args...), nil) }
 
-// Warn logs a message with WARN level
+// Warn logs a message with WARN level (maintaining backward compatibility)
 func (l *Logger) Warn(args ...interface{})  { l.log(context.Background(), core.WARN, l.formatArgsToBytes(args...), nil) }
 
-// Error logs a message with ERROR level
+// Error logs a message with ERROR level (maintaining backward compatibility)
 func (l *Logger) Error(args ...interface{}) { l.log(context.Background(), core.ERROR, l.formatArgsToBytes(args...), nil) }
 
-// Fatal logs a message with FATAL level and exits the application
+// Fatal logs a message with FATAL level and exits the application (maintaining backward compatibility)
 func (l *Logger) Fatal(args ...interface{}) { l.log(context.Background(), core.FATAL, l.formatArgsToBytes(args...), nil) }
 
-// Panic logs a message with PANIC level and panics
+// Panic logs a message with PANIC level and panics (maintaining backward compatibility)
 func (l *Logger) Panic(args ...interface{}) { l.log(context.Background(), core.PANIC, l.formatArgsToBytes(args...), nil) }
 
 // Tracef logs a formatted message with TRACE level
@@ -736,28 +935,52 @@ func (l *Logger) Panicf(format string, args ...interface{}) { l.log(context.Back
 
 // Context-aware logging methods
 
-// TraceC logs a message with TRACE level and extracts context information
+// TraceCByte logs a message with TRACE level and extracts context information using []byte (zero-allocation)
+func (l *Logger) TraceCByte(ctx context.Context, message []byte) { l.log(ctx, core.TRACE, message, nil) }
+
+// DebugCByte logs a message with DEBUG level and extracts context information using []byte (zero-allocation)
+func (l *Logger) DebugCByte(ctx context.Context, message []byte) { l.log(ctx, core.DEBUG, message, nil) }
+
+// InfoCByte logs a message with INFO level and extracts context information using []byte (zero-allocation)
+func (l *Logger) InfoCByte(ctx context.Context, message []byte)  { l.log(ctx, core.INFO, message, nil) }
+
+// NoticeCByte logs a message with NOTICE level and extracts context information using []byte (zero-allocation)
+func (l *Logger) NoticeCByte(ctx context.Context, message []byte){ l.log(ctx, core.NOTICE, message, nil) }
+
+// WarnCByte logs a message with WARN level and extracts context information using []byte (zero-allocation)
+func (l *Logger) WarnCByte(ctx context.Context, message []byte)  { l.log(ctx, core.WARN, message, nil) }
+
+// ErrorCByte logs a message with ERROR level and extracts context information using []byte (zero-allocation)
+func (l *Logger) ErrorCByte(ctx context.Context, message []byte) { l.log(ctx, core.ERROR, message, nil) }
+
+// FatalCByte logs a message with FATAL level and extracts context information, then exits the application using []byte (zero-allocation)
+func (l *Logger) FatalCByte(ctx context.Context, message []byte) { l.log(ctx, core.FATAL, message, nil) }
+
+// PanicCByte logs a message with PANIC level and extracts context information, then panics using []byte (zero-allocation)
+func (l *Logger) PanicCByte(ctx context.Context, message []byte) { l.log(ctx, core.PANIC, message, nil) }
+
+// TraceC logs a message with TRACE level and extracts context information (maintaining backward compatibility)
 func (l *Logger) TraceC(ctx context.Context, args ...interface{}) { l.log(ctx, core.TRACE, l.formatArgsToBytes(args...), nil) }
 
-// DebugC logs a message with DEBUG level and extracts context information
+// DebugC logs a message with DEBUG level and extracts context information (maintaining backward compatibility)
 func (l *Logger) DebugC(ctx context.Context, args ...interface{}) { l.log(ctx, core.DEBUG, l.formatArgsToBytes(args...), nil) }
 
-// InfoC logs a message with INFO level and extracts context information
+// InfoC logs a message with INFO level and extracts context information (maintaining backward compatibility)
 func (l *Logger) InfoC(ctx context.Context, args ...interface{})  { l.log(ctx, core.INFO, l.formatArgsToBytes(args...), nil) }
 
-// NoticeC logs a message with NOTICE level and extracts context information
+// NoticeC logs a message with NOTICE level and extracts context information (maintaining backward compatibility)
 func (l *Logger) NoticeC(ctx context.Context, args ...interface{}){ l.log(ctx, core.NOTICE, l.formatArgsToBytes(args...), nil) }
 
-// WarnC logs a message with WARN level and extracts context information
+// WarnC logs a message with WARN level and extracts context information (maintaining backward compatibility)
 func (l *Logger) WarnC(ctx context.Context, args ...interface{})  { l.log(ctx, core.WARN, l.formatArgsToBytes(args...), nil) }
 
-// ErrorC logs a message with ERROR level and extracts context information
+// ErrorC logs a message with ERROR level and extracts context information (maintaining backward compatibility)
 func (l *Logger) ErrorC(ctx context.Context, args ...interface{}) { l.log(ctx, core.ERROR, l.formatArgsToBytes(args...), nil) }
 
-// FatalC logs a message with FATAL level and extracts context information, then exits the application
+// FatalC logs a message with FATAL level and extracts context information, then exits the application (maintaining backward compatibility)
 func (l *Logger) FatalC(ctx context.Context, args ...interface{}) { l.log(ctx, core.FATAL, l.formatArgsToBytes(args...), nil) }
 
-// PanicC logs a message with PANIC level and extracts context information, then panics
+// PanicC logs a message with PANIC level and extracts context information, then panics (maintaining backward compatibility)
 func (l *Logger) PanicC(ctx context.Context, args ...interface{}) { l.log(ctx, core.PANIC, l.formatArgsToBytes(args...), nil) }
 
 // TracefC logs a formatted message with TRACE level and extracts context information

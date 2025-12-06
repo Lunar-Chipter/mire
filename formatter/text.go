@@ -297,44 +297,16 @@ func (f *TextFormatter) writePostMessage(buf *bytes.Buffer, entry *core.LogEntry
 	}
 }
 
-func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string]interface{}) {
+func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte) {
 	if f.EnableColors {
 		buf.Write(fieldsWrapperColorBytes)
 	}
 	buf.WriteByte('{')
 
-	// Determine field order: either custom order or map order
-	var orderedKeys []string
-	if len(f.CustomFieldOrder) > 0 {
-		// Use custom order for fields that exist in the entry
-		// This avoids string slice allocation if custom order is not used
-		orderedKeys = make([]string, 0, len(fields))
-		// Add fields in custom order
-		for _, field := range f.CustomFieldOrder {
-			if _, exists := fields[field]; exists {
-				orderedKeys = append(orderedKeys, field)
-			}
-		}
-
-		// Add any remaining fields that weren't in the custom order
-		for field := range fields {
-			existsInCustom := false
-			for _, customField := range orderedKeys {
-				if field == customField {
-					existsInCustom = true
-					break
-				}
-			}
-			if !existsInCustom {
-				orderedKeys = append(orderedKeys, field)
-			}
-		}
-	} else {
-		// Use natural map order - avoid extra slice allocation where possible
-		orderedKeys = make([]string, 0, len(fields))
-		for k := range fields {
-			orderedKeys = append(orderedKeys, k)
-		}
+	// Use natural map order - avoid extra slice allocation where possible
+	orderedKeys := make([]string, 0, len(fields))
+	for k := range fields {
+		orderedKeys = append(orderedKeys, k)
 	}
 
 	for i, k := range orderedKeys {
@@ -353,17 +325,13 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string]interf
 			buf.Write(fieldValueColorBytes)
 		}
 
-		// Apply field transformer or mask sensitive data
+		// For byte fields, apply masking if needed
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
 			// Use byte slice for mask value to avoid string allocation
-			buf.Write(core.StringToBytes(f.MaskStringValue)) // Use string to byte conversion
-		} else if transformer, exists := f.FieldTransformers[k]; exists {
-			// Apply field transformer
-			transformedValue := transformer(v)
-			buf.Write(core.StringToBytes(transformedValue)) // Convert string to byte slice without allocation
+			buf.Write(f.MaskStringBytes) // Use pre-converted byte slice
 		} else {
-			// Use optimized FormatValue that minimizes allocations
-			util.FormatValue(buf, v, f.MaxFieldWidth)
+			// Directly append the byte value
+			buf.Write(v)
 		}
 	}
 

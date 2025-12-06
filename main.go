@@ -90,9 +90,9 @@ func main() {
 	ctx = util.WithUserID(ctx, "user-alice")
 
 	// Menggunakan logger default untuk menunjukkan field dan konteks.
-	logWithContext := logDefault.WithFields(map[string]interface{}{
-		"service": "auth-service",
-		"version": "1.0.0",
+	logWithContext := logDefault.WithFieldsBytes(map[string][]byte{
+		"service": core.StringToBytes("auth-service"),
+		"version": core.StringToBytes("1.0.0"),
 	})
 	logWithContext.Info("Pengguna berhasil login.",
 		"username", "alice",

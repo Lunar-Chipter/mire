@@ -17,7 +17,7 @@ type LogEntry struct {
 	LevelName     []byte               `json:"level_name"`             // Byte representation of level for zero-allocation formatting
 	Message       []byte               `json:"message"`                // Log message
 	Caller        *CallerInfo          `json:"caller,omitempty"`       // Caller information
-	Fields        map[string]interface{} `json:"fields,omitempty"`     // Additional fields
+	Fields        map[string][]byte      `json:"fields,omitempty"`     // Additional fields as []byte for zero allocation
 	PID           int                  `json:"pid"`                    // Process ID
 	GoroutineID   []byte               `json:"goroutine_id,omitempty"` // Goroutine ID as byte slice
 	TraceID       []byte               `json:"trace_id,omitempty"`     // Trace ID for distributed tracing as byte slice
@@ -90,25 +90,25 @@ func PutMapFloatToPool(m map[string]float64) {
 	mapFloatPool.Put(m)
 }
 
-// Object pool for reusing map[string]interface{} objects
-var mapInterfacePool = sync.Pool{
+// Object pool for reusing map[string][]byte objects
+var mapBytePool = sync.Pool{
 	New: func() interface{} {
-		return make(map[string]interface{})
+		return make(map[string][]byte)
 	},
 }
 
-// GetMapInterfaceFromPool gets a map[string]interface{} from the pool
-func GetMapInterfaceFromPool() map[string]interface{} {
-	m := mapInterfacePool.Get().(map[string]interface{})
+// GetMapByteFromPool gets a map[string][]byte from the pool
+func GetMapByteFromPool() map[string][]byte {
+	m := mapBytePool.Get().(map[string][]byte)
 	for k := range m {
 		delete(m, k) // Reset the map
 	}
 	return m
 }
 
-// PutMapInterfaceToPool returns a map[string]interface{} to the pool
-func PutMapInterfaceToPool(m map[string]interface{}) {
-	mapInterfacePool.Put(m)
+// PutMapByteToPool returns a map[string][]byte to the pool
+func PutMapByteToPool(m map[string][]byte) {
+	mapBytePool.Put(m)
 }
 
 // stringSlicePool is a pool for reusing string slices
@@ -180,7 +180,7 @@ func (em *CoreMetrics) SerializedCount() int64 {
 }
 
 // clearMap clears a map
-func clearMap(m map[string]interface{}) {
+func clearMap(m map[string][]byte) {
 	for k := range m {
 		delete(m, k)
 	}
@@ -216,7 +216,7 @@ var entryPool = sync.Pool{
 			tagsAsBytes = append(tagsAsBytes, StringToBytes(tag))
 		}
 		return &LogEntry{
-			Fields:        GetMapInterfaceFromPool(),
+			Fields:        GetMapByteFromPool(),
 			CustomMetrics: GetMapFloatFromPool(),
 			Tags:          tagsAsBytes,
 		}
@@ -538,85 +538,8 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 			buf = append(buf, k...)
 			buf = append(buf, ':')
 
-			// Konversi nilai ke string tanpa alokasi berlebih
-			switch val := v.(type) {
-			case string:
-				buf = append(buf, val...)
-			case []byte:
-				buf = append(buf, val...)
-			case int:
-				buf = le.intToBytes(buf, val)
-			case int64:
-				buf = le.int64ToBytes(buf, val)
-			case float64:
-				buf = le.floatToBytes(buf, val)
-			case bool:
-				if val {
-					buf = append(buf, "true"...)
-				} else {
-					buf = append(buf, "false"...)
-				}
-			default:
-				// Gunakan konversi manual untuk menghindari alokasi fmt.Sprintf
-				// Gunakan fungsi konversi lokal untuk menghindari circular import
-				localStringConversion := func(value interface{}) []byte {
-					switch v := value.(type) {
-					case string:
-						return StringToBytes(v)
-					case []byte:
-						return v
-					case int:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendInt(buf, int64(v), 10)
-					case int8:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendInt(buf, int64(v), 10)
-					case int16:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendInt(buf, int64(v), 10)
-					case int32:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendInt(buf, int64(v), 10)
-					case int64:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendInt(buf, v, 10)
-					case uint:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendUint(buf, uint64(v), 10)
-					case uint8:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendUint(buf, uint64(v), 10)
-					case uint16:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendUint(buf, uint64(v), 10)
-					case uint32:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendUint(buf, uint64(v), 10)
-					case uint64:
-						buf := make([]byte, 0, 20)
-						return strconv.AppendUint(buf, v, 10)
-					case float32:
-						buf := make([]byte, 0, 32)
-						return strconv.AppendFloat(buf, float64(v), 'g', -1, 32)
-					case float64:
-						buf := make([]byte, 0, 32)
-						return strconv.AppendFloat(buf, v, 'g', -1, 64)
-					case bool:
-						if v {
-							return StringToBytes("true")
-						}
-						return StringToBytes("false")
-					case nil:
-						return StringToBytes("null")
-					default:
-						// For complex types that can't be easily converted
-						// This is a last resort case - should be avoided in demanding scenarios
-						return StringToBytes("<complex-type>")
-					}
-				}
-				tempBytes := localStringConversion(val)
-				buf = append(buf, tempBytes...)
-			}
+			// Since v is []byte, we can directly append it
+			buf = append(buf, v...)
 			first = false
 		}
 		buf = append(buf, ']')
