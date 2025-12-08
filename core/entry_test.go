@@ -116,7 +116,7 @@ func TestPutEntryToPool(t *testing.T) {
 	entry.Level = ERROR
 	entry.LevelName = []byte("ERROR")
 	entry.Message = []byte("test message")
-	entry.Fields["test"] = "value"
+	entry.Fields["test"] = []byte("value")
 	entry.CustomMetrics["metric"] = 1.0
 	entry.Tags = [][]byte{[]byte("tag1")}
 	entry.PID = 1234
@@ -258,23 +258,23 @@ func TestMapFloatPool(t *testing.T) {
 
 // TestMapInterfacePool tests the map[string]interface{} object pool
 func TestMapInterfacePool(t *testing.T) {
-	m1 := GetMapInterfaceFromPool()
+	m1 := GetMapByteFromPool()
 	if m1 == nil {
-		t.Fatal("GetMapInterfaceFromPool returned nil")
+		t.Fatal("GetMapByteFromPool returned nil")
 	}
 
 	// Add some values
-	m1["test"] = "value"
+	m1["test"] = []byte("value")
 
-	PutMapInterfaceToPool(m1)
+	PutMapByteToPool(m1)
 
 	// Get a new map and check if it's properly reset
-	m2 := GetMapInterfaceFromPool()
+	m2 := GetMapByteFromPool()
 	if len(m2) != 0 {
-		t.Errorf("PutMapInterfaceToPool did not reset map, got length %d", len(m2))
+		t.Errorf("PutMapByteToPool did not reset map, got length %d", len(m2))
 	}
 
-	PutMapInterfaceToPool(m2)
+	PutMapByteToPool(m2)
 }
 
 // TestBufferPool tests the byte buffer object pool
@@ -487,7 +487,7 @@ func TestLogEntryFormatLogToBytes(t *testing.T) {
 	entry.Level = INFO
 	entry.LevelName = []byte("INFO")
 	entry.Message = []byte("test message")
-	entry.Fields["key"] = "value"
+	entry.Fields["key"] = []byte("value")
 	entry.Tags = [][]byte{[]byte("tag1")}
 
 	// Create a buffer and test formatting

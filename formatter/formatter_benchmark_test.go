@@ -160,12 +160,11 @@ func BenchmarkFormatterWithFields(b *testing.B) {
 	entry.Level = core.INFO
 	entry.LevelName = core.StringToBytes("INFO")
 	entry.Message = core.StringToBytes("Test message for benchmark")
-	entry.Fields = map[string]interface{}{
-		"user_id":    123,
-		"action":     "login",
-		"session_id": "sess-456",
-		"source":     "web",
-		"metadata":   map[string]interface{}{"device": "mobile", "version": "1.2.3"},
+	entry.Fields = map[string][]byte{
+		"user_id":    []byte("123"),
+		"action":     []byte("login"),
+		"session_id": []byte("sess-456"),
+		"source":     []byte("web"),
 	}
 
 	for _, tt := range formatters {
@@ -205,12 +204,12 @@ func BenchmarkFormatterWithSensitiveData(b *testing.B) {
 	entry.Level = core.INFO
 	entry.LevelName = core.StringToBytes("INFO")
 	entry.Message = core.StringToBytes("Test message with sensitive data")
-	entry.Fields = map[string]interface{}{
-		"user_id":  123,
-		"action":   "login",
-		"password": "very_secret_password",
-		"token":    "auth_token_12345",
-		"ssn":      "123-45-6789",
+	entry.Fields = map[string][]byte{
+		"user_id":  []byte("123"),
+		"action":   []byte("login"),
+		"password": []byte("very_secret_password"),
+		"token":    []byte("auth_token_12345"),
+		"ssn":      []byte("123-45-6789"),
 	}
 
 	formatters := []struct {
@@ -246,10 +245,10 @@ func createBenchmarkEntry() *core.LogEntry {
 	entry.Message = core.StringToBytes("Test message for benchmark")
 	entry.PID = 12345
 	entry.TraceID = core.StringToBytes("trace-12345")
-	entry.Fields = map[string]interface{}{
-		"user_id": 123,
-		"action":  "login",
-		"status":  "success",
+	entry.Fields = map[string][]byte{
+		"user_id": []byte("123"),
+		"action":  []byte("login"),
+		"status":  []byte("success"),
 	}
 
 	return entry

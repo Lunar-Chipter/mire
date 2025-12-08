@@ -155,8 +155,8 @@ func TestTextFormatterWithFields(t *testing.T) {
 	
 	entry.Level = core.INFO
 	entry.Message = []byte("with fields")
-	entry.Fields["key1"] = "value1"
-	entry.Fields["key2"] = 123
+	entry.Fields["key1"] = []byte("value1")
+	entry.Fields["key2"] = []byte("123")
 	
 	buf := &bytes.Buffer{}
 	err := tf.Format(buf, entry)
@@ -298,9 +298,9 @@ func TestTextFormatterWithCustomFieldOrder(t *testing.T) {
 	
 	entry.Level = core.INFO
 	entry.Message = []byte("with custom field order")
-	entry.Fields["field1"] = "value1"
-	entry.Fields["field2"] = "value2"
-	entry.Fields["field3"] = "value3" // This will be added after the custom-ordered ones
+	entry.Fields["field1"] = []byte("value1")
+	entry.Fields["field2"] = []byte("value2")
+	entry.Fields["field3"] = []byte("value3") // This will be added after the custom-ordered ones
 	
 	buf := &bytes.Buffer{}
 	err := tf.Format(buf, entry)
@@ -330,8 +330,8 @@ func TestTextFormatterWithFieldTransformers(t *testing.T) {
 	
 	entry.Level = core.INFO
 	entry.Message = []byte("with transformed field")
-	entry.Fields["secret"] = "this-should-be-hidden"
-	entry.Fields["normal"] = "this-should-be-visible"
+	entry.Fields["secret"] = []byte("this-should-be-hidden")
+	entry.Fields["normal"] = []byte("this-should-be-visible")
 	
 	buf := &bytes.Buffer{}
 	err := tf.Format(buf, entry)
@@ -357,9 +357,9 @@ func TestTextFormatterWithSensitiveFields(t *testing.T) {
 	
 	entry.Level = core.INFO
 	entry.Message = []byte("with sensitive field")
-	entry.Fields["password"] = "secret123"
-	entry.Fields["token"] = "abc-def-ghi"
-	entry.Fields["normal_field"] = "visible_value"
+	entry.Fields["password"] = []byte("secret123")
+	entry.Fields["token"] = []byte("abc-def-ghi")
+	entry.Fields["normal_field"] = []byte("visible_value")
 	
 	buf := &bytes.Buffer{}
 	err := tf.Format(buf, entry)
@@ -529,11 +529,11 @@ func TestTextFormatterFormatFields(t *testing.T) {
 	
 	buf := &bytes.Buffer{}
 	
-	fields := map[string]interface{}{
-		"string_field": "value",
-		"int_field":    42,
-		"bool_field":   true,
-		"float_field":  3.14,
+	fields := map[string][]byte{
+		"string_field": []byte("value"),
+		"int_field":    []byte("42"),
+		"bool_field":   []byte("true"),
+		"float_field":  []byte("3.14"),
 	}
 	
 	tf.formatFields(buf, fields)

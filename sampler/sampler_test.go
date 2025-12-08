@@ -2,6 +2,7 @@ package sampler
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -20,10 +21,10 @@ type sampleEntry struct {
 	ctx    context.Context
 	level  core.Level
 	msg    []byte
-	fields map[string]interface{}
+	fields map[string][]byte
 }
 
-func (m *mockSamplerProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string]interface{}) {
+func (m *mockSamplerProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	
@@ -119,7 +120,7 @@ func TestSamplingLoggerLog(t *testing.T) {
 	// Log 10 messages - should only log 5 (every 2nd one)
 	for i := 0; i < 10; i++ {
 		msg := []byte("message " + string(rune(i+'0')))
-		sampler.Log(ctx, core.INFO, msg, map[string]interface{}{"idx": i})
+		sampler.Log(ctx, core.INFO, msg, map[string][]byte{"idx": []byte(fmt.Sprintf("%d", i))})
 	}
 	
 	// Verify that only approximately half the messages were processed
@@ -152,8 +153,8 @@ func TestSamplingLoggerLog(t *testing.T) {
 		// The 0-indexed calls that should result in logs are 1, 3, 5, 7, 9 (the 2nd, 4th, 6th, 8th, 10th calls)
 		expectedIndices := []int{1, 3, 5, 7, 9}
 		for i, entry := range loggedEntries {
-			if idx, ok := entry.fields["idx"]; !ok || idx != expectedIndices[i] {
-				t.Errorf("Expected logged entry %d to have idx %d, got %v", i, expectedIndices[i], idx)
+			if idx, ok := entry.fields["idx"]; !ok || string(idx) != fmt.Sprintf("%d", expectedIndices[i]) {
+				t.Errorf("Expected logged entry %d to have idx %d, got %v", i, expectedIndices[i], string(idx))
 			}
 		}
 	}
@@ -231,9 +232,9 @@ func TestSamplingLoggerConcurrent(t *testing.T) {
 			defer wg.Done()
 			for j := 0; j < logsPerGoroutine; j++ {
 				msg := []byte("goroutine " + string(rune(goroutineID+'0')) + " log " + string(rune(j+'0')))
-				sampler.Log(ctx, core.INFO, msg, map[string]interface{}{
-					"goroutine": goroutineID,
-					"log_num":   j,
+				sampler.Log(ctx, core.INFO, msg, map[string][]byte{
+					"goroutine": []byte(fmt.Sprintf("%d", goroutineID)),
+					"log_num":   []byte(fmt.Sprintf("%d", j)),
 				})
 			}
 		}(i)
@@ -288,7 +289,7 @@ func TestSamplingLoggerWithDifferentLevels(t *testing.T) {
 	levels := []core.Level{core.TRACE, core.DEBUG, core.INFO, core.WARN, core.ERROR, core.FATAL, core.PANIC}
 	
 	for _, level := range levels {
-		sampler.Log(ctx, level, []byte("level test"), map[string]interface{}{"level": level.String()})
+		sampler.Log(ctx, level, []byte("level test"), map[string][]byte{"level": []byte(level.String())})
 	}
 	
 	processor.mu.Lock()
@@ -325,11 +326,11 @@ func TestSamplingLoggerWithFields(t *testing.T) {
 	ctx := context.Background()
 	
 	// Log with various field types
-	fields := map[string]interface{}{
-		"string_field": "value",
-		"int_field":    42,
-		"bool_field":   true,
-		"float_field":  3.14,
+	fields := map[string][]byte{
+		"string_field": []byte("value"),
+		"int_field":    []byte("42"),
+		"bool_field":   []byte("true"),
+		"float_field":  []byte("3.14"),
 	}
 	
 	sampler.Log(ctx, core.INFO, []byte("fields test"), fields)
@@ -346,8 +347,8 @@ func TestSamplingLoggerWithFields(t *testing.T) {
 	for key, expectedValue := range fields {
 		if actualValue, exists := entry.fields[key]; !exists {
 			t.Errorf("Expected field %s not found in logged entry", key)
-		} else if actualValue != expectedValue {
-			t.Errorf("Field %s: expected %v, got %v", key, expectedValue, actualValue)
+		} else if string(actualValue) != string(expectedValue) {
+			t.Errorf("Field %s: expected %v, got %v", key, string(expectedValue), string(actualValue))
 		}
 	}
 }

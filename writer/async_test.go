@@ -2,6 +2,7 @@ package writer
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync"
 	"testing"
@@ -21,7 +22,7 @@ type mockLogProcessor struct {
 	mu              sync.Mutex
 }
 
-func (m *mockLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string]interface{}) {
+func (m *mockLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	
@@ -83,7 +84,7 @@ func TestAsyncLoggerLog(t *testing.T) {
 	ctx := context.Background()
 	
 	// Log a message asynchronously
-	asyncLogger.Log(core.INFO, []byte("test message"), map[string]interface{}{"key": "value"}, ctx)
+	asyncLogger.Log(core.INFO, []byte("test message"), map[string][]byte{"key": []byte("value")}, ctx)
 	
 	// Give some time for the async processing
 	time.Sleep(50 * time.Millisecond)
@@ -109,7 +110,7 @@ func TestAsyncLoggerLog(t *testing.T) {
 		if string(entry.msg) != "test message" {
 			t.Errorf("Expected message 'test message', got '%s'", string(entry.msg))
 		}
-		if val, ok := entry.fields["key"]; !ok || val != "value" {
+		if val, ok := entry.fields["key"]; !ok || string(val) != "value" {
 			t.Errorf("Expected field 'key' with value 'value', got %+v", entry.fields)
 		}
 	}
@@ -130,7 +131,7 @@ func TestAsyncLoggerMultipleLogs(t *testing.T) {
 	// Log multiple messages
 	for i := 0; i < 10; i++ {
 		asyncLogger.Log(core.DEBUG, []byte("message "+string(rune(i+'0'))), 
-			map[string]interface{}{"idx": i}, ctx)
+			map[string][]byte{"idx": []byte(fmt.Sprintf("%d", i))}, ctx)
 	}
 	
 	// Give some time for the async processing
@@ -319,7 +320,7 @@ func TestAsyncLoggerConcurrent(t *testing.T) {
 			ctx := context.Background()
 			for j := 0; j < messagesPerGoroutine; j++ {
 				msg := []byte("message from goroutine " + string(rune(goroutineID+'0')) + " - " + string(rune(j+'0')))
-				asyncLogger.Log(core.INFO, msg, map[string]interface{}{"goroutine": goroutineID, "msg_num": j}, ctx)
+				asyncLogger.Log(core.INFO, msg, map[string][]byte{"goroutine": []byte(fmt.Sprintf("%d", goroutineID)), "msg_num": []byte(fmt.Sprintf("%d", j))}, ctx)
 			}
 		}(i)
 	}
@@ -357,7 +358,7 @@ func TestAsyncLoggerConcurrent(t *testing.T) {
 // panicLogProcessor is a mock processor that panics on Log
 type panicLogProcessor struct{}
 
-func (p *panicLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string]interface{}) {
+func (p *panicLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
 	panic("intentional panic for testing")
 }
 
@@ -389,7 +390,7 @@ func TestAsyncLoggerWorker(t *testing.T) {
 	job := &logJob{
 		level: core.INFO,
 		msg: []byte("direct job"),
-		fields: map[string]interface{}{"source": "direct"},
+		fields: map[string][]byte{"source": []byte("direct")},
 		ctx: ctx,
 	}
 	

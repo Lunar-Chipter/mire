@@ -189,9 +189,9 @@ func TestJSONFormatterWithFields(t *testing.T) {
 	
 	entry.Level = core.INFO
 	entry.Message = []byte("with fields")
-	entry.Fields["key1"] = "value1"
-	entry.Fields["key2"] = 42
-	entry.Fields["key3"] = true
+	entry.Fields["key1"] = []byte("value1")
+	entry.Fields["key2"] = []byte("42")
+	entry.Fields["key3"] = []byte("true")
 	
 	buf := &bytes.Buffer{}
 	err := jf.Format(buf, entry)
@@ -478,11 +478,11 @@ func TestJSONFormatterFormatFields(t *testing.T) {
 	
 	buf := &bytes.Buffer{}
 	
-	fields := map[string]interface{}{
-		"field1": "value1",
-		"field2": 123,
-		"field3": true,
-		"field4": 3.14,
+	fields := map[string][]byte{
+		"field1": []byte("value1"),
+		"field2": []byte("123"),
+		"field3": []byte("true"),
+		"field4": []byte("3.14"),
 	}
 	
 	jf.formatFields(buf, fields)
@@ -509,9 +509,9 @@ func TestJSONFormatterFormatFieldsIndented(t *testing.T) {
 	
 	buf := &bytes.Buffer{}
 	
-	fields := map[string]interface{}{
-		"field1": "value1",
-		"field2": 456,
+	fields := map[string][]byte{
+		"field1": []byte("value1"),
+		"field2": []byte("456"),
 	}
 	
 	// Call formatFieldsIndented with indent level 1
@@ -597,9 +597,9 @@ func TestJSONFormatterFieldKeyMapping(t *testing.T) {
 	
 	entry.Level = core.INFO
 	entry.Message = []byte("with field mapping")
-	entry.Fields["old_key"] = "value1"
-	entry.Fields["user_id"] = "12345"
-	entry.Fields["normal_key"] = "normal_value"
+	entry.Fields["old_key"] = []byte("value1")
+	entry.Fields["user_id"] = []byte("12345")
+	entry.Fields["normal_key"] = []byte("normal_value")
 	
 	buf := &bytes.Buffer{}
 	err := jf.Format(buf, entry)

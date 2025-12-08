@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -14,7 +15,7 @@ func BenchmarkLogEntryPoolOperations(b *testing.B) {
 		entry.Timestamp = time.Now()
 		entry.Level = INFO
 		entry.Message = []byte("test message")
-		entry.Fields["test"] = i
+		entry.Fields["test"] = []byte(fmt.Sprintf("%d", i))
 		
 		PutEntryToPool(entry)
 	}
@@ -56,10 +57,10 @@ func BenchmarkLogEntryFormatLogToBytes(b *testing.B) {
 	entry.Level = ERROR
 	entry.LevelName = []byte("ERROR")
 	entry.Message = []byte("test message for benchmark")
-	entry.Fields = map[string]interface{}{
-		"user_id": 123,
-		"action":  "login",
-		"status":  "success",
+	entry.Fields = map[string][]byte{
+		"user_id": []byte("123"),
+		"action":  []byte("login"),
+		"status":  []byte("success"),
 	}
 
 	b.ResetTimer()
@@ -114,11 +115,11 @@ func BenchmarkMapInterfacePoolOperations(b *testing.B) {
 	b.ResetTimer()
 	
 	for i := 0; i < b.N; i++ {
-		m := GetMapInterfaceFromPool()
-		m["key"] = "value"
-		m["num"] = i
+		m := GetMapByteFromPool()
+		m["key"] = []byte("value")
+		m["num"] = []byte(fmt.Sprintf("%d", i))
 		
-		PutMapInterfaceToPool(m)
+		PutMapByteToPool(m)
 	}
 }
 
@@ -180,9 +181,9 @@ func BenchmarkZeroAllocJSONSerialize(b *testing.B) {
 	entry.Level = INFO
 	entry.LevelName = []byte("INFO")
 	entry.Message = []byte("test message")
-	entry.Fields = map[string]interface{}{
-		"user_id": 123,
-		"action":  "login",
+	entry.Fields = map[string][]byte{
+		"user_id": []byte("123"),
+		"action":  []byte("login"),
 	}
 	
 	b.ResetTimer()

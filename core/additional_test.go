@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -24,7 +25,7 @@ func TestConcurrentPoolOperations(t *testing.T) {
 				entry.Timestamp = time.Now()
 				entry.Level = ERROR
 				entry.Message = []byte("test message")
-				entry.Fields["test"] = j
+				entry.Fields["test"] = []byte(fmt.Sprintf("%d", j))
 
 				// Use the entry (simulated)
 				_ = entry.LevelName
@@ -131,8 +132,8 @@ func TestEntryFormatLogToBytesConcurrent(t *testing.T) {
 				entry.Level = INFO
 				entry.LevelName = []byte("INFO")
 				entry.Message = []byte("test message")
-				entry.Fields["iteration"] = j
-				entry.Fields["goroutine"] = i
+				entry.Fields["iteration"] = []byte(fmt.Sprintf("%d", j))
+				entry.Fields["goroutine"] = []byte(fmt.Sprintf("%d", i))
 				
 				// Use formatLogToBytes - this should not cause race conditions
 				buf := make([]byte, 0, 100)
@@ -195,23 +196,23 @@ func TestEntryFieldManipulation(t *testing.T) {
 	defer PutEntryToPool(entry)
 
 	// Add various types of fields
-	entry.Fields["string_val"] = "hello"
-	entry.Fields["int_val"] = 42
-	entry.Fields["float_val"] = 3.14
-	entry.Fields["bool_val"] = true
+	entry.Fields["string_val"] = []byte("hello")
+	entry.Fields["int_val"] = []byte("42")
+	entry.Fields["float_val"] = []byte("3.14")
+	entry.Fields["bool_val"] = []byte("true")
 	entry.Fields["nil_val"] = nil
 
 	// Verify all fields are stored correctly
-	if entry.Fields["string_val"] != "hello" {
+	if string(entry.Fields["string_val"]) != "hello" {
 		t.Error("String field not stored correctly")
 	}
-	if entry.Fields["int_val"] != 42 {
+	if string(entry.Fields["int_val"]) != "42" {
 		t.Error("Int field not stored correctly")
 	}
-	if entry.Fields["float_val"] != 3.14 {
+	if string(entry.Fields["float_val"]) != "3.14" {
 		t.Error("Float field not stored correctly")
 	}
-	if entry.Fields["bool_val"] != true {
+	if string(entry.Fields["bool_val"]) != "true" {
 		t.Error("Bool field not stored correctly")
 	}
 	if entry.Fields["nil_val"] != nil {
@@ -234,7 +235,7 @@ func TestEntryWithAllFields(t *testing.T) {
 	entry.Caller.Line = 100
 	entry.Caller.Function = "CompleteTest"
 	entry.Caller.Package = "main"
-	entry.Fields["key"] = "value"
+	entry.Fields["key"] = []byte("value")
 	entry.PID = 12345
 	entry.GoroutineID = []byte("999")
 	entry.TraceID = []byte("trace-12345")
@@ -274,7 +275,7 @@ func TestEntryWithAllFields(t *testing.T) {
 	if len(entry.Fields) != 1 {
 		t.Error("Fields map should have 1 entry")
 	}
-	if entry.Fields["key"] != "value" {
+	if string(entry.Fields["key"]) != "value" {
 		t.Error("Fields value not set correctly")
 	}
 	if string(entry.UserID) != "user-11111" {

@@ -31,7 +31,7 @@ func TestLogEntryPoolOperations(t *testing.T) {
 	entry.Timestamp = time.Now()
 	entry.Level = ERROR
 	entry.Message = []byte("test message")
-	entry.Fields["test"] = "value"
+	entry.Fields["test"] = []byte("value")
 
 	// Put back to pool
 	PutEntryToPool(entry)
@@ -128,25 +128,25 @@ func TestCallerInfoPoolOperations(t *testing.T) {
 
 // TestMapPools tests the map pools functionality
 func TestMapPools(t *testing.T) {
-	// Test map interface pool
-	map1 := GetMapInterfaceFromPool()
+	// Test map byte pool
+	map1 := GetMapByteFromPool()
 	if map1 == nil {
-		t.Fatal("GetMapInterfaceFromPool returned nil")
+		t.Fatal("GetMapByteFromPool returned nil")
 	}
 	if len(map1) != 0 {
 		t.Error("Initial map should be empty")
 	}
 
 	// Add some data
-	map1["key1"] = "value1"
-	map1["key2"] = 42
+	map1["key1"] = []byte("value1")
+	map1["key2"] = []byte("42")
 
 	// Put back to pool
-	PutMapInterfaceToPool(map1)
+	PutMapByteToPool(map1)
 
 	// Get another and verify it's clean
-	map2 := GetMapInterfaceFromPool()
-	defer PutMapInterfaceToPool(map2)
+	map2 := GetMapByteFromPool()
+	defer PutMapByteToPool(map2)
 
 	if len(map2) != 0 {
 		t.Error("Pool should return clean map after put")

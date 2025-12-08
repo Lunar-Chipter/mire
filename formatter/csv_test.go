@@ -376,9 +376,9 @@ func TestCSVFormatterWithSensitiveFields(t *testing.T) {
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
 	entry.Message = []byte("with sensitive fields")
-	entry.Fields["password"] = "secret123"
-	entry.Fields["token"] = "abc-def-ghi"
-	entry.Fields["normal_field"] = "visible_value"
+	entry.Fields["password"] = []byte("secret123")
+	entry.Fields["token"] = []byte("abc-def-ghi")
+	entry.Fields["normal_field"] = []byte("visible_value")
 	
 	buf := &bytes.Buffer{}
 	err := cf.Format(buf, entry)
@@ -421,7 +421,7 @@ func TestCSVFormatterWithFieldTransformers(t *testing.T) {
 	entry.Timestamp = time.Now()
 	entry.Level = core.INFO
 	entry.Message = []byte("with transformed field")
-	entry.Fields["secret_field"] = "original_value"
+	entry.Fields["secret_field"] = []byte("original_value")
 	
 	buf := &bytes.Buffer{}
 	err := cf.Format(buf, entry)
