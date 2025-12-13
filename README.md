@@ -821,24 +821,14 @@ Need help? Join our community:
 
 ## 📄 Changelog
 
-### v0.0.5 - Test Suite Fixes (2025-12-08)
-
-- **Test Fixes**: Fixed 50+ test errors across all packages after zero-allocation migration
-- **Type Safety**: Updated all test files to use `map[string][]byte` instead of `map[string]interface{}`
-- **Pool Functions**: Replaced deprecated `GetMapInterfaceFromPool()` with `GetMapByteFromPool()`
-- **Comparisons**: Fixed []byte comparisons in test assertions
-- **Mock Interfaces**: Updated all mock implementations to match new signatures
-- **Build Status**: All 11 packages now pass tests successfully
-- **Stability**: 100% test coverage maintained across the codebase
-
-### v0.0.4 - Zero-Allocation Redesign
+### v0.0.4 - Zero-Allocation Redesign and Test Suite Fixes
 
 - **Major Enhancement**: Complete internal redesign with []byte fields to eliminate string conversion overhead
 - **Performance**: Achieved near-zero allocation performance with improved formatter efficiency
 - **Architecture**: Refactored core components for memory hierarchy optimization
 - **Features**: Enhanced context extraction and distributed tracing support
-- **Bug Fixes**: Fixed several benchmark test errors and concurrent logging issues
-- **Testing**: Updated tests to ensure reliability
+- **Bug Fixes**: Fixed concurrent metrics counter race conditions and unused import errors
+- **Testing**: Fixed 50+ test errors across all packages, updated for type safety with `map[string][]byte`, ensured 100% test coverage and build stability
 
 ### v0.0.3 - Enhanced Features
 
