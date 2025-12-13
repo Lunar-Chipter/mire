@@ -319,7 +319,7 @@ go test -bench=. ./...
 go run main.go
 ```
 
-### Benchmark Results (v0.0.5)
+### Benchmark Results (v0.0.4)
 
 | Operation | Time per op | Allocs per op | Bytes per op |
 |-----------|-------------|---------------|--------------|
@@ -336,7 +336,7 @@ go run main.go
 
 The Mire logging library has been tested across various performance aspects including memory allocation, throughput, and component performance. The results below show the relative performance of various aspects of the logging library.
 
-### Memory Allocation Benchmarks (v0.0.5)
+### Memory Allocation Benchmarks (v0.0.4)
 
 #### Core Operations Performance
 
@@ -360,7 +360,7 @@ The Mire logging library has been tested across various performance aspects incl
 
 Note: Significant improvement due to zero-allocation design with direct byte slice operations.
 
-#### Allocation Comparison by Formatter (v0.0.5)
+#### Allocation Comparison by Formatter (v0.0.4)
 
 | Formatter | Time/Op | Bytes/Op | Allocs/Op |
 |-----------|---------|----------|-----------|
@@ -372,7 +372,7 @@ Note: Significant improvement due to zero-allocation design with direct byte sli
 
 Note: All formatters achieve excellent performance with zero-allocation batch operations.
 
-### Throughput Benchmarks (v0.0.5)
+### Throughput Benchmarks (v0.0.4)
 
 #### Throughput by Number of Fields
 
@@ -395,7 +395,7 @@ Note: All formatters achieve excellent performance with zero-allocation batch op
 
 Note: Performance improved due to zero-allocation design.
 
-#### Throughput by Formatter (v0.0.5)
+#### Throughput by Formatter (v0.0.4)
 
 | Formatter              | Time/Ops | Allocs/Operation |
 |------------------------|----------|------------------|
@@ -414,7 +414,7 @@ Note: Formatters achieve better performance with direct []byte manipulation. CSV
 - Handles 10 goroutines with 1000 messages each efficiently
 - Concurrent formatter operations: ~444ns/op with 1 alloc/op
 
-### Performance Conclusion (v0.0.5)
+### Performance Conclusion (v0.0.4)
 
 1. **Ultra-Low Memory Allocation**: The library achieves 1-6 allocations per log operation with []byte fields directly.
 
@@ -431,7 +431,7 @@ Note: Formatters achieve better performance with direct []byte manipulation. CSV
 
 6. **Improved Architecture**: Uses []byte-first design and cache-friendly memory access patterns.
 
-The Mire logging library v0.0.5 is optimized for high-load applications requiring minimal allocations and maximum throughput.
+The Mire logging library v0.0.4 is optimized for high-load applications requiring minimal allocations and maximum throughput.
 
 ## 🏗️ Architecture
 
