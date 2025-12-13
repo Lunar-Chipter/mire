@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"unsafe"
 )
 
 // Constants for compile-time configuration
 const (
 	// Buffer sizes for different pool types - aligned with zero-allocation philosophy
-	SmallBufferSize       = 512   // Untuk perf-critical
-	MediumBufferSize      = 2048  // Untuk standard logs  
-	LargeBufferSize       = 8192  // Untuk verbose debugging
+	SmallBufferSize       = 512  // Untuk perf-critical
+	MediumBufferSize      = 2048 // Untuk standard logs
+	LargeBufferSize       = 8192 // Untuk verbose debugging
 	DefaultBufferSize     = MediumBufferSize
 	MaxBufferPoolSize     = LargeBufferSize
 	SmallByteSliceSize    = 64
@@ -29,14 +30,14 @@ var (
 // PoolMetrics for observability with atomic operations
 // Built-in performance metrics with zero allocation overhead
 type PoolMetrics struct {
-	bufferGetCount    int64
-	bufferPutCount    int64
-	sliceGetCount     int64
-	slicePutCount     int64
-	mapGetCount       int64
-	mapPutCount       int64
-	poolMissCount     int64
-	discardedCount    int64
+	bufferGetCount int64
+	bufferPutCount int64
+	sliceGetCount  int64
+	slicePutCount  int64
+	mapGetCount    int64
+	mapPutCount    int64
+	poolMissCount  int64
+	discardedCount int64
 }
 
 // Global metrics instance
@@ -49,42 +50,42 @@ func GetPoolMetrics() *PoolMetrics {
 
 // BufferGetCount returns the number of buffer gets
 func (pm *PoolMetrics) BufferGetCount() int64 {
-	return pm.bufferGetCount
+	return atomic.LoadInt64(&pm.bufferGetCount)
 }
 
 // BufferPutCount returns the number of buffer puts
 func (pm *PoolMetrics) BufferPutCount() int64 {
-	return pm.bufferPutCount
+	return atomic.LoadInt64(&pm.bufferPutCount)
 }
 
 // SliceGetCount returns the number of slice gets
 func (pm *PoolMetrics) SliceGetCount() int64 {
-	return pm.sliceGetCount
+	return atomic.LoadInt64(&pm.sliceGetCount)
 }
 
 // SlicePutCount returns the number of slice puts
 func (pm *PoolMetrics) SlicePutCount() int64 {
-	return pm.slicePutCount
+	return atomic.LoadInt64(&pm.slicePutCount)
 }
 
 // MapGetCount returns the number of map gets
 func (pm *PoolMetrics) MapGetCount() int64 {
-	return pm.mapGetCount
+	return atomic.LoadInt64(&pm.mapGetCount)
 }
 
 // MapPutCount returns the number of map puts
 func (pm *PoolMetrics) MapPutCount() int64 {
-	return pm.mapPutCount
+	return atomic.LoadInt64(&pm.mapPutCount)
 }
 
 // PoolMissCount returns the number of pool misses
 func (pm *PoolMetrics) PoolMissCount() int64 {
-	return pm.poolMissCount
+	return atomic.LoadInt64(&pm.poolMissCount)
 }
 
 // DiscardedCount returns the number of discarded items
 func (pm *PoolMetrics) DiscardedCount() int64 {
-	return pm.discardedCount
+	return atomic.LoadInt64(&pm.discardedCount)
 }
 
 // Zero-allocation buffer pool with pre-allocated buffers
@@ -150,7 +151,7 @@ func (b *LogBuffer) Reset() {
 
 // GetBufferFromPool gets a byte buffer from the pool
 func GetBufferFromPool() *bytes.Buffer {
-	globalPoolMetrics.bufferGetCount++
+	atomic.AddInt64(&globalPoolMetrics.bufferGetCount, 1)
 	// Try to get from goroutine-local pool first for zero lock contention
 	localPool := GetGoroutineLocalBufferPool()
 	buf := localPool.GetBufferFromLocalPool()
@@ -164,7 +165,7 @@ func GetBufferFromPool() *bytes.Buffer {
 
 // PutBufferToPool returns a byte buffer to the pool
 func PutBufferToPool(buf *bytes.Buffer) {
-	globalPoolMetrics.bufferPutCount++
+	atomic.AddInt64(&globalPoolMetrics.bufferPutCount, 1)
 	// Try to put to goroutine-local pool first for zero lock contention
 	localPool := GetGoroutineLocalBufferPool()
 	if localPool.PutBufferToLocalPool(buf) {
@@ -185,7 +186,7 @@ var smallByteSlicePool = sync.Pool{
 
 // GetSmallByteSliceFromPool gets a small byte slice from the pool.
 func GetSmallByteSliceFromPool() []byte {
-	globalPoolMetrics.sliceGetCount++
+	atomic.AddInt64(&globalPoolMetrics.sliceGetCount, 1)
 	return smallByteSlicePool.Get().([]byte)[:0] // Get and reset length
 }
 
@@ -194,9 +195,9 @@ func PutSmallByteSliceToPool(b []byte) {
 	// Avoid putting back overly large slices to prevent pool pollution
 	if cap(b) < MaxSmallSlicePoolSize { // Keep slices up to 1KB
 		smallByteSlicePool.Put(b)
-		globalPoolMetrics.slicePutCount++
+		atomic.AddInt64(&globalPoolMetrics.slicePutCount, 1)
 	} else {
-		globalPoolMetrics.discardedCount++
+		atomic.AddInt64(&globalPoolMetrics.discardedCount, 1)
 	}
 }
 
@@ -209,7 +210,7 @@ var mapStringPool = sync.Pool{
 
 // GetMapStringFromPool gets a map[string]string from the pool
 func GetMapStringFromPool() map[string]string {
-	globalPoolMetrics.mapGetCount++
+	atomic.AddInt64(&globalPoolMetrics.mapGetCount, 1)
 	m := mapStringPool.Get().(map[string]string)
 	for k := range m {
 		delete(m, k) // Reset the map
@@ -220,7 +221,7 @@ func GetMapStringFromPool() map[string]string {
 // PutMapStringToPool returns a map[string]string to the pool
 func PutMapStringToPool(m map[string]string) {
 	mapStringPool.Put(m)
-	globalPoolMetrics.mapPutCount++
+	atomic.AddInt64(&globalPoolMetrics.mapPutCount, 1)
 }
 
 // String slice pool for reusing string slices (e.g., for map keys)
@@ -232,7 +233,7 @@ var stringSlicePool = sync.Pool{
 
 // GetStringSliceFromPool gets a []string from the pool
 func GetStringSliceFromPool() []string {
-	globalPoolMetrics.sliceGetCount++
+	atomic.AddInt64(&globalPoolMetrics.sliceGetCount, 1)
 	s := stringSlicePool.Get().([]string)
 	return s[:0] // Reset slice length but keep capacity
 }
@@ -240,7 +241,7 @@ func GetStringSliceFromPool() []string {
 // PutStringSliceToPool returns a []string to the pool
 func PutStringSliceToPool(s []string) {
 	stringSlicePool.Put(s)
-	globalPoolMetrics.slicePutCount++
+	atomic.AddInt64(&globalPoolMetrics.slicePutCount, 1)
 }
 
 // Padding for cache alignment
@@ -250,9 +251,9 @@ type cachePadding struct {
 
 // Goroutine-local pools to reduce lock contention
 var (
-	goroutineBufferPools    sync.Map // map[uint64]*localBufferPool
-	goroutineSlicePools     sync.Map // map[uint64]*localSlicePool
-	goroutineMapPools       sync.Map // map[uint64]*localMapPool
+	goroutineBufferPools sync.Map // map[uint64]*localBufferPool
+	goroutineSlicePools  sync.Map // map[uint64]*localSlicePool
+	goroutineMapPools    sync.Map // map[uint64]*localMapPool
 )
 
 // Local pool structures for goroutine-local storage
@@ -299,7 +300,7 @@ func (lp *localBufferPool) GetBufferFromLocalPool() *bytes.Buffer {
 		return buf
 	default:
 		// Local pool is empty, indicate to use global pool
-		globalPoolMetrics.poolMissCount++
+		atomic.AddInt64(&globalPoolMetrics.poolMissCount, 1)
 		return nil
 	}
 }
