@@ -8,32 +8,58 @@ import (
 	"github.com/Lunar-Chipter/mire/util"
 )
 
+// JSON key constants for zero-allocation
+var (
+	jsonTimestampKey = []byte("\"timestamp\":\"")
+	jsonLevelKey     = []byte("\"level_name\":\"")
+	jsonMessageKey   = []byte("\"message\":\"")
+	jsonPidKey       = []byte(",\"pid\":")
+	jsonCallerKey    = []byte(",\"caller\":\"")
+	jsonGoroutineKey = []byte(",\"goroutine_id\":")
+	jsonTraceKey     = []byte(",\"trace_id\":\"")
+	jsonSpanKey      = []byte(",\"span_id\":\"")
+	jsonRequestKey   = []byte(",\"request_id\":\"")
+	jsonUserKey      = []byte(",\"user_id\":\"")
+	jsonFieldsKey    = []byte(",\"fields\":")
+	jsonTagsKey      = []byte(",\"tags\":")
+	jsonMetricsKey   = []byte(",\"metrics\":")
+	jsonStackKey     = []byte(",\"stack_trace\":")
+	jsonDurationKey  = []byte(",\"duration_ns\":")
+	jsonQuote        = []byte("\"")
+	jsonComma        = []byte(",")
+	jsonColon        = []byte(":")
+	jsonBraceOpen    = []byte("{")
+	jsonBraceClose   = []byte("}")
+	jsonBracketOpen  = []byte("[")
+	jsonBracketClose = []byte("]")
+)
+
 // JSONFormatter formats log entries in JSON format
 type JSONFormatter struct {
-	PrettyPrint         bool                                       // Enable pretty-printed JSON
-	TimestampFormat     string                                     // Custom timestamp format
-	ShowCaller          bool                                       // Show caller information
-	ShowGoroutine       bool                                       // Show goroutine ID
-	ShowPID             bool                                       // Show process ID
-	ShowTraceInfo       bool                                       // Show trace information
-	EnableStackTrace    bool                                       // Enable stack trace for errors
-	EnableDuration      bool                                       // Show operation duration
-	FieldKeyMap         map[string]string                          // Map for renaming fields
-	DisableHTMLEscape   bool                                       // Disable HTML escaping in JSON
-	SensitiveFields     []string                                   // List of sensitive field names
-	MaskSensitiveData   bool                                       // Whether to mask sensitive data
-	MaskStringValue     string                                     // String value to use for masking
-	MaskStringBytes     []byte                                     // Byte slice for masking (zero-allocation)
-	FieldTransformers   map[string]func(interface{}) interface{}   // Functions to transform field values
+	PrettyPrint       bool                                     // Enable pretty-printed JSON
+	TimestampFormat   string                                   // Custom timestamp format
+	ShowCaller        bool                                     // Show caller information
+	ShowGoroutine     bool                                     // Show goroutine ID
+	ShowPID           bool                                     // Show process ID
+	ShowTraceInfo     bool                                     // Show trace information
+	EnableStackTrace  bool                                     // Enable stack trace for errors
+	EnableDuration    bool                                     // Show operation duration
+	FieldKeyMap       map[string]string                        // Map for renaming fields
+	DisableHTMLEscape bool                                     // Disable HTML escaping in JSON
+	SensitiveFields   []string                                 // List of sensitive field names
+	MaskSensitiveData bool                                     // Whether to mask sensitive data
+	MaskStringValue   string                                   // String value to use for masking
+	MaskStringBytes   []byte                                   // Byte slice for masking (zero-allocation)
+	FieldTransformers map[string]func(interface{}) interface{} // Functions to transform field values
 }
 
 // NewJSONFormatter creates a new JSONFormatter
 func NewJSONFormatter() *JSONFormatter {
 	return &JSONFormatter{
-		MaskStringValue: "[MASKED]",
-		FieldKeyMap:     make(map[string]string),
+		MaskStringValue:   "[MASKED]",
+		FieldKeyMap:       make(map[string]string),
 		FieldTransformers: make(map[string]func(interface{}) interface{}),
-		SensitiveFields: make([]string, 0),
+		SensitiveFields:   make([]string, 0),
 	}
 }
 
@@ -50,66 +76,68 @@ func (f *JSONFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 
 // formatManually creates JSON manually without allocations
 func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) error {
-	buf.WriteByte('{')
+	buf.Write(jsonBraceOpen)
 
 	// Add timestamp - manually format to avoid allocation
-	buf.WriteString("\"timestamp\":\"")
+	buf.Write(jsonTimestampKey)
 	util.FormatTimestamp(buf, entry.Timestamp, f.TimestampFormat)
-	buf.WriteString("\",")
+	buf.Write(jsonQuote)
+	buf.Write(jsonComma)
 
 	// Add level
-	buf.WriteString("\"level_name\":\"")
+	buf.Write(jsonLevelKey)
 	buf.Write(entry.Level.Bytes()) // Using pre-allocated level bytes
-	buf.WriteString("\",")
+	buf.Write(jsonQuote)
+	buf.Write(jsonComma)
 
 	// Add message
-	buf.WriteString("\"message\":\"")
+	buf.Write(jsonMessageKey)
 	// Escape the message to handle special characters
 	escapeJSON(buf, entry.Message)
-	buf.WriteString("\"")
+	buf.Write(jsonQuote)
 
 	// Add PID if needed - reduce branching by checking condition once
 	if f.ShowPID {
-		buf.WriteString(",\"pid\":")
+		buf.Write(jsonPidKey)
 		util.WriteInt(buf, int64(entry.PID))
 	}
 
 	// Add caller info if needed
 	if f.ShowCaller && entry.Caller != nil {
-		buf.WriteString(",\"caller\":\"")
+		buf.Write(jsonCallerKey)
 		buf.Write(core.StringToBytes(entry.Caller.File))
-		buf.WriteByte(':')
+		buf.Write(jsonColon)
 		util.WriteInt(buf, int64(entry.Caller.Line))
 		buf.WriteByte('"')
 	}
 
 	// Add fields if present
 	if len(entry.Fields) > 0 {
-		buf.WriteString(",\"fields\":")
+		buf.Write(jsonFieldsKey)
 		f.formatFields(buf, entry.Fields)
 	}
 
 	// Add trace info if needed - organize in a way that reduces branching
 	if f.ShowTraceInfo {
 		if entry.TraceID != nil {
-			buf.WriteString(",\"trace_id\":\"")
+			buf.Write(jsonTraceKey)
 			buf.Write(entry.TraceID)
-			buf.WriteByte('"')
+			buf.Write(jsonQuote)
 		}
 		if entry.SpanID != nil {
-			buf.WriteString(",\"span_id\":\"")
+			buf.Write(jsonSpanKey)
 			buf.Write(entry.SpanID)
-			buf.WriteByte('"')
+			buf.Write(jsonQuote)
 		}
 		if entry.UserID != nil {
-			buf.WriteString(",\"user_id\":\"")
+			buf.Write(jsonUserKey)
 			buf.Write(entry.UserID)
-			buf.WriteByte('"')
+			buf.Write(jsonQuote)
 		}
 	}
 
 	if f.EnableStackTrace && len(entry.StackTrace) > 0 {
-		buf.WriteString(",\"stack_trace\":\"")
+		buf.Write(jsonStackKey)
 		escapeJSON(buf, entry.StackTrace)
 		buf.WriteByte('"')
 	}
