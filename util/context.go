@@ -13,6 +13,8 @@ const (
 	// SpanIDKey is the context key for span ID
 	SpanIDKey contextKey = "span_id"
 	// UserIDKey is the context key for user ID
+	UserIDKey contextKey = "user_id"
+	// SessionIDKey is the context key for session ID
 	SessionIDKey contextKey = "session_id"
 	// RequestIDKey is the context key for request ID
 	RequestIDKey contextKey = "request_id"
