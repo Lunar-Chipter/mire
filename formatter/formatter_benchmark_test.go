@@ -236,7 +236,7 @@ func BenchmarkFormatterWithSensitiveData(b *testing.B) {
 	core.PutEntryToPool(entry)
 }
 
-// createBenchmarkEntry creates a standardized entry for benchmarking
+// at
 func createBenchmarkEntry() *core.LogEntry {
 	entry := core.GetEntryFromPool()
 	entry.Timestamp = time.Now()

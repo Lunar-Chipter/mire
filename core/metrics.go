@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// CoreMetrics menyimpan metrik untuk observability
-// Built-in performance metrics dengan zero allocation overhead
+// CoreMetrics stores metrics for observability
+// Built-in performance metrics with zero allocation overhead
 type CoreMetrics struct {
 	// Entry-related metrics
 	EntryCreatedCount    atomic.Int64
@@ -34,7 +34,7 @@ type CoreMetrics struct {
 // Global metrics instance
 var globalCoreMetrics = &CoreMetrics{}
 
-// GetCoreMetrics mengembalikan instance global metrics
+// GetCoreMetrics returns global metrics instance
 func GetCoreMetrics() *CoreMetrics {
 	return globalCoreMetrics
 }
@@ -92,28 +92,28 @@ func (cm *CoreMetrics) AddProcessingTime(duration time.Duration) {
 	cm.ProcessingTime.Add(int64(duration))
 }
 
-// GetEntryMetrics mengembalikan statistik entry
+// GetEntryMetrics returns entry statistics
 func (cm *CoreMetrics) GetEntryMetrics() map[string]int64 {
 	return map[string]int64{
 		"created":    cm.EntryCreatedCount.Load(),
 		"reused":     cm.EntryReusedCount.Load(),
 		"pool_miss":  cm.EntryPoolMissCount.Load(),
 		"serialized": cm.EntrySerializedCount.Load(),
-		"hit_ratio":  cm.EntryReusedCount.Load() * 100 / (cm.EntryCreatedCount.Load() + cm.EntryReusedCount.Load() + 1), // +1 untuk menghindari pembagian dengan 0
+		"hit_ratio":  cm.EntryReusedCount.Load() * 100 / (cm.EntryCreatedCount.Load() + cm.EntryReusedCount.Load() + 1), // for
 	}
 }
 
-// GetBufferMetrics mengembalikan statistik buffer
+// GetBufferMetrics returns buffer statistics
 func (cm *CoreMetrics) GetBufferMetrics() map[string]int64 {
 	return map[string]int64{
 		"gets":      cm.BufferGetCount.Load(),
 		"puts":      cm.BufferPutCount.Load(),
 		"misses":    cm.BufferMissCount.Load(),
-		"hit_ratio": (cm.BufferGetCount.Load() - cm.BufferMissCount.Load()) * 100 / (cm.BufferGetCount.Load() + 1), // +1 untuk menghindari pembagian dengan 0
+		"hit_ratio": (cm.BufferGetCount.Load() - cm.BufferMissCount.Load()) * 100 / (cm.BufferGetCount.Load() + 1), // for
 	}
 }
 
-// GetSliceMetrics mengembalikan statistik slice
+// GetSliceMetrics returns slice statistics
 func (cm *CoreMetrics) GetSliceMetrics() map[string]int64 {
 	return map[string]int64{
 		"gets": cm.SliceGetCount.Load(),
@@ -121,14 +121,14 @@ func (cm *CoreMetrics) GetSliceMetrics() map[string]int64 {
 	}
 }
 
-// GetErrorMetrics mengembalikan statistik error
+// GetErrorMetrics returns error statistics
 func (cm *CoreMetrics) GetErrorMetrics() map[string]int64 {
 	return map[string]int64{
 		"errors": cm.ErrorCount.Load(),
 	}
 }
 
-// GetTimingMetrics mengembalikan statistik timing
+// GetTimingMetrics returns timing statistics
 func (cm *CoreMetrics) GetTimingMetrics() map[string]int64 {
 	return map[string]int64{
 		"processing_time_ns": cm.ProcessingTime.Load(),
@@ -136,7 +136,7 @@ func (cm *CoreMetrics) GetTimingMetrics() map[string]int64 {
 	}
 }
 
-// GetAllMetrics mengembalikan semua metrik
+// GetAllMetrics returns all metrics
 func (cm *CoreMetrics) GetAllMetrics() map[string]interface{} {
 	allMetrics := make(map[string]interface{})
 	
@@ -149,7 +149,7 @@ func (cm *CoreMetrics) GetAllMetrics() map[string]interface{} {
 	return allMetrics
 }
 
-// ResetMetrics mereset semua metrik ke 0
+// ResetMetrics resets all metrics to 0
 func (cm *CoreMetrics) ResetMetrics() {
 	cm.EntryCreatedCount.Store(0)
 	cm.EntryReusedCount.Store(0)

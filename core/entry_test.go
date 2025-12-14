@@ -504,7 +504,7 @@ func TestLogEntryFormatLogToBytes(t *testing.T) {
 		t.Error("formatLogToBytes result too short")
 	}
 	if !entry.Timestamp.IsZero() {
-		// Timestamp should not be modified by formatting
+		// at
 	}
 }
 

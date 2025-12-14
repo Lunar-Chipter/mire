@@ -39,19 +39,19 @@ func printLine(s string) {
 
 func main() {
 	printLine("===================================================")
-	printLine("  DEMONSTRASI PENGGUNAAN LIBRARY LOGGING MIRE      ")
+	printLine("  DEMONSTRATION OF MIRE LOGGING LIBRARY USAGE      ")
 	printLine("===================================================")
-	printLine("File ini menunjukkan berbagai cara menggunakan logger.")
-	printLine("Perhatikan output di konsol, app.log, dan errors.log.")
+	printLine("This file demonstrates various ways to use the logger.")
+	printLine("Observe the output in console, app.log, and errors.log.")
 	printLine("---------------------------------------------------")
 
-	// --- Contoh 1: Logger Default (Console Output) ---
-	// Logger default sudah dikonfigurasi untuk menampilkan warna, timestamp,
-	// info pemanggil, dan level INFO ke atas.
-	printLine("### 1. Logger Default (Output Konsol Lebih Ringkas) ###")
-	// Konfigurasi logger default untuk mengurangi output ke konsol
+	// --- Example 1: Default Logger (Console Output) ---
+	// Default logger is already configured to display colors, timestamps,
+	// caller info, and INFO level and above.
+	printLine("### 1. Default Logger (More Concise Console Output) ###")
+	// Configure default logger to reduce console output
 	defaultConfig := logger.LoggerConfig{
-		Level:             core.WARN, // Hanya tampilkan WARN ke atas di konsol
+		Level:             core.WARN, // Only show WARN and above in console
 		Output:            os.Stdout,
 		ErrorOutput:       io.Discard, // Buang pesan error internal logger
 		CallerDepth:       logger.DEFAULT_CALLER_DEPTH,
@@ -68,112 +68,112 @@ func main() {
 		},
 	}
 	logDefault := logger.New(defaultConfig)
-	defer logDefault.Close() // Pastikan logger ditutup dengan bersih.
+	defer logDefault.Close() // Ensure logger is closed cleanly.
 
-	logDefault.Info("Ini adalah pesan INFORMASI dari logger default. (Tidak akan muncul di konsol karena Level WARN).")
-	logDefault.Warnf("Ada %d peringatan di sistem.", 2)
-	logDefault.Debug("Pesan debug ini TIDAK akan muncul karena level default adalah WARN.") // Tidak akan muncul
-	logDefault.Trace("Pesan trace ini juga TIDAK akan muncul.")                              // Tidak akan muncul
-	logDefault.Error("Terjadi error sederhana.")
+	logDefault.Info("This is an INFORMATION message from the default logger. (Will not appear in console due to WARN level).")
+	logDefault.Warnf("There are %d warnings in the system.", 2)
+	logDefault.Debug("This debug message will NOT appear because default level is WARN.") // Will not appear
+	logDefault.Trace("This trace message will also NOT appear.")                              // Will not appear
+	logDefault.Error("A simple error occurred.")
 	printLine("---------------------------------------------------")
-	time.Sleep(10 * time.Millisecond) // Memberi waktu untuk flush buffer jika ada
+	time.Sleep(10 * time.Millisecond) // Give time to flush buffer if any
 
-	// --- Contoh 2: Logger dengan Fields dan Context ---
-	// Logger memungkinkan penambahan bidang (key-value pairs) ke setiap entri log.
-	// Kita juga bisa menambahkan informasi kontekstual seperti TraceID, SpanID.
-	printLine("### 2. Logger dengan Fields & Context ###")
+	// --- Example 2: Logger with Fields and Context ---
+	// Logger allows adding fields (key-value pairs) to each log entry.
+	// We can also add contextual information like TraceID, SpanID.
+	printLine("### 2. Logger with Fields & Context ###")
 	ctx := context.Background()
-	// Menambahkan TraceID, SpanID, UserID ke konteks.
-	// Ini akan diekstrak otomatis oleh logger jika diaktifkan.
+	// Adding TraceID, SpanID, UserID to context.
+	// These will be automatically extracted by the logger if enabled.
 	ctx = util.WithTraceID(ctx, "trace-xyz-987")
 	ctx = util.WithSpanID(ctx, "span-123")
 	ctx = util.WithUserID(ctx, "user-alice")
 
-	// Menggunakan logger default untuk menunjukkan field dan konteks.
+	// Using default logger to demonstrate fields and context.
 	logWithContext := logDefault.WithFieldsBytes(map[string][]byte{
 		"service": core.StringToBytes("auth-service"),
 		"version": core.StringToBytes("1.0.0"),
 	})
-	logWithContext.Info("Pengguna berhasil login.",
+	logWithContext.Info("User successfully logged in.",
 		"username", "alice",
 		"ip_address", "192.168.1.100")
 
-	// Log dengan konteks eksplisit menggunakan metode context-aware.
-	logWithContext.InfofC(ctx, "Memproses permintaan otorisasi untuk %s.", "token-ABC")
+	// Log with explicit context using context-aware methods.
+	logWithContext.InfofC(ctx, "Processing authorization request for %s.", "token-ABC")
 	printLine("---------------------------------------------------")
 	time.Sleep(10 * time.Millisecond)
 
-	// --- Contoh 3: Error Logging dengan Stack Trace ---
-	// Logger dapat merekam error dan menyertakan stack trace untuk debugging.
-	printLine("### 3. Error Logging dengan Stack Trace ###")
-	errSample := errors.New("gagal membaca konfigurasi database")
+	// --- Example 3: Error Logging with Stack Trace ---
+	// Logger can record errors and include stack traces for debugging.
+	printLine("### 3. Error Logging with Stack Trace ###")
+	errSample := errors.New("failed to read database configuration")
 	logDefault.WithFields(map[string]interface{}{
 		"error_code": 500,
 		"component":  "database-connector",
-	}).Error("Error saat inisialisasi:", errSample.Error())
-	// Default logger sudah mengaktifkan ShowStackTrace untuk level ERROR ke atas.
+	}).Error("Error during initialization:", errSample.Error())
+	// Default logger already enables ShowStackTrace for ERROR level and above.
 	printLine("---------------------------------------------------")
 	time.Sleep(10 * time.Millisecond)
 
-	// --- Contoh 4: Logger JSON ke File (app.log) ---
-	// Mengonfigurasi logger untuk menulis log dalam format JSON ke file.
-	printLine("### 4. Logger JSON ke File (app.log) ###")
-	printLine("Log JSON akan ditulis ke 'app.log'. Periksa isinya setelah program selesai.")
+	// --- Example 4: JSON Logger to File (app.log) ---
+	// Configure logger to write logs in JSON format to file.
+	printLine("### 4. JSON Logger to File (app.log) ###")
+	printLine("JSON logs will be written to 'app.log'. Check its contents after the program completes.")
 	jsonFileLogger, err := setupJSONFileLogger("app.log")
 	if err != nil {
 		logDefault.Fatalf("Failed to setup JSON file logger: %v", err) // Use logDefault to fatal here
 	}
-	defer jsonFileLogger.Close() // Penting: Tutup logger agar buffer di-flush ke file!
+	defer jsonFileLogger.Close() // Important: Close logger to flush buffers to file!
 
-	jsonFileLogger.Debug("Pesan debug untuk JSON file logger.")
+	jsonFileLogger.Debug("Debug message for JSON file logger.")
 	jsonFileLogger.WithFields(map[string]interface{}{
 		"trans_id": "TXN-001",
 		"amount":   123.45,
 		"currency": "IDR",
-	}).Info("Transaksi berhasil diproses.")
-	jsonFileLogger.Error("Gagal menyimpan data pengguna ke cache.",
+	}).Info("Transaction processed successfully.")
+	jsonFileLogger.Error("Failed to save user data to cache.",
 		"user_id", "user-bob",
 		"cache_key", "user:bob")
 	printLine("---------------------------------------------------")
 	time.Sleep(10 * time.Millisecond)
 
-	// --- Contoh 5: Custom Text Logger (Tanpa Timestamp & Caller) ---
-	// Membuat logger dengan format teks kustom, menyembunyikan beberapa metadata.
+	// --- Example 5: Custom Text Logger (Without Timestamp & Caller) ---
+	// Create logger with custom text format, hiding some metadata.
 	printLine("### 5. Custom Text Logger ###")
 	customTextLogger := setupCustomTextLogger()
-	customTextLogger.Notice("Ini adalah pesan 'NOTICE' dari logger kustom (tanpa timestamp/caller).")
-	customTextLogger.Infof("Level terendah: %s", core.TRACE.String())
+	customTextLogger.Notice("This is a 'NOTICE' message from custom logger (without timestamp/caller).")
+	customTextLogger.Infof("Lowest level: %s", core.TRACE.String())
 	printLine("---------------------------------------------------")
 	time.Sleep(10 * time.Millisecond)
 
-	// --- Contoh 6: Demonstrasi Hooks (errors.log) ---
-	// Menunjukkan cara mengonfigurasi dan menggunakan hook.
-	// Log level ERROR ke atas akan ditulis ke 'errors.log'.
-	// printLine("### 6. Demonstrasi Hooks ###") // Commented out
+	// --- Example 6: Hooks Demonstration (errors.log) ---
+	// Shows how to configure and use hooks.
+	// ERROR level and above logs will be written to 'errors.log'.
+	// printLine("### 6. Hooks Demonstration ###") // Commented out
 	// demonstrateHooks() // Commented out
 	printLine("---------------------------------------------------")
 	time.Sleep(10 * time.Millisecond)
 
-	// Pastikan semua buffer di-flush sebelum program berakhir.
-	// Terutama penting untuk buffered writer dan async logger.
-	// logger.NewDefaultLogger().Close() // Jika NewDefaultLogger dipanggil berkali-kali, hanya perlu menutup instance yang digunakan.
-	// jsonFileLogger.Close() // Pastikan ditutup jika belum di-defer
-	// Biasanya, main logger akan ditutup pada akhir aplikasi.
-	// Untuk demo ini, kita tidak menutup logDefault secara eksplisit di sini,
-	// karena ia langsung menulis ke os.Stdout, tetapi jika ia memiliki buffered writer,
-	// maka harus ditutup.
+	// Ensure all buffers are flushed before program ends.
+	// Especially important for buffered writers and async loggers.
+	// logger.NewDefaultLogger().Close() // If NewDefaultLogger is called multiple times, only need to close the used instance.
+	// jsonFileLogger.Close() // Make sure to close if not deferred
+	// Usually, the main logger will be closed at the end of the application.
+	// For this demo, we don't explicitly close logDefault here,
+	// because it writes directly to os.Stdout, but if it has a buffered writer,
+	// then it should be closed.
 
 	printLine("===================================================")
-	printLine("  DEMONSTRASI SELESAI                              ")
+	printLine("  DEMONSTRATION COMPLETED                          ")
 	printLine("===================================================")
-	printLine("Periksa file 'app.log' dan 'errors.log' untuk melihat output log.")
+	printLine("Check 'app.log' and 'errors.log' files to see the log output.")
 }
 
 func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0666)
 	if err != nil {
 		return nil, &wrappedError{
-			msg:   "gagal membuka file log " + filePath,
+			msg:   "failed to open log file " + filePath,
 			cause: err,
 		}
 	}
@@ -193,7 +193,7 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 	return logger.New(jsonConfig), nil
 }
 
-// setupCustomTextLogger membuat logger dengan format teks yang disederhanakan.
+// setupCustomTextLogger creates a logger with simplified text format.
 func setupCustomTextLogger() *logger.Logger {
 	customConfig := logger.LoggerConfig{
 		Level:             core.TRACE, // Tampilkan semua log, bahkan trace
@@ -209,10 +209,10 @@ func setupCustomTextLogger() *logger.Logger {
 	return logger.New(customConfig)
 }
 
-// demonstrateHooks menunjukkan cara mengonfigurasi dan menggunakan hook.
-// Hook ini akan menulis semua log level ERROR atau di atasnya ke file 'errors.log'.
+// demonstrateHooks shows how to configure and use hooks.
+// This hook will write all ERROR level and above logs to 'errors.log'.
 // func demonstrateHooks() {
-// 	fmt.Println("Log level ERROR dan di atasnya akan ditulis ke 'errors.log'.")
+// 	fmt.Println("ERROR level and above logs will be written to 'errors.log'.")
 
 // 	// Create a file hook for errors.log
 // 	errorFileHook, err := hook.NewFileHook("errors.log") // Use mire/hook/NewFileHook
@@ -222,9 +222,9 @@ func setupCustomTextLogger() *logger.Logger {
 // 	}
 // 	defer errorFileHook.Close() // Ensure the file hook is closed
 
-// 	// 2. Konfigurasikan logger untuk menggunakan hook.
+// 	// 2. Configure logger to use hook.
 // 	logWithHook := logger.New(logger.LoggerConfig{
-// 		Level:       core.INFO, // Logger ini akan menampilkan INFO ke atas ke konsol
+// 		Level:       core.INFO, // This logger will display INFO and above to console
 // 		Output:      os.Stdout, // Console output
 // 		ErrorOutput: io.Discard, // Discard internal logger errors
 // 		EnableErrorFileHook: false, // Disable the built-in error file hook
@@ -239,13 +239,13 @@ func setupCustomTextLogger() *logger.Logger {
 // 	})
 // 	defer logWithHook.Close() // Ensure this logger instance is closed
 
-// 	// 3. Gunakan logger seperti biasa.
-// 	logWithHook.Info("Ini pesan INFO, akan tampil di konsol, tapi tidak di 'errors.log'.")
-// 	logWithHook.Warn("Ini pesan WARN, akan tampil di konsol, tapi tidak di 'errors.log'.")
+// 	// 3. Use logger as usual.
+// 	logWithHook.Info("This is an INFO message, will appear in console, but not in 'errors.log'.")
+// 	logWithHook.Warn("This is a WARN message, will appear in console, but not in 'errors.log'.")
 
-// 	// Pesan ini akan masuk ke konsol DAN ke file errors.log karena hook.
-// 	logWithHook.WithFields(map[string]interface{}{"db_host": "10.0.0.5"}).Error("Gagal menghubungkan ke database.")
+// 	// This message will go to console AND to errors.log file because of hook.
+// 	logWithHook.WithFields(map[string]interface{}{"db_host": "10.0.0.5"}).Error("Failed to connect to database.")
 
-// 	// Pesan ini juga akan memicu hook.
-// 	logWithHook.WithFields(map[string]interface{}{"service": "payment-gateway"}).Error("Timeout transaksi.")
+// 	// This message will also trigger the hook.
+// 	logWithHook.WithFields(map[string]interface{}{"service": "payment-gateway"}).Error("Transaction timeout.")
 // }

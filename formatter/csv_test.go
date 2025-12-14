@@ -54,8 +54,8 @@ func TestCSVFormatterFormat(t *testing.T) {
 		t.Error("CSVFormatter.Format produced empty output")
 	}
 	
-	// Since we haven't set FieldOrder, we can't easily predict the output
-	// But it should at least produce a line ending
+	// at
+	// at
 	if !bytes.HasSuffix(buf.Bytes(), []byte("\n")) {
 		t.Error("CSVFormatter output should end with newline")
 	}
@@ -391,7 +391,7 @@ func TestCSVFormatterWithSensitiveFields(t *testing.T) {
 		t.Error("CSVFormatter.Format with sensitive fields produced empty output")
 	}
 	
-	// Output should contain masked values instead of actual sensitive data
+	// to
 	if strings.Contains(output, "secret123") {
 		t.Error("Output should not contain actual password value")
 	}

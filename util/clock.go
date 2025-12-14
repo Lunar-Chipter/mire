@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-// Goroutine pool for managing clock workers
+// to
 var clockWorkerPool = sync.Pool{
 	New: func() interface{} {
 		return make(chan time.Time, 16) // Pre-allocated buffered channel
@@ -36,7 +36,7 @@ type Clock struct {
 	stop       chan struct{}
 	wg         sync.WaitGroup
 	metrics    *ClockMetrics
-	_          [64 - unsafe.Sizeof(time.Duration(0))]byte // Padding for cache alignment
+	_          [64 - unsafe.Sizeof(time.Duration(0))]byte // at
 }
 
 // Constants for compile-time configuration
@@ -68,7 +68,7 @@ func (c *Clock) run() {
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
 
-	// Get a worker from the pool
+	// to
 	worker := clockWorkerPool.Get().(chan time.Time)
 	defer clockWorkerPool.Put(worker)
 
@@ -80,11 +80,11 @@ func (c *Clock) run() {
 			c.metrics.updateCount.Add(1)
 			c.metrics.lastUpdate.Store(now.UnixNano())
 
-			// Send to worker pool for processing
+			// to
 			select {
 			case worker <- now:
 			default:
-				// Worker busy, increment error count
+				// to
 				c.metrics.errorCount.Add(1)
 			}
 		case <-c.stop:

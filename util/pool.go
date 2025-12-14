@@ -11,9 +11,9 @@ import (
 // Constants for compile-time configuration
 const (
 	// Buffer sizes for different pool types - aligned with zero-allocation philosophy
-	SmallBufferSize       = 512  // Untuk perf-critical
-	MediumBufferSize      = 2048 // Untuk standard logs
-	LargeBufferSize       = 8192 // Untuk verbose debugging
+	SmallBufferSize       = 512  // For perf-critical
+	MediumBufferSize      = 2048 // For standard logs
+	LargeBufferSize       = 8192 // For verbose debugging
 	DefaultBufferSize     = MediumBufferSize
 	MaxBufferPoolSize     = LargeBufferSize
 	SmallByteSliceSize    = 64
@@ -100,7 +100,7 @@ var bufferPool = sync.Pool{
 type LogBuffer struct {
 	buf []byte
 	len int
-	_   [64 - unsafe.Sizeof(int(0))]byte // Padding untuk cache alignment
+	_   [64 - unsafe.Sizeof(int(0))]byte // Padding for cache alignment
 }
 
 func (b *LogBuffer) WriteBytes(data []byte) error {
@@ -292,7 +292,7 @@ func GetGoroutineLocalBufferPool() *localBufferPool {
 }
 
 // GetBufferFromLocalPool gets a buffer from the goroutine-local pool
-// Zero lock contention di hot path
+// Zero lock contention in hot path
 func (lp *localBufferPool) GetBufferFromLocalPool() *bytes.Buffer {
 	select {
 	case buf := <-lp.buffers:
@@ -306,7 +306,7 @@ func (lp *localBufferPool) GetBufferFromLocalPool() *bytes.Buffer {
 }
 
 // PutBufferToLocalPool returns a buffer to the goroutine-local pool
-// Zero lock contention di hot path
+// Zero lock contention in hot path
 func (lp *localBufferPool) PutBufferToLocalPool(buf *bytes.Buffer) bool {
 	select {
 	case lp.buffers <- buf:

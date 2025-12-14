@@ -54,7 +54,7 @@ func TestSimpleFileHookCreationError(t *testing.T) {
 	}
 }
 
-// TestSimpleFileHookFire tests firing the hook with different log levels
+// at
 func TestSimpleFileHookFire(t *testing.T) {
 	tempFile := "test_fire_hook.log"
 	hook, err := NewFileHook(tempFile)
@@ -291,7 +291,7 @@ func TestHookInterfaceImplementation(t *testing.T) {
 	}
 }
 
-// TestSimpleFileHookWithDifferentFormatters tests hook with different formatters
+// at
 func TestSimpleFileHookWithDifferentFormatters(t *testing.T) {
 	tempFile := "test_formatter_hook.log"
 	

@@ -6,14 +6,14 @@ import (
 )
 
 // Formatter interface defines how log entries are formatted
-// Interface Formatter mendefinisikan bagaimana entri log diformat
+// Formatter interface defines how log entries are formatted
 type Formatter interface {
 	// Format formats a log entry into a byte slice
-	// Format memformat entri log menjadi slice byte
+	// Format formats log entry into byte slice
 	Format(buf *bytes.Buffer, entry *core.LogEntry) error
 }
 
-// AllFormatter interface defines additional methods for formatters that support various options
+// at
 type AllFormatter interface {
 	Formatter
 	// SetOptions allows setting formatter-specific options

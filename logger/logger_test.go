@@ -110,7 +110,7 @@ func TestLoggerContextAware(t *testing.T) {
 	logger.InfoC(ctx, "context-aware message")
 
 	output := buf.String()
-	// The context extraction might be handled differently depending on implementation
+	// at
 	// For now, just ensure no panic occurs and basic functionality works
 	if !strings.Contains(output, "context-aware message") {
 		t.Error("Context-aware message should be in output")
@@ -214,7 +214,7 @@ func TestLoggerAsyncLogging(t *testing.T) {
 		}).Info("async message")
 	}
 
-	// Give async workers time to process
+	// to
 	time.Sleep(100 * time.Millisecond)
 
 	// Close to flush any remaining messages

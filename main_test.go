@@ -50,7 +50,7 @@ func TestMainFunction(t *testing.T) {
 	}
 
 	// Check for content that should definitely appear in console output
-	// Note: Some logs go to files (like JSON logs) and won't appear in stdout
+	// to
 	definitelyExpectedContent := []string{
 		"Ada 2 peringatan di sistem", // Console output from default logger
 		"Terjadi error sederhana",    // Console output from default logger
@@ -64,7 +64,7 @@ func TestMainFunction(t *testing.T) {
 	}
 
 	// Log info for content that might not appear in console but is expected in logs
-	// (These might go to file logs or have different formatting)
+	// at
 	possibleExpectedContent := []string{
 		"token-ABC",                  // From context-aware logging (might be in output)
 		"Memproses permintaan otorisasi", // Part of context log message
@@ -212,14 +212,14 @@ func TestSetupCustomTextLogger(t *testing.T) {
 	// The implementation details are in setupCustomTextLogger function
 	// At minimum, it should be able to log without error
 	
-	// Log a test message to make sure it works
+	// to
 	logger.Info("Test message from custom text logger")
 	
 	// Close the logger
 	logger.Close()
 }
 
-// TestMainFunctionDoesNotPanic tests that main function does not panic under normal conditions
+// at
 func TestMainFunctionDoesNotPanic(t *testing.T) {
 	// This test ensures that the main function completes without panicking
 	// We can't easily verify all functionality, but at least ensure it doesn't crash

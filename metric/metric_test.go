@@ -42,7 +42,7 @@ func TestNewDefaultMetricsCollector(t *testing.T) {
 func TestIncrementCounter(t *testing.T) {
 	metricsCollector := NewDefaultMetricsCollector()
 	
-	// Test incrementing different levels
+	// at
 	levels := []core.Level{core.TRACE, core.DEBUG, core.INFO, core.NOTICE, core.WARN, core.ERROR, core.FATAL, core.PANIC}
 	
 	for _, level := range levels {
@@ -91,7 +91,7 @@ func TestRecordHistogram(t *testing.T) {
 		t.Errorf("Expected p95 200.0, got %f", p95)
 	}
 	
-	// Test with different metric name
+	// at
 	otherMetric := "request_size"
 	metricsCollector.RecordHistogram(otherMetric, 1024.0, nil)
 	min2, max2, avg2, p952 := metricsCollector.GetHistogram(otherMetric)
@@ -114,12 +114,12 @@ func TestRecordGauge(t *testing.T) {
 		t.Log("GetCounter won't work with gauges")
 	}
 	
-	// Check the gauge value by accessing it differently
+	// at
 	// Actually, there's no getter for gauges in the current implementation
 	// We'll need to check the internal gauges map, but that's not exposed.
 	// Let's just verify that RecordGauge doesn't cause errors
 	
-	// Record a different value, which should overwrite the previous value
+	// at
 	metricsCollector.RecordGauge(metricName, 20.0, nil)
 }
 
@@ -259,7 +259,7 @@ func TestMetricsCollectorConcurrent(t *testing.T) {
 		go func(goroutineID int) {
 			defer wg.Done()
 			for j := 0; j < operationsPerGoroutine; j++ {
-				// Use different levels based on goroutine ID to avoid interference
+				// at
 				level := core.Level(goroutineID % 8) // 8 log levels
 				metricsCollector.IncrementCounter(level, nil)
 				
@@ -302,7 +302,7 @@ func TestMetricsCollectorConcurrent(t *testing.T) {
 	t.Logf("Histogram stats - min: %f, max: %f, avg: %f, p95: %f", min, max, avg, p95)
 }
 
-// TestRecordHistogramWithTags tests histogram recording with tags
+// at
 func TestRecordHistogramWithTags(t *testing.T) {
 	metricsCollector := NewDefaultMetricsCollector()
 	

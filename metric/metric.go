@@ -10,7 +10,6 @@ import (
 )
 
 // MetricsCollector interface defines methods for collecting metrics
-// Interface MetricsCollector mendefinisikan metode untuk mengumpulkan metrik
 type MetricsCollector interface {
 	// IncrementCounter increments a counter metric
 	IncrementCounter(level core.Level, tags map[string]string)
@@ -23,7 +22,6 @@ type MetricsCollector interface {
 }
 
 // DefaultMetricsCollector is a simple in-memory metrics collector
-// DefaultMetricsCollector adalah kolektor metrik dalam memori sederhana
 type DefaultMetricsCollector struct {
 	counters   map[string]int64
 	histograms map[string][]float64

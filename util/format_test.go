@@ -162,7 +162,7 @@ func TestFormatTimestamp(t *testing.T) {
 		t.Errorf("FormatTimestamp = %s, want %s", buf.String(), expected)
 	}
 
-	// Test with different format
+	// at
 	buf.Reset()
 	FormatTimestamp(buf, timestamp, time.RFC3339)
 	expectedRFC3339 := "2023-01-02T15:04:05Z"

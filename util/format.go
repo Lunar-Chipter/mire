@@ -9,7 +9,7 @@ import (
 )
 
 func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
-	// Use a pooled byte slice for intermediate conversions
+	// at
 	tempBuf := GetSmallByteSliceFromPool()
 	defer PutSmallByteSliceToPool(tempBuf)
 
@@ -22,32 +22,32 @@ func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 	case []byte:
 		content = v
 	case int:
-		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // Reset length before appending
+		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // at
 	case int8:
-		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // Reset length before appending
+		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // at
 	case int16:
-		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // Reset length before appending
+		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // at
 	case int32:
-		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // Reset length before appending
+		content = strconv.AppendInt(tempBuf[:0], int64(v), 10) // at
 	case int64:
-		content = strconv.AppendInt(tempBuf[:0], v, 10) // Reset length before appending
+		content = strconv.AppendInt(tempBuf[:0], v, 10) // at
 	case uint:
-		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // Reset length before appending
+		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // at
 	case uint8:
-		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // Reset length before appending
+		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // at
 	case uint16:
-		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // Reset length before appending
+		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // at
 	case uint32:
-		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // Reset length before appending
+		content = strconv.AppendUint(tempBuf[:0], uint64(v), 10) // at
 	case uint64:
-		content = strconv.AppendUint(tempBuf[:0], v, 10) // Reset length before appending
+		content = strconv.AppendUint(tempBuf[:0], v, 10) // at
 	case float32:
 		content = strconv.AppendFloat(tempBuf[:0], float64(v), 'f', 2, 32) // 'f' format, 2 decimal places, 32-bit float
 	case float64:
 		content = strconv.AppendFloat(tempBuf[:0], v, 'f', 2, 64) // 'f' format, 2 decimal places, 64-bit float
 	case bool:
-		content = strconv.AppendBool(tempBuf[:0], v) // Reset length before appending
-	case error: // Handle errors directly
+		content = strconv.AppendBool(tempBuf[:0], v) // at
+	case error: // at
 		if appender, ok := v.(core.ErrorAppender); ok { // Changed to core.ErrorAppender
 			appender.AppendError(buf)
 			return
@@ -79,7 +79,7 @@ func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 }
 
 func FormatTimestamp(buf *bytes.Buffer, t time.Time, format string) {
-	// Use a pooled byte slice for intermediate conversions
+	// at
 	tempBuf := GetSmallByteSliceFromPool()
 	defer PutSmallByteSliceToPool(tempBuf)
 
@@ -129,38 +129,38 @@ func convertValueToString(value interface{}) string {
 		return "null"
 	default:
 		// For complex types that can't be easily converted
-		// This is a last resort case - should be avoided in demanding scenarios
+		// at
 		return "<complex-type>"
 	}
 }
 
-// WriteInt writes an integer value directly to a buffer with minimal allocation
+// at
 func WriteInt(buf *bytes.Buffer, value int64) {
 	tempBuf := GetSmallByteSliceFromPool()
 	defer PutSmallByteSliceToPool(tempBuf)
 
 	// Use AppendInt to format the integer
-	bytes := strconv.AppendInt(tempBuf[:0], value, 10) // Reset length before appending
+	bytes := strconv.AppendInt(tempBuf[:0], value, 10) // at
 	buf.Write(bytes)
 }
 
-// WriteUint writes an unsigned integer value directly to a buffer with minimal allocation
+// at
 func WriteUint(buf *bytes.Buffer, value uint64) {
 	tempBuf := GetSmallByteSliceFromPool()
 	defer PutSmallByteSliceToPool(tempBuf)
 
 	// Use AppendUint to format the unsigned integer
-	bytes := strconv.AppendUint(tempBuf[:0], value, 10) // Reset length before appending
+	bytes := strconv.AppendUint(tempBuf[:0], value, 10) // at
 	buf.Write(bytes)
 }
 
-// WriteFloat writes a float value directly to a buffer with minimal allocation
+// at
 func WriteFloat(buf *bytes.Buffer, value float64) {
 	tempBuf := GetSmallByteSliceFromPool()
 	defer PutSmallByteSliceToPool(tempBuf)
 
 	// Use AppendFloat to format the float
-	bytes := strconv.AppendFloat(tempBuf[:0], value, 'g', -1, 64) // Reset length before appending
+	bytes := strconv.AppendFloat(tempBuf[:0], value, 'g', -1, 64) // at
 	buf.Write(bytes)
 }
 
@@ -204,7 +204,7 @@ func ConvertValue(value interface{}) string {
 		return "null"
 	default:
 		// For complex types that can't be easily converted
-		// This is a last resort case - should be avoided in demanding scenarios
+		// at
 		return "<complex-type>"
 	}
 }

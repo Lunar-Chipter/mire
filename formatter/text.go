@@ -44,7 +44,7 @@ var traceColorBytes = []byte("\033[38;5;141m")     // Purple for trace info
 var errorColorBytes = []byte("\033[38;5;196m")     // Bright red for errors
 var stackTraceColorBytes = []byte("\033[38;5;240m") // Dark gray for stack trace
 var fieldsWrapperColorBytes = []byte("\033[38;5;243m") // Light gray for field wrappers
-var fieldKeyColorBytes = []byte("\033[38;5;228m")  // Light yellow for field keys
+var fieldKeyColorBytes = []byte("\033[38;5;228m")  // to
 var fieldValueColorBytes = []byte("\033[38;5;159m")// Light cyan for field values
 var tagsColorBytes = []byte("\033[38;5;135m")      // Purple for tags
 var metricsColorBytes = []byte("\033[38;5;85m")    // Green for metrics
@@ -86,7 +86,7 @@ func (f *TextFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 		buf.WriteByte(' ')
 	}
 
-	// Write level with background and padding - manual byte manipulation
+	// at
 	levelBytes := entry.Level.Bytes()
 	if f.EnableColors {
 		buf.Write(core.LevelBackgroundBytes[entry.Level])
@@ -318,7 +318,7 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 		if f.EnableColors {
 			buf.Write(fieldKeyColorBytes)
 		}
-		// Use manual byte writing for key to avoid allocation
+		// to
 		buf.Write(core.StringToBytes(k))
 		buf.WriteByte('=')
 		if f.EnableColors {
@@ -395,7 +395,7 @@ func (f *TextFormatter) formatMetrics(buf *bytes.Buffer, metrics map[string]floa
 		// Use pooled byte slice for AppendFloat
 		floatBuf := util.GetSmallByteSliceFromPool()
 		defer util.PutSmallByteSliceToPool(floatBuf)
-		floatBytes := strconv.AppendFloat(floatBuf[:0], v, 'f', 2, 64) // Reset length before appending
+		floatBytes := strconv.AppendFloat(floatBuf[:0], v, 'f', 2, 64) // at
 		buf.Write(floatBytes)
 	}
 	buf.WriteByte('>')

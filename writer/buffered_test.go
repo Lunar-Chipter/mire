@@ -235,7 +235,7 @@ func TestBufferedWriterWithBatches(t *testing.T) {
 		t.Error("Batched data should contain all chunks")
 	}
 	
-	// The write counter should be low if batching worked correctly
+	// to
 	writeCount := counter.GetWriteCount()
 	t.Logf("Number of actual writes: %d", writeCount)
 	// With batchSize=3, we expect at most 2 writes (3 items in first batch, 2 in second)
@@ -293,7 +293,7 @@ func TestBufferedWriterStats(t *testing.T) {
 		t.Fatal("Stats returned nil")
 	}
 	
-	// Verify expected keys exist
+	// to
 	if _, exists := stats["buffer_size"]; !exists {
 		t.Error("Stats should contain buffer_size")
 	}
@@ -375,7 +375,7 @@ func TestBufferedWriterConcurrent(t *testing.T) {
 	// Check results
 	// totalExpected and actualCount are already calculated in the polling loop above
 	output := string(counter.GetData())
-	// Use the actualCount from the polling loop, but make sure we get the final count too if needed
+	// to
 	finalCount := strings.Count(output, "goroutine")
 	// Use the max between the polled count and final count to handle any edge cases
 	if finalCount > actualCount {

@@ -58,7 +58,7 @@ func TestJSONFormatterFormat(t *testing.T) {
 		t.Error("JSONFormatter.Format produced empty output")
 	}
 	
-	// Check if output looks like valid JSON with expected fields
+	// to
 	if !bytes.Contains(buf.Bytes(), []byte("{")) || !bytes.Contains(buf.Bytes(), []byte("}")) {
 		t.Error("Output should contain JSON object delimiters")
 	}
@@ -612,7 +612,7 @@ func TestJSONFormatterFieldKeyMapping(t *testing.T) {
 		t.Error("JSONFormatter.Format with field mapping produced empty output")
 	}
 	
-	// The implementation should use the mapped keys in the JSON output
-	// This is difficult to test without seeing the actual implementation details,
-	// But we can at least check that both old and new keys aren't present
+	// to
+	// at
+	// to
 }

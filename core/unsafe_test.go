@@ -92,7 +92,7 @@ func TestStringToBytesAndBack(t *testing.T) {
 
 // TestStringToBytesMemorySharing tests if the conversion shares memory
 func TestStringToBytesMemorySharing(t *testing.T) {
-	// This test is more complex because we can't safely modify the result
+	// at
 	// of StringToBytes without undefined behavior.
 	// The purpose is to document the unsafe nature of the conversion.
 	
@@ -106,7 +106,7 @@ func TestStringToBytesMemorySharing(t *testing.T) {
 		t.Error("Converted bytes don't match original string")
 	}
 	
-	// The conversion shares memory, which means modifying the result
+	// at
 	// is unsafe and could affect the original string or cause corruption.
 	// We can't safely test this without causing undefined behavior.
 	// The test ensures that the function doesn't crash or panic.
@@ -125,7 +125,7 @@ func TestBytesToStringMemorySharing(t *testing.T) {
 		t.Error("Converted string doesn't match original bytes")
 	}
 	
-	// Again, we can't safely modify the original byte slice to see if the string changes
+	// at
 	// because it would be unsafe behavior.
 }
 

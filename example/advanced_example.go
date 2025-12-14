@@ -18,7 +18,7 @@ import (
 func AdvancedExample() {
 	fmt.Println("=== Advanced Mire Usage Examples ===")
 
-	// Example 1: Context-aware logging with distributed tracing
+	// at
 	contextAwareExample()
 
 	// Example 2: Custom formatter with field transformers
@@ -191,7 +191,7 @@ func (h *CustomHTTPHook) Close() error {
 	return nil
 }
 
-// Additional helper function for email masking
+// at
 func MaskEmail(email string) string {
 	if idx := strings.Index(email, "@"); idx != -1 {
 		localPart := email[:idx]

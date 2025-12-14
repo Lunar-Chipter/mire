@@ -16,35 +16,35 @@ type Level int
 
 const (
 	// TRACE level for very detailed debugging information
-	// Level TRACE untuk informasi debugging yang sangat detail
+	// TRACE level for very detailed debugging information
 	TRACE Level = iota
 
 	// DEBUG level for debugging information
-	// Level DEBUG untuk informasi debugging
+	// DEBUG level for debugging information
 	DEBUG
 
 	// INFO level for general information messages
-	// Level INFO untuk pesan informasi umum
+	// INFO level for general information messages
 	INFO
 
-	// NOTICE level for normal but significant conditions
-	// Level NOTICE untuk kondisi normal namun signifikan
+	// at
+	// at
 	NOTICE
 
 	// WARN level for warning messages
-	// Level WARN untuk pesan peringatan
+	// WARN level for warning messages
 	WARN
 
 	// ERROR level for error messages
-	// Level ERROR untuk pesan kesalahan
+	// ERROR level for error messages
 	ERROR
 
 	// FATAL level for critical errors that cause program termination
-	// Level FATAL untuk kesalahan kritis yang menyebabkan program berhenti
+	// FATAL level for critical errors that cause program to stop
 	FATAL
 
-	// PANIC level for panic conditions
-	// Level PANIC untuk kondisi panic
+	// at
+	// at
 	PANIC
 )
 

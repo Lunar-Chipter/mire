@@ -11,7 +11,7 @@ import (
 type ZeroAllocBuffer struct {
 	buf []byte
 	len int
-	_   [64 - unsafe.Sizeof(int(0))]byte // Padding untuk cache alignment
+	_   [64 - unsafe.Sizeof(int(0))]byte // Padding for cache alignment
 }
 
 // Error definitions
@@ -24,7 +24,7 @@ func (b *ZeroAllocBuffer) WriteBytes(data []byte) error {
 		return ErrBufferOverflow
 	}
 
-	// Manual byte copying untuk performa maksimal
+	// Manual byte copying for maximum performance
 	copy(b.buf[b.len:], data)
 	b.len += len(data)
 	return nil

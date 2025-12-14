@@ -27,7 +27,6 @@ func (e *wrappedError) Unwrap() error {
 }
 
 // BufferedWriter is a buffered writer with batch processing
-// BufferedWriter adalah writer yang di-buffer berkinerja tinggi dengan pemrosesan batch
 type BufferedWriter struct {
 	writer        io.Writer
 	buffer        chan []byte
@@ -261,15 +260,15 @@ func (bw *BufferedWriter) Close() error {
 	bw.closed = true
 	bw.mu.Unlock()
 
-	// Close the done channel to signal the worker
+// Close the done channel to signal the worker
 	close(bw.done)
 
-	// Wait for the worker goroutine to finish processing and clean up.
-	// The worker will close the buffer channel after processing remaining items.
+// Wait for the worker goroutine to finish processing and clean up.
+// The worker will close the buffer channel after processing remaining items.
 	bw.wg.Wait()
 
-	// Hanya tutup writer yang mendasarinya jika bukan os.Stdout atau os.Stderr
-	// karena objek-objek ini tidak boleh ditutup oleh aplikasi.
+	// Only close the underlying writer if it's not os.Stdout or os.Stderr
+	// because these objects should not be closed by the application.
 	if bw.writer != os.Stdout && bw.writer != os.Stderr {
 		if closer, ok := bw.writer.(io.Closer); ok {
 			return closer.Close()

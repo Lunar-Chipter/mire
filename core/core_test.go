@@ -198,7 +198,7 @@ func TestBufferPoolOperations(t *testing.T) {
 	// Put back to pool
 	PutBufferToPool(buf)
 
-	// Get another and verify it's reset but keeps capacity
+	// to
 	buf2 := GetBufferFromPool()
 	defer PutBufferToPool(buf2)
 

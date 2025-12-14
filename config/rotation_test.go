@@ -83,7 +83,7 @@ func TestRotationConfigZeroValues(t *testing.T) {
 	}
 }
 
-// TestRotationConfigWithDifferentSizes tests different size configurations
+// at
 func TestRotationConfigWithDifferentSizes(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -112,7 +112,7 @@ func TestRotationConfigWithDifferentSizes(t *testing.T) {
 	}
 }
 
-// TestRotationConfigWithDifferentDurations tests different duration configurations
+// at
 func TestRotationConfigWithDifferentDurations(t *testing.T) {
 	testCases := []struct {
 		name   string
@@ -141,7 +141,7 @@ func TestRotationConfigWithDifferentDurations(t *testing.T) {
 	}
 }
 
-// TestRotationConfigWithDifferentBackups tests different backup counts
+// at
 func TestRotationConfigWithDifferentBackups(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -199,9 +199,9 @@ func TestRotationConfigBooleans(t *testing.T) {
 	}
 }
 
-// TestRotationConfigWithTimeDurations tests different time durations
+// at
 func TestRotationConfigWithTimeDurations(t *testing.T) {
-	// Test RotationTime field with different values
+	// at
 	testCases := []struct {
 		name         string
 		rotationTime time.Duration
@@ -230,7 +230,7 @@ func TestRotationConfigWithTimeDurations(t *testing.T) {
 	}
 }
 
-// TestRotationConfigWithFilenamePatterns tests different filename patterns
+// at
 func TestRotationConfigWithFilenamePatterns(t *testing.T) {
 	testCases := []struct {
 		name            string
@@ -347,8 +347,8 @@ func TestRotationConfigComparison(t *testing.T) {
 		FilenamePattern: "test",
 	}
 	
-	// Since RotationConfig contains time.Duration fields, direct comparison with == won't work
-	// We'll compare fields individually
+	// at
+	// at
 	if config1.MaxSize != config2.MaxSize {
 		t.Error("Configs should be equal but MaxSize differs")
 	}
