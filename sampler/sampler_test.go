@@ -55,7 +55,7 @@ func TestNewSamplingLogger(t *testing.T) {
 	// The counter should initially be 0
 }
 
-// TestSamplingLoggerShouldLog tests the ShouldLog method with different rates
+// at
 func TestSamplingLoggerShouldLog(t *testing.T) {
 	// Test with rate 1 (should always log)
 	sampler1 := NewSamplingLogger(&mockSamplerProcessor{}, 1)
@@ -96,9 +96,9 @@ func TestSamplingLoggerShouldLog(t *testing.T) {
 		t.Errorf("With rate 3, expected 4 logs out of 12, got %d", logCount)
 	}
 	
-	// Test with rate 0 (should behave like rate 1, always log based on the code)
+	// to
 	sampler0 := NewSamplingLogger(&mockSamplerProcessor{}, 0)
-	// The implementation will likely treat rate <= 1 as always log
+	// to
 	result := sampler0.ShouldLog()
 	if !result {
 		t.Error("With rate 0, ShouldLog should return true (treated as rate <= 1)")
@@ -140,7 +140,7 @@ func TestSamplingLoggerLog(t *testing.T) {
 		t.Errorf("Expected 5 logged entries with rate 2, got %d", len(loggedEntries))
 	}
 	
-	// Verify the logged messages have the expected indices
+	// at
 	// Based on the ShouldLog() implementation, it should log when counter % rate == 0
 	// First call adds 1 to counter (making it 1), then checks if 1%2==0 (false)
 	// Second call adds 1 to counter (making it 2), then checks if 2%2==0 (true) -> log
@@ -149,7 +149,7 @@ func TestSamplingLoggerLog(t *testing.T) {
 	// So calls 2, 4, 6, 8, 10 will log, meaning messages 1, 3, 5, 7, 9 will be logged
 	
 	if len(loggedEntries) > 0 {
-		// Check that the messages that were logged match expected indices
+		// at
 		// The 0-indexed calls that should result in logs are 1, 3, 5, 7, 9 (the 2nd, 4th, 6th, 8th, 10th calls)
 		expectedIndices := []int{1, 3, 5, 7, 9}
 		for i, entry := range loggedEntries {
@@ -274,7 +274,7 @@ func TestSamplingLoggerConcurrent(t *testing.T) {
 	}
 }
 
-// TestSamplingLoggerWithDifferentLevels tests sampling with different log levels
+// at
 func TestSamplingLoggerWithDifferentLevels(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 	
@@ -285,7 +285,7 @@ func TestSamplingLoggerWithDifferentLevels(t *testing.T) {
 	
 	ctx := context.Background()
 	
-	// Log messages with different levels
+	// at
 	levels := []core.Level{core.TRACE, core.DEBUG, core.INFO, core.WARN, core.ERROR, core.FATAL, core.PANIC}
 	
 	for _, level := range levels {
@@ -353,7 +353,7 @@ func TestSamplingLoggerWithFields(t *testing.T) {
 	}
 }
 
-// TestSamplingLoggerCounterRace tests the counter for race conditions (requires -race flag)
+// at
 func TestSamplingLoggerCounterRace(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 	

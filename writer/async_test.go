@@ -226,12 +226,12 @@ func TestAsyncLoggerWithTimeout(t *testing.T) {
 	}
 }
 
-// TestAsyncLoggerWithoutTimeout tests async logger with timeout disabled
+// at
 func TestAsyncLoggerWithoutTimeout(t *testing.T) {
 	processor := &mockLogProcessor{}
 	
-	// Create async logger with timeout disabled
-	asyncLogger := NewAsyncLogger(processor, 2, 100, 0, true) // disablePerLogContextTimeout = true
+	// at
+	asyncLogger := NewAsyncLogger(processor, 2, 100, 0, true) // at
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
@@ -273,7 +273,7 @@ func TestAsyncLoggerClose(t *testing.T) {
 	// Double close should be safe
 }
 
-// TestAsyncLoggerWorkerPanicRecovery tests worker panic recovery
+// to
 func TestAsyncLoggerWorkerPanicRecovery(t *testing.T) {
 	// Create a processor that will cause a panic when Log is called
 	panicProcessor := &panicLogProcessor{}
@@ -286,10 +286,10 @@ func TestAsyncLoggerWorkerPanicRecovery(t *testing.T) {
 	
 	ctx := context.Background()
 	
-	// Send a message that will cause a panic in the worker
+	// to
 	asyncLogger.Log(core.INFO, []byte("panic test"), nil, ctx)
 	
-	// Give the worker time to process and potentially panic/recover
+	// to
 	time.Sleep(100 * time.Millisecond)
 	
 	// The logger should still be functional after the panic/recovery
@@ -325,7 +325,7 @@ func TestAsyncLoggerConcurrent(t *testing.T) {
 		}(i)
 	}
 	
-	// Wait for all goroutines to finish sending messages
+	// at
 	for i := 0; i < numGoroutines; i++ {
 		<-done
 	}
@@ -374,7 +374,7 @@ func (p *panicLogProcessor) ErrOutMu() *sync.Mutex {
 	return &sync.Mutex{}
 }
 
-// TestAsyncLoggerWorker tests individual worker functionality
+// to
 func TestAsyncLoggerWorker(t *testing.T) {
 	processor := &mockLogProcessor{}
 	
@@ -386,7 +386,7 @@ func TestAsyncLoggerWorker(t *testing.T) {
 	
 	ctx := context.Background()
 	
-	// Send a few messages to the channel directly (bypassing Log method)
+	// at
 	job := &logJob{
 		level: core.INFO,
 		msg: []byte("direct job"),
@@ -426,13 +426,13 @@ func TestAsyncLoggerClosedBehavior(t *testing.T) {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	
-	// Close the logger immediately
+	// at
 	asyncLogger.Close()
 	
 	// Try to log after closing - this should not panic
 	ctx := context.Background()
 	asyncLogger.Log(core.INFO, []byte("message after close"), nil, ctx)
 	
-	// The message might or might not be processed depending on timing,
+	// at
 	// but it should not cause a panic
 }

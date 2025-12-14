@@ -26,10 +26,10 @@ const (
 	DEFAULT_BUFFER_SIZE      = 1000
 	DEFAULT_FLUSH_INTERVAL   = 5 * time.Second
 	
-	// Buffer sizes dikonfigurasi saat inisialisasi - aligned with zero-allocation philosophy
-	SmallBufferSize          = 512   // Untuk perf-critical
-	MediumBufferSize         = 2048  // Untuk standard logs  
-	LargeBufferSize          = 8192  // Untuk verbose debugging
+	// Buffer sizes configured at initialization - aligned with zero-allocation philosophy
+	SmallBufferSize          = 512   // For perf-critical
+	MediumBufferSize         = 2048  // For standard logs
+	LargeBufferSize          = 8192  // For verbose debugging
 )
 
 
@@ -381,11 +381,11 @@ func (l *Logger) logByte(ctx context.Context, level core.Level, message []byte, 
 	l.writeByte(ctx, level, message, fields)
 }
 
-	// final write to output dengan zero-allocation optimizations for interface{} fields (backward compatibility)
+	// final write to output with zero-allocation optimizations for interface{} fields (backward compatibility)
 func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
 	entry := l.buildEntry(ctx, level, message, fields)
 
-	// Gunakan buffer yang efisien untuk zero-allocation
+	// Use efficient buffer for zero-allocation
 	buf := util.GetBufferFromPool()
 	defer util.PutBufferToPool(buf)
 
@@ -424,11 +424,11 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 	core.PutEntryToPool(entry)
 }
 
-	// final write to output dengan zero-allocation optimizations for []byte fields (true zero-allocation)
+	// final write to output with zero-allocation optimizations for []byte fields (true zero-allocation)
 func (l *Logger) writeByte(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) {
 	entry := l.buildEntryByte(ctx, level, message, fields)
 
-	// Gunakan buffer yang efisien untuk zero-allocation
+	// Use efficient buffer for zero-allocation
 	buf := util.GetBufferFromPool()
 	defer util.PutBufferToPool(buf)
 
@@ -701,16 +701,16 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 
 // runHooks executes hooks with minimal lock contention
 func (l *Logger) runHooks(entry *core.LogEntry) {
-	// Gunakan RLock untuk read-only access
+	// Use RLock for read-only access
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
-	// Early return jika tidak ada hooks
+	// Early return if no hooks
 	if len(l.hooks) == 0 {
 		return
 	}
 
-	// Execute hooks dengan graceful error handling
+	// Execute hooks with graceful error handling
 	for _, h := range l.hooks {
 		if err := h.Fire(entry); err != nil {
 			l.handleError(newErrorf("hook error: %v", err))
@@ -736,8 +736,8 @@ func (l *Logger) handleLevelActions(level core.Level, entry *core.LogEntry) {
 		if l.onPanic != nil {
 			l.onPanic(entry)
 		}
-		// BUKAN: panic(entry.Message) // Yang menyebabkan crash aplikasi
-		// Handle buffer full dengan graceful degradation
+		// NOT: panic(entry.Message) // Which would cause application crash
+		// Handle buffer full with graceful degradation
 		if l.out != nil {
 			// Use a temporary byte buffer to avoid string concatenation allocation
 			var msgBuf bytes.Buffer

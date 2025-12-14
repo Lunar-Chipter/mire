@@ -10,7 +10,7 @@ import (
 )
 
 // LogEntry represents a single log entry with all its metadata
-// LogEntry merepresentasikan entri log tunggal dengan semua metadata-nya
+// LogEntry represents a single log entry with all its metadata
 type LogEntry struct {
 	Timestamp     time.Time            `json:"timestamp"`              // When the log was created
 	Level         Level                `json:"level"`                  // Log severity level
@@ -39,7 +39,7 @@ type LogEntry struct {
 }
 
 // CallerInfo contains information about the code location where the log was created
-// CallerInfo berisi informasi tentang lokasi kode di mana log dibuat
+// CallerInfo contains information about the code location where the log was created
 type CallerInfo struct {
 	File     string `json:"file"`     // Source file name
 	Line     int    `json:"line"`     // Line number
@@ -142,7 +142,7 @@ func PutBufferToPool(buf *[]byte) {
 // GetStringSliceFromPool gets a string slice from the pool
 func GetStringSliceFromPool() *[]string {
 	s := stringSlicePool.Get().(*[]string)
-	*s = (*s)[:0] // Reset slice length but keep capacity
+	*s = (*s)[:0] // to
 	return s
 }
 
@@ -151,7 +151,7 @@ func PutStringSliceToPool(s *[]string) {
 	stringSlicePool.Put(s)
 }
 
-// Global metrics instance - sekarang menggunakan CoreMetrics
+// Global metrics instance - now using CoreMetrics
 var globalEntryMetrics = GetCoreMetrics()
 
 // GetEntryMetrics returns the global entry metrics
@@ -205,7 +205,7 @@ func clearByteSliceSlice(s [][]byte) [][]byte {
 
 
 // Object pool for reusing LogEntry objects to reduce memory allocation
-// Pool objek untuk menggunakan kembali objek LogEntry mengurangi alokasi memori
+// Object pool for reusing LogEntry objects to reduce memory allocation
 var entryPool = sync.Pool{
 	New: func() interface{} {
 		// Use pooled resources for slices and maps within the LogEntry
@@ -248,7 +248,7 @@ const (
 )
 
 // GetEntryFromPool gets a LogEntry from the pool
-// Mendapatkan LogEntry dari pool
+// Gets a LogEntry from the pool
 func GetEntryFromPool() *LogEntry {
 	// Fallback: Use regular goroutine-local pool
 	localPool := GetGoroutineLocalEntryPool()
@@ -256,17 +256,16 @@ func GetEntryFromPool() *LogEntry {
 }
 
 // GetEntryFromGlobalPool gets a LogEntry directly from the global pool
-// Mendapatkan LogEntry langsung dari pool global
 func GetEntryFromGlobalPool() *LogEntry {
 	entry := entryPool.Get().(*LogEntry)
 
 	// Update metrics
 	if entry.Timestamp.IsZero() {
-		// Entry baru dibuat (pool miss)
+		// New entry created (pool miss)
 		globalEntryMetrics.IncEntryPoolMiss()
 		globalEntryMetrics.IncEntryCreated()
 	} else {
-		// Entry digunakan ulang
+		// Entry reused
 		globalEntryMetrics.IncEntryReused()
 	}
 
@@ -297,7 +296,7 @@ func GetEntryFromGlobalPool() *LogEntry {
 	return entry
 }
 
-// goroutineLocalEntryPool menyimpan entry pool per goroutine untuk menghindari lock contention
+// goroutineLocalEntryPool stores entry pool per goroutine to avoid lock contention
 var goroutineLocalEntryPool = sync.Map{}
 
 // GoroutineLocalEntryPool represents a per-goroutine entry pool
@@ -305,30 +304,30 @@ type GoroutineLocalEntryPool struct {
 	entries chan *LogEntry
 }
 
-// getGoroutineID mendapatkan ID goroutine saat ini (implementasi sederhana)
+// getGoroutineID gets the current goroutine ID (simple implementation)
 func getGoroutineID() uint64 {
-	// Dalam implementasi nyata, kita akan menggunakan cara yang lebih andal
-	// untuk mendapatkan ID goroutine
+	// In real implementation, we would use a more reliable method
+	// to get goroutine ID
 	return uint64(time.Now().UnixNano() % 1000000)
 }
 
-// GetGoroutineLocalEntryPool mendapatkan entry pool untuk goroutine saat ini
+// GetGoroutineLocalEntryPool gets entry pool for current goroutine
 func GetGoroutineLocalEntryPool() *GoroutineLocalEntryPool {
 	gid := getGoroutineID()
 	if pool, ok := goroutineLocalEntryPool.Load(gid); ok {
 		return pool.(*GoroutineLocalEntryPool)
 	}
 	
-	// Buat pool baru untuk goroutine ini
+	// Create new pool for this goroutine
 	newPool := &GoroutineLocalEntryPool{
-		entries: make(chan *LogEntry, 100), // Buffered channel untuk 100 entries
+		entries: make(chan *LogEntry, 100), // Buffered channel for 100 entries
 	}
 	goroutineLocalEntryPool.Store(gid, newPool)
 	
 	return newPool
 }
 
-// GetEntryFromLocalPool mendapatkan entry dari pool lokal goroutine
+// GetEntryFromLocalPool gets entry from local goroutine pool
 func (g *GoroutineLocalEntryPool) GetEntryFromLocalPool() *LogEntry {
 	select {
 	case entry := <-g.entries:
@@ -360,7 +359,7 @@ func (g *GoroutineLocalEntryPool) GetEntryFromLocalPool() *LogEntry {
 		globalEntryMetrics.IncEntryReused()
 		return entry
 	default:
-		// Pool kosong, buat entry baru dari pool global
+		// Pool empty, create new entry from global pool
 		entry := GetEntryFromGlobalPool()
 		// globalEntryMetrics.poolMissCount.Add(1) // GetEntryFromGlobalPool already increments this
 		return entry
@@ -368,7 +367,7 @@ func (g *GoroutineLocalEntryPool) GetEntryFromLocalPool() *LogEntry {
 }
 
 // PutEntryToPool returns a LogEntry to the pool
-// Mengembalikan LogEntry ke pool
+// Returns LogEntry to pool
 func PutEntryToPool(entry *LogEntry) {
     if entry.Caller != nil {
         PutCallerInfoToPool(entry.Caller)
@@ -379,31 +378,31 @@ func PutEntryToPool(entry *LogEntry) {
         PutBufferToPool(entry.StackTraceBufPtr)
         entry.StackTraceBufPtr = nil
     }
-	// Gunakan goroutine-local pool jika tersedia
+	// Use goroutine-local pool if available
 	localPool := GetGoroutineLocalEntryPool()
 	localPool.PutEntryToLocalPool(entry)
 }
 
 // ZeroAllocJSONSerialize serializes the LogEntry to JSON without memory allocation
 func (le *LogEntry) ZeroAllocJSONSerialize() []byte {
-	// Dapatkan buffer dari pool untuk zero allocation
+	// Get buffer from pool for zero allocation
 	bufPtr := GetBufferFromPool()
 	buf := *bufPtr
 
-	// Mulai dengan kurung kurawal
+	// Start with opening brace
 	buf = append(buf, '{')
 
 	// Serialisasi field-field penting
 	buf = le.serializeTimestamp(buf, "timestamp", le.Timestamp)
 	buf = append(buf, ',')
 
-	// Serialisasi field-field penting - sekarang LevelName adalah []byte
+	// Serialize important fields - now LevelName is []byte
 	buf = le.serializeByteSliceField(buf, "level", le.LevelName)
 	buf = append(buf, ',')
 
 	buf = le.serializeByteSliceField(buf, "message", le.Message)
 
-	// Tambahkan field lain jika ada
+	// Add other fields if any
 	if le.PID != 0 {
 		buf = append(buf, ',')
 		buf = le.serializeIntField(buf, "pid", le.PID)
@@ -414,14 +413,14 @@ func (le *LogEntry) ZeroAllocJSONSerialize() []byte {
 		buf = le.serializeByteSliceField(buf, "goroutine_id", le.GoroutineID)
 	}
 
-	// Tutup dengan kurung kurawal
+	// Close with closing brace
 	buf = append(buf, '}')
 
-	// Simpan hasil dan kembalikan buffer ke pool
+	// Save result and return buffer to pool
 	result := make([]byte, len(buf))
 	copy(result, buf)
 
-	// Reset buffer dan kembalikan ke pool
+	// Reset buffer and return to pool
 	*bufPtr = (*bufPtr)[:0]
 	PutBufferToPool(bufPtr)
 
@@ -479,7 +478,7 @@ func (le *LogEntry) serializeIntField(buf []byte, key string, value int) []byte 
 	buf = append(buf, '"')
 	buf = append(buf, ':')
 
-	// Konversi int ke string tanpa alokasi
+	// Convert int to string without allocation
 	var temp [20]byte
 	i := len(temp)
 	val := value
@@ -510,7 +509,7 @@ type ErrorAppender interface {
 }
 
 
-// formatLogToBytes menulis data log secara manual ke buffer byte untuk efisiensi maksimal
+// formatLogToBytes writes log data manually to byte buffer for maximum efficiency
 func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	// Format: TIMESTAMP LEVEL MESSAGE [FIELDS] [TAGS]
 
@@ -519,7 +518,7 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	buf = append(buf, ts...)
 	buf = append(buf, ' ')
 
-	// Menulis level - sekarang LevelName adalah []byte
+	// Write level - now LevelName is []byte
 	buf = append(buf, le.LevelName...)
 	buf = append(buf, ' ')
 
@@ -527,7 +526,7 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	buf = append(buf, le.Message...)
 	buf = append(buf, ' ')
 
-	// Menulis fields jika ada
+	// Write fields if any
 	if len(le.Fields) > 0 {
 		buf = append(buf, '[')
 		first := true
@@ -546,7 +545,7 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 		buf = append(buf, ' ')
 	}
 
-	// Menulis tags jika ada
+	// Write tags if any
 	if len(le.Tags) > 0 {
 		buf = append(buf, '[')
 		for i, tag := range le.Tags {
@@ -561,7 +560,7 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	return buf
 }
 
-// intToBytes menulis integer ke buffer tanpa alokasi
+// intToBytes writes integer to buffer without allocation
 func (le *LogEntry) intToBytes(buf []byte, value int) []byte {
 	if value == 0 {
 		return append(buf, '0')
@@ -585,7 +584,7 @@ func (le *LogEntry) intToBytes(buf []byte, value int) []byte {
 	return append(buf, temp[i:]...)
 }
 
-// int64ToBytes menulis int64 ke buffer tanpa alokasi
+// int64ToBytes writes int64 to buffer without allocation
 func (le *LogEntry) int64ToBytes(buf []byte, value int64) []byte {
 	if value == 0 {
 		return append(buf, '0')
@@ -609,10 +608,10 @@ func (le *LogEntry) int64ToBytes(buf []byte, value int64) []byte {
 	return append(buf, temp[i:]...)
 }
 
-// byteSlicePool untuk float formatting di core package
+// byteSlicePool for float formatting in core package
 var byteSlicePool = sync.Pool{
 	New: func() interface{} {
-		return make([]byte, 0, 32) // Ukuran yang cukup untuk float formatting
+		return make([]byte, 0, 32) // Size sufficient for float formatting
 	},
 }
 
@@ -629,22 +628,22 @@ const (
 
 // PutByteSliceToPool returns a byte slice to the pool
 func PutByteSliceToPool(b []byte) {
-	b = b[:0] // Reset length but keep capacity
+	b = b[:0] // to
 	byteSlicePool.Put(b)
 }
 
-// floatToBytes menulis float64 ke buffer tanpa alokasi
+// floatToBytes writes float64 to buffer without allocation
 func (le *LogEntry) floatToBytes(buf []byte, value float64) []byte {
-	// Gunakan pooled buffer untuk konversi float
+	// Use pooled buffer for float conversion
 	tempBuf := GetByteSliceFromPool()
 	defer PutByteSliceToPool(tempBuf)
 
-	// Gunakan strconv.AppendFloat untuk konversi tanpa alokasi
+	// Use strconv.AppendFloat for allocation-free conversion
 	floatBytes := strconv.AppendFloat(tempBuf[:0], value, 'f', 2, 64)
 	return append(buf, floatBytes...)
 }
 
-// PutEntryToLocalPool mengembalikan entry ke pool lokal goroutine
+// PutEntryToLocalPool returns entry to local goroutine pool
 func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
 	if entry.Caller != nil {
 		PutCallerInfoToPool(entry.Caller)
@@ -655,12 +654,12 @@ func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
 	globalEntryMetrics.IncEntrySerialized()
 	globalEntryMetrics.SetLastOperationTime(time.Now())
 	
-	// Coba masukkan ke pool lokal
+	// Try to put into local pool
 	select {
 	case g.entries <- entry:
-		// Berhasil dimasukkan ke pool
+		// Successfully put into pool
 	default:
-		// Pool penuh, kembalikan ke pool global
+		// Pool full, return to global pool
 		entryPool.Put(entry)
 	}
 }

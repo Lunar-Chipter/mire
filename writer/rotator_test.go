@@ -293,9 +293,9 @@ func TestRotatingFileWriterFilePermissions(t *testing.T) {
 	}
 }
 
-// TestRotatingFileWriterWithNonExistentDir creates a writer in a non-existent directory path
+// at
 func TestRotatingFileWriterWithNonExistentDir(t *testing.T) {
-	// Try to create a writer in a non-existent directory
+	// at
 	rotationConfig := &config.RotationConfig{}
 	
 	nonExistentFile := "/non/existent/dir/test.log"

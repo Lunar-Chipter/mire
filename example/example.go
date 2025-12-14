@@ -131,7 +131,7 @@ func ExampleUsage() {
 	ctx = util.WithTraceID(ctx, "trace-12345")
 	ctx = util.WithRequestID(ctx, "req-67890")
 
-	// Log different types of events
+	// at
 	appLogger.LogRequest(ctx, "GET", "/api/users/123", 150*time.Millisecond)
 	appLogger.LogUserAction(ctx, "view_profile", "user-123")
 	appLogger.LogTransaction(ctx, "txn-98765", 99.99, "USD")

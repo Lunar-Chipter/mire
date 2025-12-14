@@ -58,7 +58,7 @@ func NewAsyncLogger(processor LogProcessor, workerCount int, bufferSize int, log
 	return al
 }
 
-// worker is the goroutine that processes log jobs
+// to
 func (al *AsyncLogger) worker() {
 	defer al.wg.Done()
 	defer func() {

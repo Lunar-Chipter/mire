@@ -12,7 +12,7 @@ import (
 	"github.com/Lunar-Chipter/mire/util"
 )
 
-// TestAdditionalLoggerFeatures tests additional features not covered in the original tests
+// at
 func TestAdditionalLoggerFeatures(t *testing.T) {
 	// Test logger with various configuration options
 	var buf bytes.Buffer
@@ -200,7 +200,7 @@ func TestLoggerWithSampling(t *testing.T) {
 	}
 }
 
-// TestCloneWithDisableLocking tests logger when locking is disabled
+// at
 func TestLoggerWithDisableLocking(t *testing.T) {
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{

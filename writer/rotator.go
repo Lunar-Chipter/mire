@@ -9,7 +9,7 @@ import (
 
 // RotatingFileWriter provides a file writer that rotates logs.
 // The implementation details for rotation (e.g., based on size, time) would go here.
-// This is a placeholder as the original file did not contain its implementation.
+// at
 type RotatingFileWriter struct {
 	file   *os.File
 	closed bool

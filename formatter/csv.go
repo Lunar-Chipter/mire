@@ -8,7 +8,7 @@ import (
 )
 
 // CSVFormatter formats log entries in CSV format
-// CSVFormatter memformat entri log dalam format CSV
+// CSVFormatter formats log entries in CSV format
 type CSVFormatter struct {
 	IncludeHeader     bool                                       // Include header row in output
 	FieldOrder        []string                                   // Order of fields in CSV
@@ -20,7 +20,7 @@ type CSVFormatter struct {
 }
 
 // NewCSVFormatter creates a new CSVFormatter
-// NewCSVFormatter membuat CSVFormatter baru
+// NewCSVFormatter creates a new CSVFormatter
 func NewCSVFormatter() *CSVFormatter {
 	return &CSVFormatter{
 		MaskStringValue: "[MASKED]",
@@ -29,7 +29,7 @@ func NewCSVFormatter() *CSVFormatter {
 }
 
 // Format formats a log entry into CSV byte slice with zero allocations
-// Format memformat entri log menjadi slice byte CSV tanpa alokasi
+// Format formats log entry into CSV byte slice without allocation
 func (f *CSVFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 	// Pre-allocate buffer space if possible
 	estimatedSize := 256 // Base size for common fields
@@ -73,7 +73,7 @@ func (f *CSVFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 }
 
 // writeCSVValue writes a value to CSV format, escaping if necessary
-// This is a manual implementation to avoid allocations from encoding/csv
+// at
 func (f *CSVFormatter) writeCSVValue(buf *bytes.Buffer, value string) {
 	// Check if value needs escaping by scanning for special characters
 	needsEscaping := false
@@ -103,7 +103,7 @@ func (f *CSVFormatter) writeCSVValue(buf *bytes.Buffer, value string) {
 
 // writeCSVValueBytes writes a byte slice to CSV format, escaping if necessary
 func (f *CSVFormatter) writeCSVValueBytes(buf *bytes.Buffer, value []byte) {
-	// Check if value needs escaping by scanning for special characters directly in bytes
+	// at
 	needsEscaping := false
 	for _, b := range value {
 		if b == '"' || b == ',' || b == '\n' || b == '\r' {
@@ -144,7 +144,7 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 	case "message":
 		f.writeCSVValueBytes(buf, entry.Message)
 	case "pid":
-		// Write integer directly to the main buffer to avoid an extra copy
+		// at
 		buf.WriteByte('"')
 		util.WriteInt(buf, int64(entry.PID))
 		buf.WriteByte('"')
@@ -167,7 +167,7 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 		}
 	case "line":
 		if entry.Caller != nil {
-			// Write integer directly to the main buffer to avoid an extra copy
+			// at
 			buf.WriteByte('"')
 			util.WriteInt(buf, int64(entry.Caller.Line))
 			buf.WriteByte('"')
@@ -179,7 +179,7 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 		if entry.Error != nil {
 			// Check if the error implements ErrorAppender for zero-allocation
 			if appender, ok := entry.Error.(core.ErrorAppender); ok {
-				// Use the buffer directly for the appender to avoid extra copy
+				// at
 				buf.WriteByte('"')
 				appender.AppendError(buf)
 				buf.WriteByte('"')

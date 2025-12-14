@@ -12,7 +12,7 @@ import (
 	"github.com/Lunar-Chipter/mire/formatter"
 )
 
-// OptimizedLogger adalah versi logger yang efisien untuk mencapai 1 alokasi per operasi log
+// OptimizedLogger is an efficient logger version to achieve 1 allocation per log operation
 type OptimizedLogger struct {
 	config          LoggerConfig
 	formatter       formatter.Formatter
@@ -25,7 +25,7 @@ type OptimizedLogger struct {
 	closed          atomic.Bool
 }
 
-// NewOptimizedLogger membuat instance logger yang efisien
+// NewOptimizedLogger creates an efficient logger instance
 func NewOptimizedLogger(config LoggerConfig) *OptimizedLogger {
 	if config.Output == nil {
 		config.Output = io.Discard // Use io.Discard directly
@@ -51,31 +51,31 @@ func NewOptimizedLogger(config LoggerConfig) *OptimizedLogger {
 	}
 }
 
-// logInternal adalah fungsi inti yang efisien untuk 1 alokasi per operasi
+// logInternal is the core efficient function for 1 allocation per operation
 func (l *OptimizedLogger) logInternal(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
-	// Early return jika level log tidak sesuai
+	// Early return if log level doesn't match
 	if level < l.level {
 		return
 	}
 
-	// Ambil buffer dari pool (1 alokasi ini adalah yang diizinkan)
+	// Get buffer from pool (this 1 allocation is allowed)
 	buf := l.bufferPool.Get().(*bytes.Buffer)
 	defer func() {
 		buf.Reset()
 		l.bufferPool.Put(buf)
 	}()
 
-	// Buat entry dengan menggunakan pool
+	// Create entry using pool
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
 
-	// Isi entry dengan data yang diperlukan
+	// Fill entry with required data
 	entry.Timestamp = time.Now()
 	entry.Level = level
 	entry.LevelName = level.ToBytes()
 	entry.Message = message
 
-	// Tambahkan fields dari logger
+	// Add fields from logger
 	for k, v := range l.fields {
 		// Convert interface{} values to []byte when copying to entry.Fields
 		switch val := v.(type) {
@@ -87,7 +87,7 @@ func (l *OptimizedLogger) logInternal(ctx context.Context, level core.Level, mes
 			entry.Fields[k] = core.StringToBytes(stringify(val)) // Use existing stringify function with conversion
 		}
 	}
-	// Tambahkan fields spesifik untuk log ini
+	// Add specific fields for this log
 	for k, v := range fields {
 		// Convert interface{} values to []byte when copying to entry.Fields
 		switch val := v.(type) {
@@ -100,92 +100,92 @@ func (l *OptimizedLogger) logInternal(ctx context.Context, level core.Level, mes
 		}
 	}
 
-	// Format entry ke buffer
+	// Format entry to buffer
 	if err := l.formatter.Format(buf, entry); err != nil {
-		// Tangani error jika perlu
+		// Handle error if needed
 		return
 	}
 
-	// Tulis ke output
+	// Write to output
 	l.mu.Lock()
 	_, _ = l.out.Write(buf.Bytes())
 	l.mu.Unlock()
 }
 
-// Metode-metode logging tingkat dasar
+// Basic logging level methods
 func (l *OptimizedLogger) Trace(args ...interface{}) {
 	if core.TRACE >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.TRACE, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Debug(args ...interface{}) {
 	if core.DEBUG >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.DEBUG, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Info(args ...interface{}) {
 	if core.INFO >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.INFO, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Warn(args ...interface{}) {
 	if core.WARN >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.WARN, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Error(args ...interface{}) {
 	if core.ERROR >= l.level {
-		message := l.formatArgsToBytes(args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatArgsToBytes(args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.ERROR, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Tracef(format string, args ...interface{}) {
 	if core.TRACE >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.TRACE, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Debugf(format string, args ...interface{}) {
 	if core.DEBUG >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.DEBUG, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Infof(format string, args ...interface{}) {
 	if core.INFO >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.INFO, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Warnf(format string, args ...interface{}) {
 	if core.WARN >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.WARN, message, nil)
 	}
 }
 
 func (l *OptimizedLogger) Errorf(format string, args ...interface{}) {
 	if core.ERROR >= l.level {
-		message := l.formatfArgsToBytes(format, args...) // Ini harus efisien untuk hanya 1 alokasi
+		message := l.formatfArgsToBytes(format, args...) // This should be efficient for only 1 allocation
 		l.logInternal(context.Background(), core.ERROR, message, nil)
 	}
 }
 
-// formatArgsToBytes mengonversi argumen ke byte slice dengan hanya 1 alokasi
+// formatArgsToBytes converts arguments to byte slice with only 1 allocation
 func (l *OptimizedLogger) formatArgsToBytes(args ...interface{}) []byte {
-	// Gunakan buffer dari pool untuk menggabungkan argumen
+	// Use buffer from pool to combine arguments
 	buf := l.bufferPool.Get().(*bytes.Buffer)
 	defer func() {
 		buf.Reset()
@@ -214,43 +214,43 @@ func (l *OptimizedLogger) formatArgsToBytes(args ...interface{}) []byte {
 				buf.WriteString("false")
 			}
 		default:
-			buf.WriteString(stringify(v)) // Ini mungkin menyebabkan alokasi tambahan
+			buf.WriteString(stringify(v)) // This may cause additional allocation
 		}
 	}
 
-	// Buat salinan data buffer dan kembalikan ke pool sebelumnya
+	// Create a copy of buffer data and return to pool beforehand
 	result := make([]byte, buf.Len())
 	copy(result, buf.Bytes())
 	return result
 }
 
-// formatfArgsToBytes mengonversi argumen terformat ke byte slice dengan hanya 1 alokasi
+// formatfArgsToBytes converts formatted arguments to byte slice with only 1 allocation
 func (l *OptimizedLogger) formatfArgsToBytes(format string, args ...interface{}) []byte {
-	// Gunakan buffer dari pool untuk menggabungkan argumen
+	// Use buffer from pool to combine arguments
 	buf := l.bufferPool.Get().(*bytes.Buffer)
 	defer func() {
 		buf.Reset()
 		l.bufferPool.Put(buf)
 	}()
 
-	// Ini akan menyebabkan 1 alokasi karena penggunaan fmt.Sprintf
-	// Dalam implementasi produksi yang benar-benar efisien,
-	// kita akan mengganti ini dengan implementasi zero-allocation
+	// This will cause 1 allocation due to fmt.Sprintf usage
+	// In truly efficient production implementation,
+	// we would replace this with zero-allocation implementation
 	buf.WriteString(formatString(format, args...))
 
-	// Buat salinan data buffer dan kembalikan ke pool sebelumnya
+	// Create a copy of buffer data and return to pool beforehand
 	result := make([]byte, buf.Len())
 	copy(result, buf.Bytes())
 	return result
 }
 
-// Fungsi bantu untuk konversi tipe tanpa alokasi (sebisa mungkin)
+// Helper function for type conversion without allocation (as much as possible)
 func itoa(i int) string {
 	if i == 0 {
 		return "0"
 	}
-	
-	// Gunakan buffer stack-allocated untuk konversi
+
+	// Use stack-allocated buffer for conversion
 	var buf [32]byte
 	n := len(buf)
 	sign := false
@@ -279,7 +279,7 @@ func i64toa(i int64) string {
 		return "0"
 	}
 	
-	// Gunakan buffer stack-allocated untuk konversi
+	// Use stack-allocated buffer for conversion
 	var buf [32]byte
 	n := len(buf)
 	sign := false
@@ -304,35 +304,35 @@ func i64toa(i int64) string {
 }
 
 func ftoa(f float64) string {
-	// Ini masih menyebabkan alokasi karena kita tidak mengimplementasikan parsing float secara manual
-	// Dalam library produksi yang efisien, kita akan menggunakan algoritma zero-allocation
+	// This still causes allocation because we don't implement manual float parsing
+	// In efficient production library, we would use zero-allocation algorithm
 	return formatFloat(f)
 }
 
-// formatFloat adalah implementasi dasar untuk mengonversi float ke string
+// formatFloat is a basic implementation to convert float to string
 func formatFloat(f float64) string {
-	// Bagian bulat
+	// Integer part
 	intPart := int64(f)
 	decPart := f - float64(intPart)
-	
-	// Konversi bagian desimal ke string
+
+	// Convert decimal part to string
 	decStr := itoa(int(decPart * 100))
-	
+
 	return i64toa(intPart) + "." + decStr
 }
 
-// stringify mengonversi tipe apa pun ke string (ini menyebabkan alokasi)
+// stringify converts any type to string (this causes allocation)
 func stringify(v interface{}) string {
-	return string([]byte(v.(string))) // Ini menyebabkan alokasi tambahan
+	return string([]byte(v.(string))) // This causes additional allocation
 }
 
-// formatString adalah implementasi dasar dari fmt.Sprintf (menyebabkan alokasi)
+// formatString is a basic implementation of fmt.Sprintf (causes allocation)
 func formatString(format string, args ...interface{}) string {
-	// Dalam implementasi produksi, ini akan diganti dengan implementasi zero-allocation
+	// In production implementation, this will be replaced with zero-allocation implementation
 	return format
 }
 
-// WithFields menambahkan field ke logger
+// WithFields adds fields to logger
 func (l *OptimizedLogger) WithFields(fields map[string]interface{}) *OptimizedLogger {
 	newLogger := &OptimizedLogger{
 		config:     l.config,
@@ -342,7 +342,7 @@ func (l *OptimizedLogger) WithFields(fields map[string]interface{}) *OptimizedLo
 		bufferPool: l.bufferPool,
 	}
 
-	// Salin field-field dari logger asli
+	// Copy fields from original logger
 	newLogger.fields = make(map[string]interface{}, len(l.fields)+len(fields))
 	for k, v := range l.fields {
 		newLogger.fields[k] = v
@@ -354,7 +354,7 @@ func (l *OptimizedLogger) WithFields(fields map[string]interface{}) *OptimizedLo
 	return newLogger
 }
 
-// WithFieldsBytes menambahkan field ke logger menggunakan []byte (zero-allocation)
+// WithFieldsBytes adds fields to logger using []byte (zero-allocation)
 func (l *OptimizedLogger) WithFieldsBytes(fields map[string][]byte) *OptimizedLogger {
 	newLogger := &OptimizedLogger{
 		config:     l.config,
@@ -364,7 +364,7 @@ func (l *OptimizedLogger) WithFieldsBytes(fields map[string][]byte) *OptimizedLo
 		bufferPool: l.bufferPool,
 	}
 
-	// Salin field-field dari logger asli dan konversi ke interface{}
+	// Copy fields from original logger and convert to interface{}
 	newLogger.fields = make(map[string]interface{}, len(l.fields)+len(fields))
 	for k, v := range l.fields {
 		newLogger.fields[k] = v
@@ -376,9 +376,9 @@ func (l *OptimizedLogger) WithFieldsBytes(fields map[string][]byte) *OptimizedLo
 	return newLogger
 }
 
-// Close menutup logger
+// Close closes the logger
 func (l *OptimizedLogger) Close() {
 	if l.closed.CompareAndSwap(false, true) {
-		// Lakukan pembersihan jika diperlukan
+		// Perform cleanup if needed
 	}
 }

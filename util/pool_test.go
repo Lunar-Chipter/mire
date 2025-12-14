@@ -397,15 +397,15 @@ func TestLogBufferFull(t *testing.T) {
 
 // TestSmallByteSlicePool tests the behavior of small byte slice pool with size limits
 func TestSmallByteSlicePool(t *testing.T) {
-	// Get a slice and make it larger than MaxSmallSlicePoolSize
+	// to
 	// This should cause it to not be returned to the pool in PutSmallByteSliceToPool
 	largeSlice := make([]byte, MaxSmallSlicePoolSize+10) // Larger than the limit
 	
-	// Put it to pool - this should result in the slice being discarded
+	// at
 	PutSmallByteSliceToPool(largeSlice)
 	
-	// Check if the discard counter increased
-	// We'd need to check internal pool state which is difficult
+	// at
+	// at
 	// For now, just ensure it doesn't panic
 }
 

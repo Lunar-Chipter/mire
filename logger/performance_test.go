@@ -10,7 +10,7 @@ import (
 	"github.com/Lunar-Chipter/mire/formatter"
 )
 
-// TestMemoryAllocations tests memory allocations for different log levels
+// at
 func TestMemoryAllocations(t *testing.T) {
 	t.Run("TraceLevelAllocations", func(t *testing.T) {
 		allocs := testing.AllocsPerRun(1000, func() {
@@ -120,7 +120,7 @@ func TestThroughput(t *testing.T) {
 	})
 }
 
-// BenchmarkMemoryAllocations benchmarks memory allocations for different log levels
+// at
 func BenchmarkMemoryAllocations(b *testing.B) {
 	b.Run("BenchmarkTraceAlloc", func(b *testing.B) {
 		logger := New(LoggerConfig{
@@ -238,7 +238,7 @@ func BenchmarkFormatterAllocations(b *testing.B) {
 	})
 }
 
-// BenchmarkFieldAllocations tests allocations with different numbers of fields
+// at
 func BenchmarkFieldAllocations(b *testing.B) {
 	b.Run("BenchmarkWithNoFields", func(b *testing.B) {
 		logger := New(LoggerConfig{
@@ -380,7 +380,7 @@ func BenchmarkThroughput(b *testing.B) {
 	})
 }
 
-// BenchmarkThroughputLevels tests throughput at different log levels
+// at
 func BenchmarkThroughputLevels(b *testing.B) {
 	levels := []struct {
 		name  string
@@ -416,7 +416,7 @@ func BenchmarkThroughputLevels(b *testing.B) {
 	}
 }
 
-// BenchmarkThroughputFormatters compares throughput of different formatters
+// at
 func BenchmarkThroughputFormatters(b *testing.B) {
 	formatters := []struct {
 		name string
@@ -447,7 +447,7 @@ func BenchmarkThroughputFormatters(b *testing.B) {
 	}
 }
 
-// BenchmarkFormatters compares different formatters
+// at
 func BenchmarkFormatters(b *testing.B) {
 	b.Run("BenchmarkTextFormatter", func(b *testing.B) {
 		logger := New(LoggerConfig{
@@ -661,7 +661,7 @@ func TestBufferedWriterPerformance(t *testing.T) {
 	})
 }
 
-// TestFormatterPerformance compares performance of different formatters
+// at
 func TestFormatterPerformance(t *testing.T) {
 	formatters := []struct {
 		name string
@@ -701,7 +701,7 @@ func ExampleLogger_performance() {
 		Level:             core.INFO,
 		Output:            io.Discard, // Use io.Discard for benchmarks
 		AsyncLogging:      true,       // Enable async logging
-		AsyncWorkerCount:  4,          // Use 4 async workers
+		AsyncWorkerCount:  4,          // to
 		AsyncLogChannelBufferSize: 1000, // Buffer up to 1000 log messages
 		Formatter: &formatter.TextFormatter{
 			EnableColors:    false,      // Disable colors for performance

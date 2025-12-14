@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// TestWithTraceID tests adding trace ID to context
+// at
 func TestWithTraceID(t *testing.T) {
 	ctx := context.Background()
 	traceID := "test-trace-id"
@@ -29,7 +29,7 @@ func TestWithTraceID(t *testing.T) {
 	}
 }
 
-// TestWithSpanID tests adding span ID to context
+// at
 func TestWithSpanID(t *testing.T) {
 	ctx := context.Background()
 	spanID := "test-span-id"
@@ -53,7 +53,7 @@ func TestWithSpanID(t *testing.T) {
 	}
 }
 
-// TestWithUserID tests adding user ID to context
+// at
 func TestWithUserID(t *testing.T) {
 	ctx := context.Background()
 	userID := "test-user-id"
@@ -77,7 +77,7 @@ func TestWithUserID(t *testing.T) {
 	}
 }
 
-// TestWithSessionID tests adding session ID to context
+// at
 func TestWithSessionID(t *testing.T) {
 	ctx := context.Background()
 	sessionID := "test-session-id"
@@ -101,7 +101,7 @@ func TestWithSessionID(t *testing.T) {
 	}
 }
 
-// TestWithRequestID tests adding request ID to context
+// at
 func TestWithRequestID(t *testing.T) {
 	ctx := context.Background()
 	requestID := "test-request-id"
@@ -179,7 +179,7 @@ func TestExtractFromContextWithMissingValues(t *testing.T) {
 
 	ctx = WithTraceID(ctx, traceID)
 	ctx = WithUserID(ctx, userID)
-	// Skip adding other values
+	// at
 
 	// Extract values
 	result := ExtractFromContext(ctx)
@@ -222,16 +222,16 @@ func TestExtractFromContextEmpty(t *testing.T) {
 	}
 }
 
-// TestContextKeyString tests that context keys are properly defined as strings
+// to
 func TestContextKeyString(t *testing.T) {
-	// Check that all keys are string type
+	// to
 	_ = string(TraceIDKey)
 	_ = string(SpanIDKey)
 	_ = string(UserIDKey)
 	_ = string(SessionIDKey)
 	_ = string(RequestIDKey)
 
-	// Check that keys are all different
+	// to
 	keys := []contextKey{
 		TraceIDKey,
 		SpanIDKey,
@@ -240,7 +240,7 @@ func TestContextKeyString(t *testing.T) {
 		RequestIDKey,
 	}
 
-	// Make sure all keys are unique
+	// to
 	for i := 0; i < len(keys); i++ {
 		for j := i + 1; j < len(keys); j++ {
 			if keys[i] == keys[j] {
@@ -264,7 +264,7 @@ func TestExtractFromContextWithEmptyStringValues(t *testing.T) {
 	defer PutMapStringToPool(result) // Important: return the map to the pool
 	
 	// Empty string values should not be included in the result
-	// according to the implementation logic
+	// at
 	for key, value := range result {
 		if key == "trace_id" || key == "user_id" || key == "request_id" {
 			if value != "" {

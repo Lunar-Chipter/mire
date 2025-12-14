@@ -8,7 +8,7 @@ import (
 	"github.com/Lunar-Chipter/mire/util"
 )
 
-// JSON key constants for zero-allocation
+// to
 var (
 	jsonTimestampKey = []byte("\"timestamp\":\"")
 	jsonLevelKey     = []byte("\"level_name\":\"")
@@ -66,7 +66,7 @@ func NewJSONFormatter() *JSONFormatter {
 // Format formats a log entry into JSON byte slice with zero allocations
 func (f *JSONFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 	if f.PrettyPrint {
-		// For now, keep standard encoder for pretty print, but optimize regular print
+		// to
 		return f.formatWithStandardEncoder(buf, entry)
 	}
 
@@ -96,7 +96,7 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 	escapeJSON(buf, entry.Message)
 	buf.Write(jsonQuote)
 
-	// Add PID if needed - reduce branching by checking condition once
+	// at
 	if f.ShowPID {
 		buf.Write(jsonPidKey)
 		util.WriteInt(buf, int64(entry.PID))
@@ -151,15 +151,15 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 // formatWithStandardEncoder uses standard encoder (less efficient but with pretty printing)
 func (f *JSONFormatter) formatWithStandardEncoder(buf *bytes.Buffer, entry *core.LogEntry) error {
 	// For compatibility with JSON marshaling, we need to convert the LogEntry
-	// to avoid automatic base64 encoding of []byte fields while maintaining performance.
+	// at
 	// We'll create a JSON-compatible struct representation manually for full control.
 
 	if f.PrettyPrint {
-		// For pretty printing, use manual formatting to avoid base64 encoding
+		// at
 		return f.formatManuallyWithIndent(buf, entry)
 	} else {
 		// Even for non-pretty printing, we need to avoid the standard encoder's base64 behavior
-		// by implementing our own encoding that handles []byte as strings
+		// at
 		return f.formatManually(buf, entry)
 	}
 }
@@ -337,7 +337,7 @@ func escapeJSON(buf *bytes.Buffer, data []byte) {
 			}
 		}
 
-		// Periodically flush to main buffer to avoid growing the escaped buffer too large
+		// at
 		if escaped.Len() > 1024 {
 			buf.Write(escaped.Bytes())
 			escaped.Reset()
@@ -471,7 +471,7 @@ func (f *JSONFormatter) transformValue(val interface{}, defaultVal string) strin
 		return "null"
 	default:
 		// For complex types that can't be easily converted
-		// This is a last resort case - should be avoided in demanding scenarios
+		// at
 		return defaultVal
 	}
 }
@@ -496,7 +496,7 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 		buf.Write(core.StringToBytes(k))
 		buf.Write([]byte("\":"))
 
-		// Write field value directly as JSON string since it's already []byte
+		// at
 		buf.WriteByte('"')
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
 			// Apply masking if needed
@@ -547,7 +547,7 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 		buf.Write(indentBytes)
 	}
 
-	// Create a simple slice for keys
+	// to
 	orderedKeys := make([]string, 0, len(fields))
 	for k := range fields {
 		orderedKeys = append(orderedKeys, k)
@@ -566,7 +566,7 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 		buf.Write(core.StringToBytes(k))
 		buf.Write([]byte("\": "))
 
-		// Write field value directly as JSON string since it's already []byte
+		// at
 		buf.WriteByte('"')
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
 			// Apply masking if needed
