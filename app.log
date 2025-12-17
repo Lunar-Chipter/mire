@@ -1,21 +1,26 @@
 {
-  "timestamp": "2025-12-17 21:35:28.772",
+  "timestamp": "2025-12-17 21:05:23.077",
     "level_name": "DEBUG",
     "message": "Debug message for JSON file logger."
 }
 {
-  "timestamp": "2025-12-17 21:35:28.772",
+  "timestamp": "2025-12-17 21:05:23.077",
     "level_name": "INFO",
     "message": "Transaction processed successfully.",
     "fields": {
       
+      "amount": "123.45",
       "currency": "IDR",
-      "trans_id": "TXN-001",
-      "amount": "123.45"
+      "trans_id": "TXN-001"
   }
 }
 {
-  "timestamp": "2025-12-17 21:35:28.772",
+  "timestamp": "2025-12-17 21:05:23.078",
     "level_name": "ERROR",
-    "message": "Failed to save user data to cache. user_id user-bob cache_key user:bob"
+    "message": "Failed to save user data to cache.",
+    "fields": {
+
+      "user_id": "user-bob",
+      "cache_key": "user:bob"
+  }
 }
