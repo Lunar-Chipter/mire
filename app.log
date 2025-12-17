@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-12-17 21:35:28.772",
+  "timestamp": "2025-12-17 20:59:24.193",
     "level_name": "DEBUG",
     "message": "Debug message for JSON file logger."
 }
 {
-  "timestamp": "2025-12-17 21:35:28.772",
+  "timestamp": "2025-12-17 20:59:24.193",
     "level_name": "INFO",
     "message": "Transaction processed successfully.",
     "fields": {
@@ -15,7 +15,12 @@
   }
 }
 {
-  "timestamp": "2025-12-17 21:35:28.772",
+  "timestamp": "2025-12-17 20:59:24.193",
     "level_name": "ERROR",
-    "message": "Failed to save user data to cache. user_id user-bob cache_key user:bob"
+    "message": "Failed to save user data to cache.",
+    "fields": {
+
+      "user_id": "user-bob",
+      "cache_key": "user:bob"
+  }
 }
