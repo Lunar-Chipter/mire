@@ -1,21 +1,21 @@
 {
-  "timestamp": "2025-12-08 15:57:10.815",
+  "timestamp": "2025-12-17 21:06:58.612",
     "level_name": "DEBUG",
-    "message": "Pesan debug untuk JSON file logger."
+    "message": "Debug message for JSON file logger."
 }
 {
-  "timestamp": "2025-12-08 15:57:10.815",
+  "timestamp": "2025-12-17 21:06:58.612",
     "level_name": "INFO",
-    "message": "Transaksi berhasil diproses.",
+    "message": "Transaction processed successfully.",
     "fields": {
       
-      "trans_id": "TXN-001",
+      "amount": "123.45",
       "currency": "IDR",
-      "amount": "123.45"
+      "trans_id": "TXN-001"
   }
 }
 {
-  "timestamp": "2025-12-08 15:57:10.815",
+  "timestamp": "2025-12-17 21:06:58.613",
     "level_name": "ERROR",
-    "message": "Gagal menyimpan data pengguna ke cache. user_id user-bob cache_key user:bob"
+    "message": "Failed to save user data to cache. user_id user-bob cache_key user:bob"
 }
