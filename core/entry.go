@@ -435,7 +435,7 @@ func (le *LogEntry) serializeTimestamp(buf []byte, key string, value time.Time) 
 	buf = append(buf, ':')
 	buf = append(buf, '"')
 
-	// Format timestamp secara manual tanpa alokasi
+	// Format timestamp manually without allocation
 	ts := value.Format(time.RFC3339)
 	buf = append(buf, ts...)
 
@@ -513,7 +513,7 @@ type ErrorAppender interface {
 func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	// Format: TIMESTAMP LEVEL MESSAGE [FIELDS] [TAGS]
 
-	// Menulis timestamp
+	// Write timestamp
 	ts := le.Timestamp.Format("2006-01-02T15:04:05.000Z07:00")
 	buf = append(buf, ts...)
 	buf = append(buf, ' ')
@@ -522,7 +522,7 @@ func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	buf = append(buf, le.LevelName...)
 	buf = append(buf, ' ')
 
-	// Menulis pesan
+	// Write message
 	buf = append(buf, le.Message...)
 	buf = append(buf, ' ')
 
@@ -566,13 +566,13 @@ func (le *LogEntry) intToBytes(buf []byte, value int) []byte {
 		return append(buf, '0')
 	}
 
-	// Untuk angka negatif
+	// For negative numbers
 	if value < 0 {
 		buf = append(buf, '-')
 		value = -value
 	}
 
-	// Konversi tanpa alokasi
+	// Conversion without allocation
 	var temp [20]byte
 	i := len(temp)
 	for value > 0 && i > 0 {
@@ -590,13 +590,13 @@ func (le *LogEntry) int64ToBytes(buf []byte, value int64) []byte {
 		return append(buf, '0')
 	}
 
-	// Untuk angka negatif
+	// For negative numbers
 	if value < 0 {
 		buf = append(buf, '-')
 		value = -value
 	}
 
-	// Konversi tanpa alokasi
+	// Conversion without allocation
 	var temp [20]byte
 	i := len(temp)
 	for value > 0 && i > 0 {

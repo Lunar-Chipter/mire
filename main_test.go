@@ -30,16 +30,16 @@ func TestMainFunction(t *testing.T) {
 	output := buf.String()
 
 	// Check for the header
-	if !strings.Contains(output, "DEMONSTRASI PENGGUNAAN LIBRARY LOGGING MIRE") {
+	if !strings.Contains(output, "DEMONSTRATION OF MIRE LOGGING LIBRARY USAGE") {
 		t.Error("Output should contain the main header")
 	}
 
 	// Check for various section headers
 	expectedSections := []string{
-		"### 1. Logger Default",
-		"### 2. Logger dengan Fields & Context",
-		"### 3. Error Logging dengan Stack Trace",
-		"### 4. Logger JSON ke File",
+		"### 1. Default Logger (More Concise Console Output)",
+		"### 2. Logger with Fields & Context",
+		"### 3. Error Logging with Stack Trace",
+		"### 4. JSON Logger to File (app.log)",
 		"### 5. Custom Text Logger",
 	}
 	
@@ -50,10 +50,9 @@ func TestMainFunction(t *testing.T) {
 	}
 
 	// Check for content that should definitely appear in console output
-	// to
 	definitelyExpectedContent := []string{
-		"Ada 2 peringatan di sistem", // Console output from default logger
-		"Terjadi error sederhana",    // Console output from default logger
+		"There are 2 warnings in the system", // Console output from default logger
+		"A simple error occurred",    // Console output from default logger
 	}
 
 	for _, content := range definitelyExpectedContent {
@@ -64,11 +63,10 @@ func TestMainFunction(t *testing.T) {
 	}
 
 	// Log info for content that might not appear in console but is expected in logs
-	// at
 	possibleExpectedContent := []string{
 		"token-ABC",                  // From context-aware logging (might be in output)
-		"Memproses permintaan otorisasi", // Part of context log message
-		"Transaksi berhasil diproses",     // From JSON file logging (might not be in console)
+		"Processing authorization request for", // Part of context log message
+		"Transaction processed successfully",     // From JSON file logging (might not be in console)
 		"level: INFO",                     // Might not be in console output
 	}
 

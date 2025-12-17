@@ -53,7 +53,7 @@ func main() {
 	defaultConfig := logger.LoggerConfig{
 		Level:             core.WARN, // Only show WARN and above in console
 		Output:            os.Stdout,
-		ErrorOutput:       io.Discard, // Buang pesan error internal logger
+		ErrorOutput:       io.Discard, // Discard internal logger error messages
 		CallerDepth:       logger.DEFAULT_CALLER_DEPTH,
 		TimestampFormat:   logger.DEFAULT_TIMESTAMP_FORMAT,
 		BufferSize:        logger.DEFAULT_BUFFER_SIZE,
@@ -181,8 +181,8 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 	jsonConfig := logger.LoggerConfig{
 		Level:       core.DEBUG,
 		Output:      file,
-		ErrorOutput: io.Discard, // Buang pesan error internal logger
-		BufferSize:  1024, // Aktifkan buffered writer
+		ErrorOutput: io.Discard, // Discard internal logger error messages
+		BufferSize:  1024, // Enable buffered writer
 		Formatter: &formatter.JSONFormatter{
 			PrettyPrint:      true,
 			ShowCaller:       true,
@@ -196,14 +196,14 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 // setupCustomTextLogger creates a logger with simplified text format.
 func setupCustomTextLogger() *logger.Logger {
 	customConfig := logger.LoggerConfig{
-		Level:             core.TRACE, // Tampilkan semua log, bahkan trace
-		ErrorOutput:       io.Discard, // Buang pesan error internal logger
+		Level:             core.TRACE, // Display all logs, even trace
+		ErrorOutput:       io.Discard, // Discard internal logger error messages
 		Formatter: &formatter.TextFormatter{
 			EnableColors:      true,
-			ShowTimestamp:     false, // Sembunyikan timestamp
-			ShowCaller:        false, // Sembunyikan info pemanggil
-			ShowPID:           true,  // Tampilkan Process ID
-			ShowGoroutine:     true,  // Tampilkan Goroutine ID
+			ShowTimestamp:     false, // Hide timestamp
+			ShowCaller:        false, // Hide caller info
+			ShowPID:           true,  // Show Process ID
+			ShowGoroutine:     true,  // Show Goroutine ID
 		},
 	}
 	return logger.New(customConfig)
