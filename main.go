@@ -94,10 +94,7 @@ func main() {
 		"service": core.StringToBytes("auth-service"),
 		"version": core.StringToBytes("1.0.0"),
 	})
-	logWithContext.WithFields(map[string]interface{}{
-		"username":   "alice",
-		"ip_address": "192.168.1.100",
-	}).Info("User successfully logged in.")
+	logWithContext.WithFields(map[string]interface{}{"username": "alice", "ip_address": "192.168.1.100"}).Info("User successfully logged in.")
 
 	// Log with explicit context using context-aware methods.
 	logWithContext.InfofC(ctx, "Processing authorization request for %s.", "token-ABC")
@@ -132,10 +129,7 @@ func main() {
 		"amount":   123.45,
 		"currency": "IDR",
 	}).Info("Transaction processed successfully.")
-	jsonFileLogger.WithFields(map[string]interface{}{
-		"user_id":   "user-bob",
-		"cache_key": "user:bob",
-	}).Error("Failed to save user data to cache.")
+	jsonFileLogger.WithFields(map[string]interface{}{"user_id": "user-bob", "cache_key": "user:bob"}).Error("Failed to save user data to cache.")
 	printLine("---------------------------------------------------")
 	time.Sleep(10 * time.Millisecond)
 
