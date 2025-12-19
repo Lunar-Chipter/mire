@@ -9,6 +9,10 @@ import (
 	"github.com/Lunar-Chipter/mire/logger"
 )
 
+type key string
+
+const traceIDKey key = "trace_id"
+
 // ExternalServiceExample demonstrates how to use the external hook
 func ExternalServiceExample() {
 	// Create an external hook for a logging service
@@ -46,7 +50,7 @@ func ExternalServiceExample() {
 
 	// Simulate some processing
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "trace_id", "trace-123")
+	ctx = context.WithValue(ctx, traceIDKey, "trace-123")
 
 	log.InfoC(ctx, "Processing request with context")
 

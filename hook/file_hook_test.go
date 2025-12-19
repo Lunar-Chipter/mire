@@ -268,8 +268,7 @@ func TestHookInterfaceImplementation(t *testing.T) {
 	}()
 
 	// Assign to interface variable for interface testing
-	var h Hook
-	h = hook
+	var h Hook = hook
 
 	// Create a log entry for testing
 	entry := core.GetEntryFromPool()

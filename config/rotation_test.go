@@ -285,13 +285,10 @@ func TestRotationConfigLargeValues(t *testing.T) {
 func TestRotationConfigMemoryLayout(t *testing.T) {
 	// This test checks that the struct has reasonable size and layout
 	config := &RotationConfig{}
-	
+
 	// We can't easily test the exact memory layout without unsafe,
 	// but we can ensure the struct can be instantiated and used
-	if config == nil {
-		t.Error("RotationConfig could not be instantiated")
-	}
-	
+
 	// Check that the struct has the expected fields by setting and getting them
 	config.MaxSize = 12345
 	config.MaxAge = 456 * time.Hour

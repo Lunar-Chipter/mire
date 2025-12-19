@@ -503,9 +503,6 @@ func TestLogEntryFormatLogToBytes(t *testing.T) {
 	if len(string(result)) < len("2023-01-01T12:00:00") {
 		t.Error("formatLogToBytes result too short")
 	}
-	if !entry.Timestamp.IsZero() {
-		// at
-	}
 }
 
 // TestLogEntryIntConversion tests int to bytes conversion functions

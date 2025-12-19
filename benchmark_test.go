@@ -14,9 +14,6 @@ func TestBenchmarkTestExists(t *testing.T) {
 	// we would create proper tests here
 	
 	// For now, we just ensure the test file exists and compiles correctly
-	if true != true {
-		t.Error("Basic logical test failed")
-	}
 }
 
 // TestBenchmarksAreFunctional tests that the benchmark functions compile correctly

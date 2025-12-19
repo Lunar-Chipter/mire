@@ -330,16 +330,17 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 
 	// Convert interface{} fields to []byte fields for zero-allocation processing
 	byteFields := make(map[string][]byte)
-	if fields != nil {
-		for k, v := range fields {
-			switch value := v.(type) {
-			case string:
-				byteFields[k] = core.StringToBytes(value)
-			case []byte:
-				byteFields[k] = value
-			default:
-				byteFields[k] = core.StringToBytes(fmt.Sprintf("%v", value))
-			}
+	for k, v := range fields {
+		switch value := v.(type) {
+		case string:
+			byteFields[k] = core.StringToBytes(value)
+		case []byte:
+			byteFields[k] = value
+		default:
+			// For unsupported types, convert to string representation
+			byteFields[k] = core.StringToBytes(fmt.Sprintf("%v", v))
+		}
+	}
 		}
 	}
 
@@ -475,10 +476,6 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 	// Use an efficient approach by pre-calculating the total size if possible
 	// to reduce allocations during concatenation
 	totalLen := 0
-	spaceCount := len(args) - 1
-	if spaceCount < 0 {
-		spaceCount = 0
-	}
 
 	// Pre-calculate total length for efficient allocation
 	for i, arg := range args {
