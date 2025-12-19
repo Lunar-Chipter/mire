@@ -339,6 +339,7 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 		default:
 			// For unsupported types, convert to string representation
 			byteFields[k] = core.StringToBytes(fmt.Sprintf("%v", v))
+		}
 	}
 
 	// Optimized path for non-blocking scenarios using atomic operations
