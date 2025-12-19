@@ -22,7 +22,7 @@ func BenchmarkCSVFormatter(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_ = formatter.Format(&buf, entry)
 	}
 }
 
@@ -39,7 +39,7 @@ func BenchmarkJSONFormatter(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_ = formatter.Format(&buf, entry)
 	}
 }
 
@@ -56,7 +56,7 @@ func BenchmarkJSONFormatterPretty(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_ = formatter.Format(&buf, entry)
 	}
 }
 
@@ -75,7 +75,7 @@ func BenchmarkTextFormatter(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_ = formatter.Format(&buf, entry)
 	}
 }
 
@@ -94,7 +94,7 @@ func BenchmarkTextFormatterWithColors(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_ = formatter.Format(&buf, entry)
 	}
 }
 
@@ -111,7 +111,7 @@ func BenchmarkCSVFormatterBatch(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_ = formatter.Format(&buf, entry)
 	}
 }
 

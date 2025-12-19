@@ -30,8 +30,8 @@ func TestSimpleFileHookCreation(t *testing.T) {
 	}
 	
 	// Clean up
-	hook.Close()
-	os.Remove(tempFile)
+	_ = hook.Close()
+	_ = os.Remove(tempFile)
 }
 
 // TestSimpleFileHookCreationError tests error case when file can't be created
