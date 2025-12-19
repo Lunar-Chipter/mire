@@ -195,14 +195,6 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 	}
 }
 
-
-	buf.Write(core.StringToBytes(part)) // Use zero-allocation string to byte conversion
-	if f.EnableColors {
-		buf.Write(ResetColorBytes)
-	}
-	buf.WriteByte(' ')
-}
-
 func (f *TextFormatter) writeMetaPartBytes(buf *bytes.Buffer, part []byte) {
 	if f.EnableColors {
 		buf.Write(metaColorBytes)
