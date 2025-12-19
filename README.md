@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <strong>Mire</strong> - The blazing-fast, zero-allocation logging library for Go that handles 1M+ logs/second with elegance and efficiency. Supports multiple formatters (#json #csv #text), structured logging, async processing, and high-throughput applications.
+  <strong>Mire</strong> - The blazing-fast, zero-allocation logging library for Go that handles 1M+ logs/second with elegance and efficiency.
 </p>
 
 <p align="center">
