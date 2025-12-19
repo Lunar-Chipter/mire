@@ -82,7 +82,6 @@ func TestBufferedWriterWrite(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBufferedWriter returned nil")
 	}
-	defer bufferedWriter.Close()
 	
 	data := []byte("test data")
 	n, err := bufferedWriter.Write(data)
@@ -95,6 +94,8 @@ func TestBufferedWriterWrite(t *testing.T) {
 	
 	// Wait a bit for the flush
 	time.Sleep(150 * time.Millisecond)
+	
+	bufferedWriter.Close()
 	
 	result := output.String()
 	if !strings.Contains(result, string(data)) {
@@ -143,8 +144,11 @@ func TestBufferedWriterFullBuffer(t *testing.T) {
 // TestBufferedWriterWriteError tests behavior when the underlying writer returns an error
 func TestBufferedWriterWriteError(t *testing.T) {
 	var capturedError error
+	var mu sync.Mutex
 	errorHandler := func(err error) {
+		mu.Lock()
 		capturedError = err
+		mu.Unlock()
 	}
 	
 	bufferedWriter := NewBufferedWriter(&mockWriteError{}, 10, 10*time.Millisecond, errorHandler, 5, 1*time.Second)
@@ -163,7 +167,10 @@ func TestBufferedWriterWriteError(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	
 	// Check if error was handled
-	if capturedError == nil {
+	mu.Lock()
+	hasError := capturedError != nil
+	mu.Unlock()
+	if !hasError {
 		t.Error("Expected error to be captured by error handler")
 	}
 	
@@ -419,7 +426,6 @@ func TestBufferedWriterLargeWrite(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBufferedWriter returned nil")
 	}
-	defer bufferedWriter.Close()
 	
 	// Write a large chunk of data
 	largeData := make([]byte, 1000)
@@ -438,6 +444,8 @@ func TestBufferedWriterLargeWrite(t *testing.T) {
 	// Wait for processing
 	time.Sleep(150 * time.Millisecond)
 	
+	bufferedWriter.Close()
+	
 	result := output.String()
 	if len(result) < 900 { // Check that most of the data was written
 		t.Errorf("Output seems truncated, got %d chars", len(result))
@@ -453,7 +461,6 @@ func TestBufferedWriterWithBytesBuffer(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBufferedWriter returned nil")
 	}
-	defer bufferedWriter.Close()
 	
 	// Write several pieces of data
 	for i := 0; i < 7; i++ {
@@ -462,6 +469,8 @@ func TestBufferedWriterWithBytesBuffer(t *testing.T) {
 	
 	// Wait for flush
 	time.Sleep(100 * time.Millisecond)
+	
+	bufferedWriter.Close()
 	
 	// Verify data was written
 	output := buf.String()
