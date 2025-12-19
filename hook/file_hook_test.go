@@ -187,11 +187,11 @@ func TestSimpleFileHookClose(t *testing.T) {
 	}
 	
 	// Try to close again - this should not cause issues
-	hook.Close()
+	_ = hook.Close()
 	// Note: Whether closing an already closed file returns an error depends on the OS/file system
 	// For this test, we just ensure it doesn't panic
 	
-	os.Remove(tempFile)
+	_ = os.Remove(tempFile)
 }
 
 // TestSimpleFileHookCloseNilFile tests closing a hook with nil file
@@ -263,8 +263,8 @@ func TestHookInterfaceImplementation(t *testing.T) {
 		t.Fatalf("NewFileHook failed: %v", err)
 	}
 	defer func() {
-		hook.Close()
-		os.Remove(tempFile)
+		_ = hook.Close()
+		_ = os.Remove(tempFile)
 	}()
 
 	// Assign to interface variable for interface testing
@@ -301,8 +301,8 @@ func TestSimpleFileHookWithDifferentFormatters(t *testing.T) {
 		t.Fatalf("NewFileHook failed: %v", err)
 	}
 	defer func() {
-		hook.Close()
-		os.Remove(tempFile)
+		_ = hook.Close()
+		_ = os.Remove(tempFile)
 	}()
 	
 	// Verify the formatter is JSON
