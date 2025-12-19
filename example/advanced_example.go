@@ -53,7 +53,7 @@ func contextAwareExample() {
 			EnableStackTrace: true,
 		},
 	})
-	defer func() { _ = log.Close() }()
+	defer func() { log.Close() }()
 
 	log.InfoC(ctx, "Processing user request") // Will include trace_id, user_id, etc.
 
@@ -94,7 +94,7 @@ func customFormatterExample() {
 		Output:    os.Stdout,
 		Formatter: jsonFormatter,
 	})
-	defer func() { _ = log.Close() }()
+	defer func() { log.Close() }()
 
 	// Log with sensitive data that will be transformed
 	log.WithFields(map[string]interface{}{
@@ -122,7 +122,7 @@ func hookExample() {
 		},
 		Hooks: []hook.Hook{customHook},
 	})
-	defer func() { _ = log.Close() }()
+	defer func() { log.Close() }()
 
 	// This will trigger the hook since it's WARN level
 	log.WithFields(map[string]interface{}{
@@ -131,7 +131,7 @@ func hookExample() {
 	}).Warn("Database connection failed, retrying...")
 
 	// Close hook to flush any remaining data
-	_ = customHook.Close()
+	customHook.Close()
 }
 
 func performanceExample() {
@@ -153,7 +153,7 @@ func performanceExample() {
 			IncludeHeader: false,
 		},
 	})
-	defer func() { _ = perfLog.Close() }()
+	defer func() { perfLog.Close() }()
 
 	// Log many messages to demonstrate performance
 	start := time.Now()
@@ -168,7 +168,7 @@ func performanceExample() {
 	fmt.Printf("Logged 1000 messages in %v using async logging\n", duration)
 
 	// Close to ensure all messages are processed
-	_ = perfLog.Close()
+	perfLog.Close()
 }
 
 // CustomHTTPHook is a custom hook implementation

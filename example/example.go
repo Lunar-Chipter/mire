@@ -69,7 +69,7 @@ func NewApplicationLogger(output io.Writer, level core.Level, environment string
 // Close closes the application logger
 func (al *ApplicationLogger) Close() error {
 	if al.logger != nil {
-		_ = al.logger.Close()
+		al.logger.Close()
 	}
 	return nil
 }
@@ -124,7 +124,7 @@ func (al *ApplicationLogger) LogSecurityEvent(ctx context.Context, eventType, de
 func ExampleUsage() {
 	// Create application logger
 	appLogger := NewApplicationLogger(os.Stdout, core.INFO, "production")
-	defer func() { _ = appLogger.Close() }()
+	defer func() { appLogger.Close() }()
 
 	// Simulate context with trace ID
 	ctx := context.Background()
@@ -191,7 +191,7 @@ func (hpl *HighPerformanceLogger) LogEvent(eventType, message string, fields map
 // Close closes the high-performance logger
 func (hpl *HighPerformanceLogger) Close() error {
 	if hpl.logger != nil {
-		_ = hpl.logger.Close()
+		hpl.logger.Close()
 	}
 	return nil
 }

@@ -36,7 +36,7 @@ func ExternalServiceExample() {
 		// In real usage, uncomment the next lines:
 		// Hooks: []hook.Hook{externalHook},
 	})
-	defer func() { _ = log.Close() }()
+	defer func() { log.Close() }()
 
 	// Log some messages - these would also be sent to the external service
 	log.Info("Application started")

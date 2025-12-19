@@ -192,7 +192,7 @@ func TestSetupJSONFileLogger(t *testing.T) {
 	}
 	
 	// Close the logger
-	_ = logger.Close()
+	logger.Close()
 	
 	// Clean up the test file if it was created
 	_ = os.Remove("test_json.log")
@@ -214,7 +214,7 @@ func TestSetupCustomTextLogger(t *testing.T) {
 	logger.Info("Test message from custom text logger")
 	
 	// Close the logger
-	_ = logger.Close()
+	logger.Close()
 }
 
 // at
