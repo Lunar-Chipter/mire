@@ -244,25 +244,15 @@ func PutStringSliceToPool(s []string) {
 	atomic.AddInt64(&globalPoolMetrics.slicePutCount, 1)
 }
 
-// Padding for cache alignment
-type cachePadding struct {
-	_ [64]byte // Cache line padding
-}
-
 // Goroutine-local pools to reduce lock contention
 var (
 	goroutineBufferPools sync.Map // map[uint64]*localBufferPool
-	goroutineSlicePools  sync.Map // map[uint64]*localSlicePool
 	goroutineMapPools    sync.Map // map[uint64]*localMapPool
 )
 
 // Local pool structures for goroutine-local storage
 type localBufferPool struct {
 	buffers chan *bytes.Buffer
-}
-
-type localSlicePool struct {
-	slices chan []byte
 }
 
 type localMapPool struct {

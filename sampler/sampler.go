@@ -17,7 +17,6 @@ type SamplingLogger struct {
 	processor LogSampler
 	rate      int
 	counter   int64
-	mu        sync.Mutex
 }
 
 // NewSamplingLogger creates a new SamplingLogger

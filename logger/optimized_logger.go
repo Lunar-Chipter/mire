@@ -20,7 +20,6 @@ type OptimizedLogger struct {
 	mu              sync.Mutex
 	fields          map[string]interface{}
 	level           core.Level
-	buffer          *bytes.Buffer
 	bufferPool      *sync.Pool
 	closed          atomic.Bool
 }
