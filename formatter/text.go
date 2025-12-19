@@ -195,10 +195,7 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 	}
 }
 
-func (f *TextFormatter) writeMetaPart(buf *bytes.Buffer, part string) {
-	if f.EnableColors {
-		buf.Write(metaColorBytes)
-	}
+
 	buf.Write(core.StringToBytes(part)) // Use zero-allocation string to byte conversion
 	if f.EnableColors {
 		buf.Write(ResetColorBytes)
@@ -229,18 +226,7 @@ func (f *TextFormatter) writeTraceInfo(buf *bytes.Buffer, entry *core.LogEntry) 
 	}
 }
 
-func (f *TextFormatter) writeTracePart(buf *bytes.Buffer, key []byte, value string) {
-	if f.EnableColors {
-		buf.Write(traceColorBytes)
-	}
-	buf.Write(key)
-	buf.WriteByte(':')
-	buf.Write(core.StringToBytes(value)) // Use zero-allocation string to byte conversion
-	if f.EnableColors {
-		buf.Write(ResetColorBytes)
-	}
-	buf.WriteByte(' ')
-}
+
 
 func (f *TextFormatter) writeTracePartBytes(buf *bytes.Buffer, key []byte, value []byte) {
 	if f.EnableColors {

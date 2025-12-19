@@ -193,11 +193,6 @@ func clearFloatMap(m map[string]float64) {
 	}
 }
 
-// clearStringSlice clears a string slice
-func clearStringSlice(s []string) []string {
-	return s[:0]
-}
-
 // clearByteSliceSlice clears a byte slice slice
 func clearByteSliceSlice(s [][]byte) [][]byte {
 	return s[:0]
@@ -222,13 +217,6 @@ var entryPool = sync.Pool{
 		}
 	},
 }
-
-// Efficient allocation-free pool access with optimized path
-var (
-	// Pre-allocated entries to reduce sync.Pool contention under low load
-	preallocatedEntries = make([]*LogEntry, 32) // Fixed-size array for fast access
-	preallocatedIndex = &atomic.Int64{}        // Atomic index for round-robin access
-)
 
 // Constants for compile-time configuration
 const (
@@ -443,18 +431,6 @@ func (le *LogEntry) serializeTimestamp(buf []byte, key string, value time.Time) 
 	return buf
 }
 
-// serializeField serializes a string field
-func (le *LogEntry) serializeField(buf []byte, key, value string) []byte {
-	buf = append(buf, '"')
-	buf = append(buf, key...)
-	buf = append(buf, '"')
-	buf = append(buf, ':')
-	buf = append(buf, '"')
-	buf = append(buf, value...)
-	buf = append(buf, '"')
-	return buf
-}
-
 // serializeByteSliceField serializes a byte slice field
 func (le *LogEntry) serializeByteSliceField(buf []byte, key string, value []byte) []byte {
 	buf = append(buf, '"')
@@ -664,48 +640,5 @@ func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
 	}
 }
 
-// manualStringConversion converts common types to string without fmt to avoid circular import
-func manualStringConversion(value interface{}) string {
-	switch v := value.(type) {
-	case string:
-		return v
-	case []byte:
-		return string(v) // This is unavoidable for []byte to string
-	case int:
-		return strconv.Itoa(v)
-	case int8:
-		return strconv.FormatInt(int64(v), 10)
-	case int16:
-		return strconv.FormatInt(int64(v), 10)
-	case int32:
-		return strconv.FormatInt(int64(v), 10)
-	case int64:
-		return strconv.FormatInt(v, 10)
-	case uint:
-		return strconv.FormatUint(uint64(v), 10)
-	case uint8:
-		return strconv.FormatUint(uint64(v), 10)
-	case uint16:
-		return strconv.FormatUint(uint64(v), 10)
-	case uint32:
-		return strconv.FormatUint(uint64(v), 10)
-	case uint64:
-		return strconv.FormatUint(v, 10)
-	case float32:
-		return strconv.FormatFloat(float64(v), 'g', -1, 32)
-	case float64:
-		return strconv.FormatFloat(v, 'g', -1, 64)
-	case bool:
-		if v {
-			return "true"
-		}
-		return "false"
-	case nil:
-		return "null"
-	default:
-		// For complex types that can't be easily converted
-		// This is a last resort case - should be avoided in demanding scenarios
-		return "<complex-type>"
-	}
-}
+
 

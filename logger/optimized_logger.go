@@ -378,7 +378,5 @@ func (l *OptimizedLogger) WithFieldsBytes(fields map[string][]byte) *OptimizedLo
 
 // Close closes the logger
 func (l *OptimizedLogger) Close() {
-	if l.closed.CompareAndSwap(false, true) {
-		// Perform cleanup if needed
-	}
+	l.closed.Store(true)
 }

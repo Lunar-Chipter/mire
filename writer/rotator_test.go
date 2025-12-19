@@ -1,7 +1,6 @@
 package writer
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -95,7 +94,7 @@ func TestRotatingFileWriterWrite(t *testing.T) {
 	}
 	
 	// Check that the file contains the data
-	content, err := ioutil.ReadFile(tempFile)
+	content, err := os.ReadFile(tempFile)
 	if err != nil {
 		t.Errorf("Failed to read log file: %v", err)
 	} else if string(content) != string(data) {
@@ -134,7 +133,7 @@ func TestRotatingFileWriterMultipleWrites(t *testing.T) {
 	}
 	
 	// Check that the file contains all the data
-	content, err := ioutil.ReadFile(tempFile)
+	content, err := os.ReadFile(tempFile)
 	if err != nil {
 		t.Errorf("Failed to read log file: %v", err)
 	} else if string(content) != expectedContent {
@@ -170,7 +169,7 @@ func TestRotatingFileWriterClose(t *testing.T) {
 	}
 	
 	// Verify the file still contains the data
-	content, err := ioutil.ReadFile(tempFile)
+	content, err := os.ReadFile(tempFile)
 	if err != nil {
 		t.Errorf("Failed to read log file after close: %v", err)
 	} else if !strings.Contains(string(content), "Before close") {
@@ -223,7 +222,7 @@ func TestRotatingFileWriterWithLargeData(t *testing.T) {
 	}
 	
 	// Check final file size
-	content, err := ioutil.ReadFile(tempFile)
+	content, err := os.ReadFile(tempFile)
 	if err != nil {
 		t.Errorf("Failed to read log file: %v", err)
 	} else if int64(len(content)) < int64(len(largeData)+len(moreData)) {
@@ -256,7 +255,7 @@ func TestRotatingFileWriterWithSpecialCharacters(t *testing.T) {
 	}
 	
 	// Check that the file contains the special data
-	content, err := ioutil.ReadFile(tempFile)
+	content, err := os.ReadFile(tempFile)
 	if err != nil {
 		t.Errorf("Failed to read log file: %v", err)
 	} else if string(content) != string(specialData) {

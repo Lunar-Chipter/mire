@@ -353,34 +353,7 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 	l.writeByte(ctx, level, message, byteFields)
 }
 
-// internal logging method optimized for 1M+ logs/second with []byte fields (zero-allocation)
-// Early filtering to avoid unnecessary work
-func (l *Logger) logByte(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) {
-	// Early return if logger is closed
-	if l.closed.Load() {
-		return
-	}
 
-	// Early filtering to avoid unnecessary work - branch prediction optimized
-	if level < l.Config.Level {
-		return
-	}
-
-    // Sampling if enabled
-    if l.sampler != nil && !l.sampler.ShouldLog() {
-        return
-	}
-
-	// Optimized path for non-blocking scenarios using atomic operations
-	if l.asyncLogger != nil {
-		// Use lock-free async logging for high throughput
-		l.asyncLogger.Log(level, message, fields, ctx)
-		return
-	}
-
-	// Hot path is efficient
-	l.writeByte(ctx, level, message, fields)
-}
 
 	// final write to output with zero-allocation optimizations for interface{} fields (backward compatibility)
 func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
@@ -585,17 +558,15 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 	for k, v := range l.fields {
 		entry.Fields[k] = v // v is already []byte
 	}
-	if fields != nil {
-		for k, v := range fields {
-			// Convert interface{} values to []byte when copying to entry.Fields
-			switch val := v.(type) {
-			case string:
-				entry.Fields[k] = core.StringToBytes(val)
-			case []byte:
-				entry.Fields[k] = val
-			default:
-				entry.Fields[k] = core.StringToBytes(fmt.Sprintf("%v", val))
-			}
+	for k, v := range fields {
+		// Convert interface{} values to []byte when copying to entry.Fields
+		switch val := v.(type) {
+		case string:
+			entry.Fields[k] = core.StringToBytes(val)
+		case []byte:
+			entry.Fields[k] = val
+		default:
+			entry.Fields[k] = core.StringToBytes(fmt.Sprintf("%v", val))
 		}
 	}
 
@@ -654,10 +625,8 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 	for k, v := range l.fields {
 		entry.Fields[k] = v
 	}
-	if fields != nil {
-		for k, v := range fields {
-			entry.Fields[k] = v
-		}
+	for k, v := range fields {
+		entry.Fields[k] = v
 	}
 
 	// Extract context with zero allocation if possible
