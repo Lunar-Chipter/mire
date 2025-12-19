@@ -319,7 +319,7 @@ go test -bench=. ./...
 go run main.go
 ```
 
-### Benchmark Results (v0.0.4)
+### Benchmark Results (v0.0.5)
 
 | Operation | Time per op | Allocs per op | Bytes per op |
 |-----------|-------------|---------------|--------------|
@@ -336,17 +336,17 @@ go run main.go
 
 The Mire logging library has been tested across various performance aspects including memory allocation, throughput, and component performance. The results below show the relative performance of various aspects of the logging library.
 
-### Memory Allocation Benchmarks (v0.0.4)
+### Memory Allocation Benchmarks (v0.0.5)
 
 #### Core Operations Performance
 
 | Operation | Time/Op | Bytes/Op | Allocs/Op |
 |-----------|---------|----------|-----------|
-| Level Bytes Conversion | 4.5ns | 0 B | 0 allocs |
-| Caller Info Pool | 119.7ns | 0 B | 0 allocs |
-| Buffer Pool | 145.6ns | 0 B | 0 allocs |
-| Int to Bytes | 128.5ns | 0 B | 0 allocs |
-| LogEntry Format | 1,301ns | 24 B | 1 allocs |
+| Level Bytes Conversion | 0.93ns | 0 B | 0 allocs |
+| Caller Info Pool | 14.07ns | 0 B | 0 allocs |
+| Buffer Pool | 13.40ns | 0 B | 0 allocs |
+| Int to Bytes | 13.50ns | 0 B | 0 allocs |
+| LogEntry Format | 325.5ns | 24 B | 1 allocs |
 
 #### Allocation per Logging Operation by Level
 
@@ -360,19 +360,19 @@ The Mire logging library has been tested across various performance aspects incl
 
 Note: Significant improvement due to zero-allocation design with direct byte slice operations.
 
-#### Allocation Comparison by Formatter (v0.0.4)
+#### Allocation Comparison by Formatter (v0.0.5)
 
 | Formatter | Time/Op | Bytes/Op | Allocs/Op |
 |-----------|---------|----------|-----------|
-| TextFormatter | 1,390ns | 72 B | 2 allocs |
-| JSONFormatter | 2,846ns | 24 B | 1 allocs |
-| JSONFormatter (Pretty) | 10,358ns | 72 B | 2 allocs |
-| CSVFormatter | 2,990ns | 48 B | 2 allocs |
-| CSVFormatter (Batch) | 21.58ns | 0 B | 0 allocs |
+| TextFormatter | 408.8ns | 72 B | 2 allocs |
+| JSONFormatter | 1168ns | 24 B | 1 allocs |
+| JSONFormatter (Pretty) | 1639ns | 72 B | 2 allocs |
+| CSVFormatter | 746.0ns | 48 B | 2 allocs |
+| CSVFormatter (Batch) | 9.477ns | 0 B | 0 allocs |
 
 Note: All formatters achieve excellent performance with zero-allocation batch operations.
 
-### Throughput Benchmarks (v0.0.4)
+### Throughput Benchmarks (v0.0.5)
 
 #### Throughput by Number of Fields
 
@@ -395,15 +395,15 @@ Note: All formatters achieve excellent performance with zero-allocation batch op
 
 Note: Performance improved due to zero-allocation design.
 
-#### Throughput by Formatter (v0.0.4)
+#### Throughput by Formatter (v0.0.5)
 
 | Formatter              | Time/Ops | Allocs/Operation |
 |------------------------|----------|------------------|
-| TextFormatter          | 1,390ns/op| 2 allocs/op      |
-| JSONFormatter          | 2,846ns/op| 1 allocs/op     |
-| JSONFormatter (Pretty) | 10,358ns/op| 2 allocs/op     |
-| CSVFormatter           | 2,990ns/op| 2 allocs/op      |
-| CSVFormatter (Batch)   | 21.58ns/op| 0 allocs/op      |
+| TextFormatter          | 408.8ns/op| 2 allocs/op      |
+| JSONFormatter          | 1168ns/op| 1 allocs/op     |
+| JSONFormatter (Pretty) | 1639ns/op| 2 allocs/op     |
+| CSVFormatter           | 746.0ns/op| 2 allocs/op      |
+| CSVFormatter (Batch)   | 9.477ns/op| 0 allocs/op      |
 
 Note: Formatters achieve better performance with direct []byte manipulation. CSVFormatter batch shows exceptional performance with sub-22ns/op at zero allocations.
 
@@ -411,10 +411,10 @@ Note: Formatters achieve better performance with direct []byte manipulation. CSV
 
 #### Concurrent Logging Performance
 
-- Handles 10 goroutines with 1000 messages each efficiently
-- Concurrent formatter operations: ~444ns/op with 1 alloc/op
+- Handles concurrent operations efficiently
+- Concurrent formatter operations: ~100.7ns/op with 1 alloc/op
 
-### Performance Conclusion (v0.0.4)
+### Performance Conclusion (v0.0.5)
 
 1. **Ultra-Low Memory Allocation**: The library achieves 1-6 allocations per log operation with []byte fields directly.
 
