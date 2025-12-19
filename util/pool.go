@@ -194,6 +194,7 @@ func GetSmallByteSliceFromPool() []byte {
 func PutSmallByteSliceToPool(b []byte) {
 	// Avoid putting back overly large slices to prevent pool pollution
 	if cap(b) < MaxSmallSlicePoolSize { // Keep slices up to 1KB
+		//nolint:staticcheck
 		smallByteSlicePool.Put(b)
 		atomic.AddInt64(&globalPoolMetrics.slicePutCount, 1)
 	} else {
@@ -247,16 +248,11 @@ func PutStringSliceToPool(s []string) {
 // Goroutine-local pools to reduce lock contention
 var (
 	goroutineBufferPools sync.Map // map[uint64]*localBufferPool
-	goroutineMapPools    sync.Map // map[uint64]*localMapPool
 )
 
 // Local pool structures for goroutine-local storage
 type localBufferPool struct {
 	buffers chan *bytes.Buffer
-}
-
-type localMapPool struct {
-	maps chan map[string]string
 }
 
 // getGoroutineID returns a pseudo goroutine ID for goroutine-local storage

@@ -57,6 +57,7 @@ func GetStackTrace(depth int) ([]byte, *[]byte) {
 	// and then has "package.function(...)\n\tfile:line +0xOFFSET\n" pairs.
 	// We want to count pairs.
 	lineCount := 0
+	//nolint:ineffassign
 	lastNewline := -1
 	for i := 0; i < len(trace); i++ {
 		if trace[i] == '\n' {

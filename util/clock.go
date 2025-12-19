@@ -174,5 +174,6 @@ func Now() time.Time {
 
 // ReleaseTimeBuffer returns the buffer to the pool after use
 func (c *Clock) ReleaseTimeBuffer(buf []byte) {
+	//nolint:staticcheck
 	timeBufferPool.Put(buf[:0]) // Reset before putting back
 }

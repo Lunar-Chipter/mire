@@ -63,13 +63,4 @@ func (w *RotatingFileWriter) Close() error {
 	return err
 }
 
-// rotate would handle the process of renaming the current log file
-// and creating a new one.
-func (w *RotatingFileWriter) rotate() error {
-	// 1. Close the current file
-	// 2. Rename it (e.g., app.log -> app.2025-11-22.log)
-	// 3. Create a new log file with the original name
-	// 4. Update w.file to point to the new file
-	// 5. Manage old backups (delete if > maxBackups)
-	return nil // Placeholder
-}
+

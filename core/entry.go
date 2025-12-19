@@ -604,6 +604,7 @@ const (
 // PutByteSliceToPool returns a byte slice to the pool
 func PutByteSliceToPool(b []byte) {
 	b = b[:0] // to
+	//nolint:staticcheck
 	byteSlicePool.Put(b)
 }
 
