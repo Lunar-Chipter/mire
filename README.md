@@ -336,6 +336,13 @@ go run main.go
 
 The Mire logging library has been tested across various performance aspects including memory allocation, throughput, and component performance. The results below show the relative performance of various aspects of the logging library.
 
+**Benchmark Environment:**
+- **CPU**: AMD EPYC 7763 64-Core Processor (64 cores)
+- **Go Version**: 1.25.0
+- **OS**: Linux (Ubuntu on GitHub Actions)
+- **Architecture**: amd64
+- **Runner**: GitHub Actions standard runner
+
 ### Memory Allocation Benchmarks (v0.0.5)
 
 #### Core Operations Performance
