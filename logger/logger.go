@@ -134,7 +134,7 @@ type Logger struct {
 	formatter        formatter.Formatter             // Formatter to use for log entries
 	out              io.Writer                       // Output writer for logs
 	errOut           io.Writer                       // Output writer for internal logger errors
-	errOutMu         sync.Mutex                      // Mutex for protecting errOut
+	errOutMu         *sync.Mutex                     // Mutex for protecting errOut
 	mu               *sync.RWMutex                   // Mutex for protecting internal state (changed to pointer to allow safe cloning)
 	hooks            []hook.Hook                     // Hooks to execute for each log entry
 	exitFunc         func(int)                       // Function to call on fatal/panic
@@ -149,7 +149,7 @@ type Logger struct {
 	stats            *LoggerStats                    // Statistics for the logger
 	asyncLogger      *writer.AsyncLogger             // Async logger for non-blocking logging
 	errorFileHook    *hook.SimpleFileHook            // Built-in error file hook for ERROR+ levels
-	closed           atomic.Bool                     // Flag to indicate if logger is closed
+	closed           *atomic.Bool                    // Flag to indicate if logger is closed
 	pid              int                             // Process ID
 	clock            *util.Clock                 // Clock for timestamp optimization
 }
@@ -232,6 +232,7 @@ func New(config LoggerConfig) *Logger {
 		formatter:        config.Formatter,
 		out:              config.Output,
 		errOut:           config.ErrorOutput,
+		errOutMu:         &sync.Mutex{}, // Initialize the mutex pointer
 		mu:               new(sync.RWMutex), // Initialize the mutex pointer
 		exitFunc:         config.ExitFunc,
 		fields:           make(map[string][]byte),
@@ -241,6 +242,7 @@ func New(config LoggerConfig) *Logger {
 		onFatal:          config.OnFatal,
 		onPanic:          config.OnPanic,
 		stats:            NewLoggerStats(),
+		closed:           &atomic.Bool{},
 		pid:              os.Getpid(),
 	}
 
@@ -305,7 +307,7 @@ func (l *Logger) Log(ctx context.Context, level core.Level, msg []byte, fields m
 }
 func (l *Logger) ErrorHandler() func(error) { return l.handleError }
 func (l *Logger) ErrOut() io.Writer { return l.errOut }
-func (l *Logger) ErrOutMu() *sync.Mutex { return &l.errOutMu }
+func (l *Logger) ErrOutMu() *sync.Mutex { return l.errOutMu }
 
 
 // internal logging method optimized for 1M+ logs/second with interface{} fields (for backward compatibility)
@@ -844,19 +846,41 @@ func (l *Logger) clone() *Logger {
     l.mu.RLock()
     defer l.mu.RUnlock()
 
-    // Perform a shallow copy of the logger. This is critical.
+    // Create a new logger with shared resources to avoid copying noCopy fields.
     // We want clone to share the same writers (async, buffer)
     // and their goroutines, not create new ones.
-    cloned := *l
+    cloned := &Logger{
+        Config:           l.Config,
+        formatter:        l.formatter,
+        out:              l.out,
+        errOut:           l.errOut,
+        errOutMu:         l.errOutMu,
+        mu:               l.mu,
+        hooks:            make([]hook.Hook, len(l.hooks)),
+        exitFunc:         l.exitFunc,
+        fields:           make(map[string][]byte, len(l.fields)+10),
+        sampler:          l.sampler,
+        buffer:           l.buffer,
+        rotation:         l.rotation,
+        contextExtractor: l.contextExtractor,
+        metrics:          l.metrics,
+        onFatal:          l.onFatal,
+        onPanic:          l.onPanic,
+        stats:            NewLoggerStats(),
+        asyncLogger:      l.asyncLogger,
+        errorFileHook:    l.errorFileHook,
+        closed:           &atomic.Bool{},
+        pid:              l.pid,
+        clock:            l.clock,
+    }
+    copy(cloned.hooks, l.hooks)
 
-    // Create a new map for cloned fields and copy parent fields.
-    // Pre-allocate with sufficient capacity to avoid reallocation
-    cloned.fields = make(map[string][]byte, len(l.fields)+10)
+    // Copy parent fields.
     for k, v := range l.fields {
         cloned.fields[k] = v
     }
 
-    return &cloned
+    return cloned
 }
 
 // --- Level-based logging methods ---
