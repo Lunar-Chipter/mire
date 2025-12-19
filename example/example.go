@@ -69,7 +69,7 @@ func NewApplicationLogger(output io.Writer, level core.Level, environment string
 // Close closes the application logger
 func (al *ApplicationLogger) Close() error {
 	if al.logger != nil {
-		al.logger.Close()
+		_ = al.logger.Close()
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ func (hpl *HighPerformanceLogger) LogEvent(eventType, message string, fields map
 // Close closes the high-performance logger
 func (hpl *HighPerformanceLogger) Close() error {
 	if hpl.logger != nil {
-		hpl.logger.Close()
+		_ = hpl.logger.Close()
 	}
 	return nil
 }
