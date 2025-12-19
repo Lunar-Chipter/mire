@@ -2,7 +2,6 @@ package sampler
 
 import (
 	"context"
-	"sync"
 	"sync/atomic"
 	"github.com/Lunar-Chipter/mire/core"
 )
