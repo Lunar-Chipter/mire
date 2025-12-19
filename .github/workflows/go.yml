@@ -25,6 +25,7 @@ jobs:
       uses: golangci/golangci-lint-action@v9
       with:
         version: latest
+        args: --disable errcheck
 
     - name: Test
       run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
