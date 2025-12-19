@@ -746,7 +746,6 @@ func (l *Logger) handleLevelActions(level core.Level, entry *core.LogEntry) {
 			msgBuf.WriteString("PANIC: ")
 			msgBuf.Write(entry.Message)
 			msgBuf.WriteByte('\n')
-			//nolint:errcheck
 			l.out.Write(msgBuf.Bytes())
 		}
 		l.exitFunc(1)
@@ -769,8 +768,7 @@ func (l *Logger) handleError(err error) {
 		buf.Write([]byte("logger error: "))
 		buf.Write(core.StringToBytes(err.Error())) // Use zero-allocation string to byte conversion
 		buf.Write([]byte("\n"))
-		_ , _ = 		//nolint:errcheck
-		l.errOut.Write(buf.Bytes())
+		_ , _ = 		l.errOut.Write(buf.Bytes())
 	}
 }
 

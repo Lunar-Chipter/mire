@@ -31,7 +31,7 @@ func TestSimpleFileHookCreation(t *testing.T) {
 	
 	// Clean up
 	_ = hook.Close()
-	_ = os.Remove(tempFile)
+	os.Remove(tempFile)
 }
 
 // TestSimpleFileHookCreationError tests error case when file can't be created
@@ -43,14 +43,14 @@ func TestSimpleFileHookCreationError(t *testing.T) {
 		t.Error("NewFileHook should have failed with invalid path")
 		// Close hook if it was created despite the error
 		if hook != nil {
-			_ = hook.Close()
+			hook.Close()
 		}
 		return
 	}
 	
 	if hook != nil {
 		t.Error("NewFileHook should have returned nil on error")
-		_ = hook.Close()
+		hook.Close()
 	}
 }
 
@@ -62,8 +62,8 @@ func TestSimpleFileHookFire(t *testing.T) {
 		t.Fatalf("NewFileHook failed: %v", err)
 	}
 	defer func() {
-		_ = hook.Close()
-		_ = os.Remove(tempFile)
+		hook.Close()
+		os.Remove(tempFile)
 	}()
 	
 	// Create a log entry with ERROR level (should be logged)
@@ -135,7 +135,7 @@ func TestSimpleFileHookFireError(t *testing.T) {
 	}
 	
 	_ = hook.Close()
-	_ = os.Remove(tempFile)
+	os.Remove(tempFile)
 }
 
 // TestSimpleFileHookFireWriteError tests error handling when writer fails
@@ -191,7 +191,7 @@ func TestSimpleFileHookClose(t *testing.T) {
 	// Note: Whether closing an already closed file returns an error depends on the OS/file system
 	// For this test, we just ensure it doesn't panic
 	
-	_ = os.Remove(tempFile)
+	os.Remove(tempFile)
 }
 
 // TestSimpleFileHookCloseNilFile tests closing a hook with nil file
@@ -263,8 +263,8 @@ func TestHookInterfaceImplementation(t *testing.T) {
 		t.Fatalf("NewFileHook failed: %v", err)
 	}
 	defer func() {
-		_ = hook.Close()
-		_ = os.Remove(tempFile)
+		hook.Close()
+		os.Remove(tempFile)
 	}()
 
 	// Assign to interface variable for interface testing
@@ -301,8 +301,8 @@ func TestSimpleFileHookWithDifferentFormatters(t *testing.T) {
 		t.Fatalf("NewFileHook failed: %v", err)
 	}
 	defer func() {
-		_ = hook.Close()
-		_ = os.Remove(tempFile)
+		hook.Close()
+		os.Remove(tempFile)
 	}()
 	
 	// Verify the formatter is JSON

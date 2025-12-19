@@ -131,7 +131,7 @@ func hookExample() {
 	}).Warn("Database connection failed, retrying...")
 
 	// Close hook to flush any remaining data
-	customHook.Close()
+	_ = customHook.Close()
 }
 
 func performanceExample() {

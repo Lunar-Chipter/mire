@@ -33,9 +33,7 @@ func (e *wrappedError) Unwrap() error {
 
 // printLine is a helper function to print lines without fmt
 func printLine(s string) {
-	//nolint:errcheck
 	os.Stdout.Write([]byte(s))
-	//nolint:errcheck
 	os.Stdout.Write([]byte("\n"))
 }
 

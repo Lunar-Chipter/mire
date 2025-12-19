@@ -24,7 +24,7 @@ func TestMainFunction(t *testing.T) {
 
 	// Read the output
 	var buf bytes.Buffer
-	_ , _ = io.Copy(&buf, r)
+	io.Copy(&buf, r)
 
 	// Check the output contains expected parts
 	output := buf.String()
@@ -141,7 +141,7 @@ func TestPrintLine(t *testing.T) {
 
 	// Read the output
 	var buf bytes.Buffer
-	_ , _ = io.Copy(&buf, r)
+	io.Copy(&buf, r)
 	output := buf.String()
 
 	// Check if the message was printed with a newline
@@ -167,7 +167,7 @@ func TestPrintLineEmpty(t *testing.T) {
 
 	// Read the output
 	var buf bytes.Buffer
-	_ , _ = io.Copy(&buf, r)
+	io.Copy(&buf, r)
 	output := buf.String()
 
 	// Check if an empty line was printed
@@ -195,7 +195,7 @@ func TestSetupJSONFileLogger(t *testing.T) {
 	logger.Close()
 	
 	// Clean up the test file if it was created
-	_ = os.Remove("test_json.log")
+	os.Remove("test_json.log")
 }
 
 // TestSetupCustomTextLogger tests the setupCustomTextLogger function
