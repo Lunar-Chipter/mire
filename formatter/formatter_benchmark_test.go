@@ -138,7 +138,7 @@ func BenchmarkAllFormatters(b *testing.B) {
 
 			for i := 0; i < b.N; i++ {
 				buf.Reset()
-				tt.formatter.Format(&buf, entry)
+				_ = tt.formatter.Format(&buf, entry)
 			}
 		})
 	}
@@ -174,7 +174,7 @@ func BenchmarkFormatterWithFields(b *testing.B) {
 
 			for i := 0; i < b.N; i++ {
 				buf.Reset()
-				tt.formatter.Format(&buf, entry)
+				_ = tt.formatter.Format(&buf, entry)
 			}
 		})
 	}
@@ -228,7 +228,7 @@ func BenchmarkFormatterWithSensitiveData(b *testing.B) {
 
 			for i := 0; i < b.N; i++ {
 				buf.Reset()
-				tt.formatter.Format(&buf, entry)
+				_ = tt.formatter.Format(&buf, entry)
 			}
 		})
 	}
@@ -266,7 +266,7 @@ func BenchmarkFormatterConcurrent(b *testing.B) {
 		var buf bytes.Buffer
 		for pb.Next() {
 			buf.Reset()
-			formatter.Format(&buf, entry)
+			_ = formatter.Format(&buf, entry)
 		}
 	})
 }

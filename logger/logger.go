@@ -746,7 +746,7 @@ func (l *Logger) handleLevelActions(level core.Level, entry *core.LogEntry) {
 			msgBuf.WriteString("PANIC: ")
 			msgBuf.Write(entry.Message)
 			msgBuf.WriteByte('\n')
-			l.out.Write(msgBuf.Bytes())
+			_ = l.out.Write(msgBuf.Bytes())
 		}
 		l.exitFunc(1)
 	}

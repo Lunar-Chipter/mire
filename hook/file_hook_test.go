@@ -43,14 +43,14 @@ func TestSimpleFileHookCreationError(t *testing.T) {
 		t.Error("NewFileHook should have failed with invalid path")
 		// Close hook if it was created despite the error
 		if hook != nil {
-			hook.Close()
+			_ = hook.Close()
 		}
 		return
 	}
 	
 	if hook != nil {
 		t.Error("NewFileHook should have returned nil on error")
-		hook.Close()
+		_ = hook.Close()
 	}
 }
 
@@ -62,8 +62,8 @@ func TestSimpleFileHookFire(t *testing.T) {
 		t.Fatalf("NewFileHook failed: %v", err)
 	}
 	defer func() {
-		hook.Close()
-		os.Remove(tempFile)
+		_ = hook.Close()
+		_ = os.Remove(tempFile)
 	}()
 	
 	// Create a log entry with ERROR level (should be logged)
@@ -134,8 +134,8 @@ func TestSimpleFileHookFireError(t *testing.T) {
 		}
 	}
 	
-	hook.Close()
-	os.Remove(tempFile)
+	_ = hook.Close()
+	_ = os.Remove(tempFile)
 }
 
 // TestSimpleFileHookFireWriteError tests error handling when writer fails
