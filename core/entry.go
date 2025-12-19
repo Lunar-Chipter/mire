@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 	"unsafe"
 )
