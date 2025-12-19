@@ -33,8 +33,10 @@ func (e *wrappedError) Unwrap() error {
 
 // printLine is a helper function to print lines without fmt
 func printLine(s string) {
-	_ , _ = os.Stdout.Write([]byte(s))
-	_ , _ = os.Stdout.Write([]byte("\n"))
+	//nolint:errcheck
+	os.Stdout.Write([]byte(s))
+	//nolint:errcheck
+	os.Stdout.Write([]byte("\n"))
 }
 
 func main() {
