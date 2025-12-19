@@ -241,6 +241,7 @@ func GetStringSliceFromPool() []string {
 
 // PutStringSliceToPool returns a []string to the pool
 func PutStringSliceToPool(s []string) {
+	//nolint:staticcheck
 	stringSlicePool.Put(s)
 	atomic.AddInt64(&globalPoolMetrics.slicePutCount, 1)
 }

@@ -356,6 +356,7 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 
 
 	// final write to output with zero-allocation optimizations for interface{} fields (backward compatibility)
+	//nolint:unused
 func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
 	entry := l.buildEntry(ctx, level, message, fields)
 
@@ -539,6 +540,7 @@ func (l *Logger) formatfArgsToBytes(format string, args ...interface{}) []byte {
 }
 
 // buildEntry creates a log entry with minimal allocations
+//nolint:unused
 func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) *core.LogEntry {
     entry := core.GetEntryFromPool()
 

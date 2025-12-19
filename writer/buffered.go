@@ -100,6 +100,7 @@ func (bw *BufferedWriter) Write(p []byte) (n int, err error) {
 		// The buffer channel is full. Drop the log to prevent blocking.
 		atomic.AddInt64(&bw.droppedLogs, 1)
 		// We must return the buffer to the pool since it was not sent.
+		//nolint:staticcheck
 		bw.bufferPool.Put(buf[:0])
 		return len(p), nil
 	}
@@ -216,6 +217,7 @@ func (bw *BufferedWriter) flushBatch(batch [][]byte) {
 	combined := make([]byte, 0, totalSize)
 	for _, data := range batch {
 		combined = append(combined, data...)
+		//nolint:staticcheck
 		bw.bufferPool.Put(data[:0])
 	}
 
