@@ -125,21 +125,21 @@ func main() {
     log := logger.NewDefaultLogger()
     defer log.Close() // Always close the logger to flush remaining messages
 
-    // Zero-allocation API (Recommended for best performance)
+    // Zero-allocation API
     ctx := context.Background()
     
-    // Basic logging with zero allocations
+    // Basic logging
     log.Log(ctx, core.INFO, []byte("Application started"))
     log.Log(ctx, core.WARN, []byte("This is a warning message"))
     log.Log(ctx, core.ERROR, []byte("An error occurred"))
 
-    // Logging with key-value pairs (zero allocation)
+    // Logging with key-value pairs
     log.Log(ctx, core.INFO, []byte("User logged in"), 
         []byte("user_id"), logger.I2B(123),
         []byte("action"), []byte("login"),
         []byte("success"), logger.B2B(true))
 
-    // Legacy API (still supported but may allocate)
+    // Legacy API (still supported)
     log.WithFields(map[string]interface{}{
         "user_id": 123,
         "action":  "login",
@@ -149,7 +149,7 @@ func main() {
     ctx = util.WithTraceID(ctx, "trace-123")
     ctx = util.WithUserID(ctx, "user-456")
 
-    log.Log(ctx, core.INFO, []byte("Processing request")) // Zero-allocation
+    log.Log(ctx, core.INFO, []byte("Processing request"))
     log.InfoC(ctx, "Processing request") // Legacy API
 }
 ```
