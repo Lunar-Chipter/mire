@@ -832,7 +832,7 @@ func (l *Logger) clone() *Logger {
         metrics:          l.metrics,
         onFatal:          l.onFatal,
         onPanic:          l.onPanic,
-        stats:            NewLoggerStats(),
+        stats:            l.stats,
         asyncLogger:      l.asyncLogger,
         errorFileHook:    l.errorFileHook,
         closed:           &atomic.Bool{},
