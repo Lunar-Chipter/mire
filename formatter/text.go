@@ -1,3 +1,6 @@
+//go:build with_colors
+// +build with_colors
+
 package formatter
 
 import (
@@ -317,34 +320,27 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 	}
 	buf.WriteByte('{')
 
-	// Use natural map order - avoid extra slice allocation where possible
-	orderedKeys := make([]string, 0, len(fields))
-	for k := range fields {
-		orderedKeys = append(orderedKeys, k)
-	}
-
-	for i, k := range orderedKeys {
-		v := fields[k]
-		if i > 0 {
+	// Note: Field order is non-deterministic because iterating directly on the map
+	// avoids allocations from creating and sorting a slice of keys.
+	first := true
+	for k, v := range fields {
+		if !first {
 			buf.WriteByte(' ')
 		}
+		first = false
 
 		if f.EnableColors {
 			buf.Write(fieldKeyColorBytes)
 		}
-		// to
 		buf.Write(core.StringToBytes(k))
 		buf.WriteByte('=')
 		if f.EnableColors {
 			buf.Write(fieldValueColorBytes)
 		}
 
-		// For byte fields, apply masking if needed
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
-			// Use byte slice for mask value to avoid string allocation
-			buf.Write(f.MaskStringBytes) // Use pre-converted byte slice
+			buf.Write(f.MaskStringBytes)
 		} else {
-			// Directly append the byte value
 			buf.Write(v)
 		}
 	}

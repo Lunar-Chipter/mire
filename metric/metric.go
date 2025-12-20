@@ -1,3 +1,6 @@
+//go:build with_metrics
+// +build with_metrics
+
 package metric
 
 import (

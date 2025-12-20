@@ -2,6 +2,9 @@ package core
 
 import (
 	"bytes"
+	"fmt"
+	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -257,11 +260,24 @@ const (
 	MaxOptimizedPathAttempts = 5  // Max attempts to use optimized path before fallback
 )
 
+var useGoroutineLocalPool = true
+
+func init() {
+	// Sanity check to ensure getGoroutineID works as expected.
+	// If it fails, we fall back to the global pool.
+	if getGoroutineID() == 0 {
+		useGoroutineLocalPool = false
+		fmt.Fprintf(os.Stderr, "WARNING: could not parse goroutine ID. Falling back to global logger pool, which may cause contention.\n")
+	}
+}
+
 // GetEntryFromPool gets a LogEntry from the pool
 func GetEntryFromPool() *LogEntry {
-	// Fallback: Use regular goroutine-local pool
-	localPool := GetGoroutineLocalEntryPool()
-	return localPool.GetEntryFromLocalPool()
+	if useGoroutineLocalPool {
+		localPool := GetGoroutineLocalEntryPool()
+		return localPool.GetEntryFromLocalPool()
+	}
+	return GetEntryFromGlobalPool()
 }
 
 // GetEntryFromGlobalPool gets a LogEntry directly from the global pool
@@ -313,11 +329,31 @@ type GoroutineLocalEntryPool struct {
 	entries chan *LogEntry
 }
 
-// getGoroutineID gets the current goroutine ID (simple implementation)
+// getGoroutineID gets the current goroutine ID.
+// This implementation is allocation-free and avoids the overhead of runtime.Stack.
+// Note: This implementation is fragile and depends on the Go runtime's stack trace format.
 func getGoroutineID() uint64 {
-	// In real implementation, we would use a more reliable method
-	// to get goroutine ID
-	return uint64(time.Now().UnixNano() % 1000000)
+	var buf [64]byte
+	n := runtime.Stack(buf[:], false)
+	// Skip "goroutine " (10 bytes)
+	b := buf[10:n]
+	// Find the first space after the ID
+	spaceIdx := bytes.IndexByte(b, ' ')
+	if spaceIdx == -1 {
+		// Fallback or error, though unlikely
+		return 0
+	}
+	// Parse the numeric part allocation-free
+	var id uint64
+	for _, char := range b[:spaceIdx] {
+		if char >= '0' && char <= '9' {
+			id = id*10 + uint64(char-'0')
+		} else {
+			// Should not happen with runtime.Stack output
+			return 0
+		}
+	}
+	return id
 }
 
 // GetGoroutineLocalEntryPool gets entry pool for current goroutine
@@ -386,9 +422,33 @@ func PutEntryToPool(entry *LogEntry) {
 		PutBufferToPool(entry.StackTraceBufPtr)
 		entry.StackTraceBufPtr = nil
 	}
-	// Use goroutine-local pool if available
-	localPool := GetGoroutineLocalEntryPool()
-	localPool.PutEntryToLocalPool(entry)
+	if useGoroutineLocalPool {
+		localPool := GetGoroutineLocalEntryPool()
+		localPool.PutEntryToLocalPool(entry)
+	} else {
+		entryPool.Put(entry)
+	}
+}
+
+// PutEntryToLocalPool returns entry to local goroutine pool
+func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
+	if entry.Caller != nil {
+		PutCallerInfoToPool(entry.Caller)
+		entry.Caller = nil
+	}
+
+	// Update metrics
+	globalEntryMetrics.IncEntrySerialized()
+	globalEntryMetrics.SetLastOperationTime(time.Now())
+
+	// Try to put into local pool
+	select {
+	case g.entries <- entry:
+		// Successfully put into pool
+	default:
+		// Pool full, return to global pool
+		entryPool.Put(entry)
+	}
 }
 
 // ZeroAllocJSONSerialize serializes LogEntry to JSON without allocation
@@ -637,25 +697,4 @@ func (le *LogEntry) floatToBytes(buf []byte, value float64) []byte {
 	// Use strconv.AppendFloat for allocation-free conversion
 	floatBytes := strconv.AppendFloat(tempBuf[:0], value, 'f', 2, 64)
 	return append(buf, floatBytes...)
-}
-
-// PutEntryToLocalPool returns entry to local goroutine pool
-func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
-	if entry.Caller != nil {
-		PutCallerInfoToPool(entry.Caller)
-		entry.Caller = nil
-	}
-
-	// Update metrics
-	globalEntryMetrics.IncEntrySerialized()
-	globalEntryMetrics.SetLastOperationTime(time.Now())
-
-	// Try to put into local pool
-	select {
-	case g.entries <- entry:
-		// Successfully put into pool
-	default:
-		// Pool full, return to global pool
-		entryPool.Put(entry)
-	}
 }

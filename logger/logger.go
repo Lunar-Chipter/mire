@@ -325,49 +325,6 @@ func (l *Logger) ErrorHandler() func(error) { return l.handleError }
 func (l *Logger) ErrOut() io.Writer         { return l.errOut }
 func (l *Logger) ErrOutMu() *sync.Mutex     { return l.errOutMu }
 
-// internal logging method optimized for 1M+ logs/second with interface{} fields (for backward compatibility)
-// Early filtering to avoid unnecessary work
-func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
-	// Early return if logger is closed
-	if l.closed.Load() {
-		return
-	}
-
-	// Early filtering to avoid unnecessary work - branch prediction optimized
-	if level < l.Config.Level {
-		return
-	}
-
-	// Sampling if enabled
-	if l.sampler != nil && !l.sampler.ShouldLog() {
-		return
-	}
-
-	// Convert interface{} fields to []byte fields for zero-allocation processing
-	byteFields := make(map[string][]byte)
-	for k, v := range fields {
-		switch value := v.(type) {
-		case string:
-			byteFields[k] = core.StringToBytes(value)
-		case []byte:
-			byteFields[k] = value
-		default:
-			// For unsupported types, convert to string representation
-			byteFields[k] = core.StringToBytes(fmt.Sprintf("%v", v))
-		}
-	}
-
-	// Optimized path for non-blocking scenarios using atomic operations
-	if l.asyncLogger != nil {
-		// Use lock-free async logging for high throughput
-		l.asyncLogger.Log(level, message, byteFields, ctx)
-		return
-	}
-
-	// Hot path is efficient
-	l.writeByte(ctx, level, message, byteFields)
-}
-
 // internal logging method optimized for 1M+ logs/second with []byte fields (zero-allocation)
 // logZero handles zero-allocation logging with variadic key-value pairs
 func (l *Logger) logZero(ctx context.Context, level core.Level, message []byte, keyvals ...[]byte) {
@@ -987,7 +944,7 @@ func (l *Logger) LogC(ctx context.Context, level core.Level, msg []byte) {
 	if level < l.Config.Level {
 		return
 	}
-	l.log(ctx, level, msg, nil)
+	l.logZero(ctx, level, msg)
 }
 
 // LogCF with context and fields (complete API)
@@ -1013,44 +970,44 @@ func (l *Logger) Tracef(format string, args ...interface{}) {
 	if core.TRACE < l.Config.Level {
 		return
 	}
-	l.log(context.Background(), core.TRACE, l.formatfArgsToBytes(format, args...), nil)
+	l.logZero(context.Background(), core.TRACE, l.formatfArgsToBytes(format, args...))
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
 	if core.DEBUG < l.Config.Level {
 		return
 	}
-	l.log(context.Background(), core.DEBUG, l.formatfArgsToBytes(format, args...), nil)
+	l.logZero(context.Background(), core.DEBUG, l.formatfArgsToBytes(format, args...))
 }
 
 // Infof logs a formatted message with INFO level
 func (l *Logger) Infof(format string, args ...interface{}) {
-	l.log(context.Background(), core.INFO, l.formatfArgsToBytes(format, args...), nil)
+	l.logZero(context.Background(), core.INFO, l.formatfArgsToBytes(format, args...))
 }
 
 // Noticef logs a formatted message with NOTICE level
 func (l *Logger) Noticef(format string, args ...interface{}) {
-	l.log(context.Background(), core.NOTICE, l.formatfArgsToBytes(format, args...), nil)
+	l.logZero(context.Background(), core.NOTICE, l.formatfArgsToBytes(format, args...))
 }
 
 // Warnf logs a formatted message with WARN level
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	l.log(context.Background(), core.WARN, l.formatfArgsToBytes(format, args...), nil)
+	l.logZero(context.Background(), core.WARN, l.formatfArgsToBytes(format, args...))
 }
 
 // Errorf logs a formatted message with ERROR level
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.log(context.Background(), core.ERROR, l.formatfArgsToBytes(format, args...), nil)
+	l.logZero(context.Background(), core.ERROR, l.formatfArgsToBytes(format, args...))
 }
 
 // Fatalf logs a formatted message with FATAL level and exits the application
 func (l *Logger) Fatalf(format string, args ...interface{}) {
-	l.log(context.Background(), core.FATAL, l.formatfArgsToBytes(format, args...), nil)
+	l.logZero(context.Background(), core.FATAL, l.formatfArgsToBytes(format, args...))
 }
 
 // Panicf logs a formatted message with PANIC level and panics
 func (l *Logger) Panicf(format string, args ...interface{}) {
-	l.log(context.Background(), core.PANIC, l.formatfArgsToBytes(format, args...), nil)
+	l.logZero(context.Background(), core.PANIC, l.formatfArgsToBytes(format, args...))
 }
 
 // Efficient helper functions for common conversions
@@ -1074,71 +1031,71 @@ func BoolB(b bool) []byte {
 // TraceCB logs a message with TRACE level and extracts context information using []byte (zero-allocation)
 func (l *Logger) TraceCB(ctx context.Context, message []byte) {
 	if core.TRACE >= l.Config.Level {
-		l.log(ctx, core.TRACE, message, nil)
+		l.logZero(ctx, core.TRACE, message)
 	}
 }
 
 // DebugCB logs a message with DEBUG level and extracts context information using []byte (zero-allocation)
 func (l *Logger) DebugCB(ctx context.Context, message []byte) {
 	if core.DEBUG >= l.Config.Level {
-		l.log(ctx, core.DEBUG, message, nil)
+		l.logZero(ctx, core.DEBUG, message)
 	}
 }
 
 // InfoCB logs a message with INFO level and extracts context information using []byte (zero-allocation)
-func (l *Logger) InfoCB(ctx context.Context, message []byte) { 
+func (l *Logger) InfoCB(ctx context.Context, message []byte) {
 	if core.INFO >= l.Config.Level {
-		l.log(ctx, core.INFO, message, nil) 
+		l.logZero(ctx, core.INFO, message)
 	}
 }
 
 // WarnCB logs a message with WARN level and extracts context information using []byte (zero-allocation)
-func (l *Logger) WarnCB(ctx context.Context, message []byte) { 
+func (l *Logger) WarnCB(ctx context.Context, message []byte) {
 	if core.WARN >= l.Config.Level {
-		l.log(ctx, core.WARN, message, nil) 
+		l.logZero(ctx, core.WARN, message)
 	}
 }
 
 // ErrorCB logs a message with ERROR level and extracts context information using []byte (zero-allocation)
 func (l *Logger) ErrorCB(ctx context.Context, message []byte) {
 	if core.ERROR >= l.Config.Level {
-		l.log(ctx, core.ERROR, message, nil)
+		l.logZero(ctx, core.ERROR, message)
 	}
 }
 
 // FatalCB logs a message with FATAL level and extracts context information, then exits the application using []byte (zero-allocation)
 func (l *Logger) FatalCB(ctx context.Context, message []byte) {
-	l.log(ctx, core.FATAL, message, nil)
+	l.logZero(ctx, core.FATAL, message)
 }
 
 // Context-aware logging methods (interface{} args)
 func (l *Logger) TraceC(ctx context.Context, args ...interface{}) {
 	if core.TRACE >= l.Config.Level {
-		l.log(ctx, core.TRACE, l.formatArgsToBytes(args...), nil)
+		l.logZero(ctx, core.TRACE, l.formatArgsToBytes(args...))
 	}
 }
 
 func (l *Logger) DebugC(ctx context.Context, args ...interface{}) {
 	if core.DEBUG >= l.Config.Level {
-		l.log(ctx, core.DEBUG, l.formatArgsToBytes(args...), nil)
+		l.logZero(ctx, core.DEBUG, l.formatArgsToBytes(args...))
 	}
 }
 
 func (l *Logger) InfoC(ctx context.Context, args ...interface{}) {
 	if core.INFO >= l.Config.Level {
-		l.log(ctx, core.INFO, l.formatArgsToBytes(args...), nil)
+		l.logZero(ctx, core.INFO, l.formatArgsToBytes(args...))
 	}
 }
 
 func (l *Logger) WarnC(ctx context.Context, args ...interface{}) {
 	if core.WARN >= l.Config.Level {
-		l.log(ctx, core.WARN, l.formatArgsToBytes(args...), nil)
+		l.logZero(ctx, core.WARN, l.formatArgsToBytes(args...))
 	}
 }
 
 func (l *Logger) ErrorC(ctx context.Context, args ...interface{}) {
 	if core.ERROR >= l.Config.Level {
-		l.log(ctx, core.ERROR, l.formatArgsToBytes(args...), nil)
+		l.logZero(ctx, core.ERROR, l.formatArgsToBytes(args...))
 	}
 }
 
@@ -1187,10 +1144,13 @@ func newErrorf(format string, args ...interface{}) error {
 }
 
 func manualFormatValue(buf *bytes.Buffer, v interface{}) {
+	// This is a placeholder for a more optimized manual formatting implementation.
+	// For now, we'll stick with fmt.Fprintf and focus on other zero-allocation areas.
 	fmt.Fprintf(buf, "%v", v)
 }
 
 func manualFormatWithArgs(buf *bytes.Buffer, format string, args ...interface{}) {
+	// This is a placeholder for a more optimized manual formatting implementation.
 	fmt.Fprintf(buf, format, args...)
 }
 
