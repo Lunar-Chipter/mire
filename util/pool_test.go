@@ -6,96 +6,82 @@ import (
 	"testing"
 )
 
-// TestGetBufferFromPool tests the GetBufferFromPool function
 func TestGetBufferFromPool(t *testing.T) {
-	// Get a buffer from the pool
 	buf1 := GetBufferFromPool()
 	if buf1 == nil {
 		t.Fatal("GetBufferFromPool returned nil")
 	}
-	
-	// Verify initial state
+
 	if buf1.Len() != 0 {
 		t.Errorf("New buffer from pool should have length 0, got %d", buf1.Len())
 	}
-	
-	// Write some data to the buffer
+
 	_, err := buf1.WriteString("test data")
 	if err != nil {
 		t.Fatalf("Failed to write to buffer: %v", err)
 	}
-	
-	// Return the buffer to the pool
+
 	PutBufferToPool(buf1)
-	
-	// Get another buffer - it might be the same one we just returned
+
+	// Buffer might be the same one we just returned
 	buf2 := GetBufferFromPool()
 	if buf2 == nil {
 		t.Fatal("GetBufferFromPool returned nil after return")
 	}
-	
-	// The buffer should be reset to empty state
+
+	// Buffer should be reset to empty state
 	if buf2.Len() != 0 {
 		t.Errorf("Returned buffer from pool should have length 0, got %d", buf2.Len())
 	}
-	
-	// Return the buffer to the pool again
+
 	PutBufferToPool(buf2)
 }
 
-// TestPutBufferToPool tests the PutBufferToPool function
 func TestPutBufferToPool(t *testing.T) {
 	buf := GetBufferFromPool()
-	
-	// Write data to the buffer
+
 	buf.WriteString("some data")
-	
-	// Verify it has content
+
 	if buf.Len() == 0 {
 		t.Fatal("Buffer should have content before putting to pool")
 	}
-	
-	// Put it back to pool - this should reset it
+
+	// This should reset it
 	PutBufferToPool(buf)
-	
-	// Get it again to verify it's reset
+
 	buf2 := GetBufferFromPool()
 	defer PutBufferToPool(buf2)
-	
+
 	if buf2.Len() != 0 {
 		t.Errorf("Returned buffer should be empty, got length %d", buf2.Len())
 	}
 }
 
-// TestGetSmallByteSliceFromPool tests the GetSmallByteSliceFromPool function
 func TestGetSmallByteSliceFromPool(t *testing.T) {
 	slice1 := GetSmallByteSliceFromPool()
 	if slice1 == nil {
 		t.Fatal("GetSmallByteSliceFromPool returned nil")
 	}
-	
-	// Initially, the slice should have 0 length but some capacity
+
+	// Initially, slice should have 0 length but some capacity
 	if len(slice1) != 0 {
 		t.Errorf("New slice from pool should have length 0, got %d", len(slice1))
 	}
 	if cap(slice1) == 0 {
 		t.Error("New slice from pool should have some capacity")
 	}
-	
-	// Add some data
+
 	slice1 = append(slice1, []byte("test")...)
 	if len(slice1) != 4 {
 		t.Errorf("Slice should have length 4 after appending 'test', got %d", len(slice1))
 	}
-	
-	// Return to pool
+
 	PutSmallByteSliceToPool(slice1)
-	
-	// Get another slice
+
 	slice2 := GetSmallByteSliceFromPool()
 	defer PutSmallByteSliceToPool(slice2)
-	
-	// It should be reset to 0 length
+
+	// Should be reset to 0 length
 	if len(slice2) != 0 {
 		t.Errorf("Returned slice from pool should have length 0, got %d", len(slice2))
 	}
@@ -104,17 +90,17 @@ func TestGetSmallByteSliceFromPool(t *testing.T) {
 // TestPutSmallByteSliceToPool tests the PutSmallByteSliceToPool function
 func TestPutSmallByteSliceToPool(t *testing.T) {
 	slice := GetSmallByteSliceFromPool()
-	
+
 	// Add some data
 	slice = append(slice, []byte("data")...)
-	
+
 	// Put it back
 	PutSmallByteSliceToPool(slice)
-	
+
 	// Get it again to check if it's properly reset
 	slice2 := GetSmallByteSliceFromPool()
 	defer PutSmallByteSliceToPool(slice2)
-	
+
 	if len(slice2) != 0 {
 		t.Errorf("Returned slice should be empty, got length %d", len(slice2))
 	}
@@ -126,26 +112,26 @@ func TestGetMapStringFromPool(t *testing.T) {
 	if map1 == nil {
 		t.Fatal("GetMapStringFromPool returned nil")
 	}
-	
+
 	// Initially, the map should be empty
 	if len(map1) != 0 {
 		t.Errorf("New map from pool should have length 0, got %d", len(map1))
 	}
-	
+
 	// Add some data
 	map1["key1"] = "value1"
 	map1["key2"] = "value2"
 	if len(map1) != 2 {
 		t.Errorf("Map should have length 2 after adding items, got %d", len(map1))
 	}
-	
+
 	// Return to pool
 	PutMapStringToPool(map1)
-	
+
 	// Get another map
 	map2 := GetMapStringFromPool()
 	defer PutMapStringToPool(map2)
-	
+
 	// It should be reset to empty
 	if len(map2) != 0 {
 		t.Errorf("Returned map from pool should have length 0, got %d", len(map2))
@@ -155,17 +141,17 @@ func TestGetMapStringFromPool(t *testing.T) {
 // TestPutMapStringToPool tests the PutMapStringToPool function
 func TestPutMapStringToPool(t *testing.T) {
 	m := GetMapStringFromPool()
-	
+
 	// Add some data
 	m["test"] = "value"
-	
+
 	// Put it back to pool
 	PutMapStringToPool(m)
-	
+
 	// Get it again to check if it's properly reset
 	m2 := GetMapStringFromPool()
 	defer PutMapStringToPool(m2)
-	
+
 	if len(m2) != 0 {
 		t.Errorf("Returned map should be empty, got length %d", len(m2))
 	}
@@ -224,34 +210,34 @@ func TestPutStringSliceToPool(t *testing.T) {
 // TestPoolMetrics tests the PoolMetrics functionality
 func TestPoolMetrics(t *testing.T) {
 	metrics := GetPoolMetrics()
-	
+
 	initialBufferGetCount := metrics.BufferGetCount()
 	initialBufferPutCount := metrics.BufferPutCount()
 	initialSliceGetCount := metrics.SliceGetCount()
 	initialSlicePutCount := metrics.SlicePutCount()
 	initialMapGetCount := metrics.MapGetCount()
 	initialMapPutCount := metrics.MapPutCount()
-	
+
 	// Perform some pool operations
 	buf := GetBufferFromPool()
 	PutBufferToPool(buf)
-	
+
 	slice := GetSmallByteSliceFromPool()
 	PutSmallByteSliceToPool(slice)
-	
+
 	m := GetMapStringFromPool()
 	PutMapStringToPool(m)
-	
+
 	s := GetStringSliceFromPool()
 	PutStringSliceToPool(s)
-	
+
 	newBufferGetCount := metrics.BufferGetCount()
 	newBufferPutCount := metrics.BufferPutCount()
 	newSliceGetCount := metrics.SliceGetCount()
 	newSlicePutCount := metrics.SlicePutCount()
 	newMapGetCount := metrics.MapGetCount()
 	newMapPutCount := metrics.MapPutCount()
-	
+
 	if newBufferGetCount != initialBufferGetCount+1 {
 		t.Error("BufferGetCount was not incremented properly")
 	}
@@ -275,14 +261,14 @@ func TestPoolMetrics(t *testing.T) {
 // TestPoolMetricsConcurrent tests the PoolMetrics functionality in a concurrent context
 func TestPoolMetricsConcurrent(t *testing.T) {
 	metrics := GetPoolMetrics()
-	
+
 	initialGetCount := metrics.BufferGetCount()
-	
+
 	// Run multiple goroutines to use the pool concurrently
 	const numGoroutines = 10
 	const operationsPerGoroutine = 100
 	var wg sync.WaitGroup
-	
+
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
 		go func() {
@@ -293,11 +279,11 @@ func TestPoolMetricsConcurrent(t *testing.T) {
 			}
 		}()
 	}
-	
+
 	wg.Wait()
-	
+
 	finalGetCount := metrics.BufferGetCount()
-	
+
 	expected := initialGetCount + int64(numGoroutines*operationsPerGoroutine)
 	if finalGetCount != expected {
 		t.Errorf("Concurrent BufferGetCount: expected %d, got %d", expected, finalGetCount)
@@ -400,10 +386,10 @@ func TestSmallByteSlicePool(t *testing.T) {
 	// to
 	// This should cause it to not be returned to the pool in PutSmallByteSliceToPool
 	largeSlice := make([]byte, MaxSmallSlicePoolSize+10) // Larger than the limit
-	
+
 	// at
 	PutSmallByteSliceToPool(largeSlice)
-	
+
 	// at
 	// at
 	// For now, just ensure it doesn't panic
@@ -429,7 +415,7 @@ func TestGoroutineLocalBufferPool(t *testing.T) {
 // TestPutBufferToLocalPoolFull tests what happens when the local pool is full
 func TestPutBufferToLocalPoolFull(t *testing.T) {
 	localPool := GetGoroutineLocalBufferPool()
-	
+
 	// Fill up the local pool's channel
 	for i := 0; i < 10; i++ { // Default channel size is 10
 		buf := bytes.NewBuffer(make([]byte, 0, 100))
@@ -441,7 +427,7 @@ func TestPutBufferToLocalPoolFull(t *testing.T) {
 		}
 		// If we're able to put all 10, that's also fine
 	}
-	
+
 	// Try to put one more - this should return false and put to global pool
 	extraBuf := bytes.NewBuffer(make([]byte, 0, 100))
 	_ = localPool.PutBufferToLocalPool(extraBuf)

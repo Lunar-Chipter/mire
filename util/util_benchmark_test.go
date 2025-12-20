@@ -151,7 +151,7 @@ func BenchmarkSmallByteSlicePool(b *testing.B) {
 // BenchmarkStringToBytes benchmarks the StringToBytes conversion
 func BenchmarkStringToBytes(b *testing.B) {
 	str := "test string for StringToBytes benchmark"
-	
+
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
@@ -162,7 +162,7 @@ func BenchmarkStringToBytes(b *testing.B) {
 // BenchmarkBytesToString benchmarks the BytesToString conversion
 func BenchmarkBytesToString(b *testing.B) {
 	bytes := []byte("test bytes for BytesToString benchmark")
-	
+
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {

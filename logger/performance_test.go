@@ -18,9 +18,9 @@ func TestMemoryAllocations(t *testing.T) {
 				Level:  core.TRACE,
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:    false,
-					ShowTimestamp:   false,
-					ShowCaller:      false,
+					EnableColors:  false,
+					ShowTimestamp: false,
+					ShowCaller:    false,
 				},
 			})
 			logger.Trace("test message")
@@ -35,9 +35,9 @@ func TestMemoryAllocations(t *testing.T) {
 				Level:  core.DEBUG,
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:    false,
-					ShowTimestamp:   false,
-					ShowCaller:      false,
+					EnableColors:  false,
+					ShowTimestamp: false,
+					ShowCaller:    false,
 				},
 			})
 			logger.Debug("test message")
@@ -52,9 +52,9 @@ func TestMemoryAllocations(t *testing.T) {
 				Level:  core.INFO,
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:    false,
-					ShowTimestamp:   false,
-					ShowCaller:      false,
+					EnableColors:  false,
+					ShowTimestamp: false,
+					ShowCaller:    false,
 				},
 			})
 			logger.Info("test message")
@@ -69,9 +69,9 @@ func TestMemoryAllocations(t *testing.T) {
 				Level:  core.ERROR,
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:    false,
-					ShowTimestamp:   false,
-					ShowCaller:      false,
+					EnableColors:  false,
+					ShowTimestamp: false,
+					ShowCaller:    false,
 				},
 			})
 			logger.Error("test message")
@@ -127,9 +127,9 @@ func BenchmarkMemoryAllocations(b *testing.B) {
 			Level:  core.TRACE,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -146,9 +146,9 @@ func BenchmarkMemoryAllocations(b *testing.B) {
 			Level:  core.DEBUG,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -165,9 +165,9 @@ func BenchmarkMemoryAllocations(b *testing.B) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -184,9 +184,9 @@ func BenchmarkMemoryAllocations(b *testing.B) {
 			Level:  core.ERROR,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -206,9 +206,9 @@ func BenchmarkFormatterAllocations(b *testing.B) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false, // Disable timestamp for benchmark consistency
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false, // Disable timestamp for benchmark consistency
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -245,9 +245,9 @@ func BenchmarkFieldAllocations(b *testing.B) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -264,9 +264,9 @@ func BenchmarkFieldAllocations(b *testing.B) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -285,9 +285,9 @@ func BenchmarkFieldAllocations(b *testing.B) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -310,9 +310,9 @@ func BenchmarkFieldAllocations(b *testing.B) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -400,9 +400,9 @@ func BenchmarkThroughputLevels(b *testing.B) {
 				Level:  core.TRACE, // Set to lowest level to ensure all logs pass through
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:    false,
-					ShowTimestamp:   false,
-					ShowCaller:      false,
+					EnableColors:  false,
+					ShowTimestamp: false,
+					ShowCaller:    false,
 				},
 			})
 			defer logger.Close()
@@ -454,9 +454,9 @@ func BenchmarkFormatters(b *testing.B) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   true,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: true,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -490,15 +490,15 @@ func BenchmarkFormatters(b *testing.B) {
 func BenchmarkAsyncLogging(b *testing.B) {
 	b.Run("BenchmarkAsyncLogging", func(b *testing.B) {
 		logger := New(LoggerConfig{
-			Level:             core.INFO,
-			Output:            io.Discard,
-			AsyncLogging:      true,
-			AsyncWorkerCount:  4,
+			Level:                     core.INFO,
+			Output:                    io.Discard,
+			AsyncLogging:              true,
+			AsyncWorkerCount:          4,
 			AsyncLogChannelBufferSize: 1000,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   true,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: true,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -515,9 +515,9 @@ func BenchmarkAsyncLogging(b *testing.B) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   true,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: true,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -620,9 +620,9 @@ func TestBufferedWriterPerformance(t *testing.T) {
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -642,9 +642,9 @@ func TestBufferedWriterPerformance(t *testing.T) {
 			Output:     io.Discard,
 			BufferSize: 1000,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:    false,
-				ShowTimestamp:   false,
-				ShowCaller:      false,
+				EnableColors:  false,
+				ShowTimestamp: false,
+				ShowCaller:    false,
 			},
 		})
 		defer logger.Close()
@@ -698,15 +698,15 @@ func TestFormatterPerformance(t *testing.T) {
 func ExampleLogger_performance() {
 	// Create an efficient logger configuration
 	logger := New(LoggerConfig{
-		Level:             core.INFO,
-		Output:            io.Discard, // Use io.Discard for benchmarks
-		AsyncLogging:      true,       // Enable async logging
-		AsyncWorkerCount:  4,          // to
-		AsyncLogChannelBufferSize: 1000, // Buffer up to 1000 log messages
+		Level:                     core.INFO,
+		Output:                    io.Discard, // Use io.Discard for benchmarks
+		AsyncLogging:              true,       // Enable async logging
+		AsyncWorkerCount:          4,          // to
+		AsyncLogChannelBufferSize: 1000,       // Buffer up to 1000 log messages
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,      // Disable colors for performance
-			ShowTimestamp:   true,       // Include timestamps
-			ShowCaller:      false,      // Disable caller info for performance
+			EnableColors:  false, // Disable colors for performance
+			ShowTimestamp: true,  // Include timestamps
+			ShowCaller:    false, // Disable caller info for performance
 		},
 	})
 

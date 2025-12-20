@@ -78,14 +78,130 @@ func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 	}
 }
 
+// FormatTimestamp formats timestamp with optimized manual formatting for common formats
 func FormatTimestamp(buf *bytes.Buffer, t time.Time, format string) {
-	// at
-	tempBuf := GetSmallByteSliceFromPool()
-	defer PutSmallByteSliceToPool(tempBuf)
+	switch format {
+	case "2006-01-02T15:04:05.000Z07:00":
+		formatRFC3339WithMillis(buf, t)
+	case "2006-01-02 15:04:05.000":
+		formatSimpleWithMillis(buf, t)
+	default:
+		// Fallback for custom formats
+		tempBuf := GetSmallByteSliceFromPool()
+		defer PutSmallByteSliceToPool(tempBuf)
+		tsBytes := t.AppendFormat(tempBuf[:0], format)
+		buf.Write(tsBytes)
+	}
+}
 
-	// Format the timestamp to the temp buffer
-	tsBytes := t.AppendFormat(tempBuf[:0], format)
-	buf.Write(tsBytes)
+// formatRFC3339WithMillis formats RFC3339 timestamp with milliseconds manually
+func formatRFC3339WithMillis(buf *bytes.Buffer, t time.Time) {
+	year, month, day := t.Date()
+	hour, min, sec := t.Clock()
+	nsec := t.Nanosecond()
+	_, offset := t.Zone()
+
+	// Format: 2006-01-02T15:04:05.000Z07:00
+	writeInt4Digits(buf, year)
+	buf.WriteByte('-')
+	writeInt2Digits(buf, int(month))
+	buf.WriteByte('-')
+	writeInt2Digits(buf, day)
+	buf.WriteByte('T')
+	writeInt2Digits(buf, hour)
+	buf.WriteByte(':')
+	writeInt2Digits(buf, min)
+	buf.WriteByte(':')
+	writeInt2Digits(buf, sec)
+	buf.WriteByte('.')
+	writeInt3Digits(buf, nsec/1000000) // Convert nanoseconds to milliseconds
+
+	if offset == 0 {
+		buf.WriteString("Z")
+	} else {
+		if offset < 0 {
+			buf.WriteByte('-')
+			offset = -offset
+		} else {
+			buf.WriteByte('+')
+		}
+		writeInt2Digits(buf, offset/3600)
+		buf.WriteByte(':')
+		writeInt2Digits(buf, (offset%3600)/60)
+	}
+}
+
+// formatSimpleWithMillis formats simple timestamp with milliseconds manually
+func formatSimpleWithMillis(buf *bytes.Buffer, t time.Time) {
+	year, month, day := t.Date()
+	hour, min, sec := t.Clock()
+	nsec := t.Nanosecond()
+
+	// Format: 2006-01-02 15:04:05.000
+	writeInt4Digits(buf, year)
+	buf.WriteByte('-')
+	writeInt2Digits(buf, int(month))
+	buf.WriteByte('-')
+	writeInt2Digits(buf, day)
+	buf.WriteByte(' ')
+	writeInt2Digits(buf, hour)
+	buf.WriteByte(':')
+	writeInt2Digits(buf, min)
+	buf.WriteByte(':')
+	writeInt2Digits(buf, sec)
+	buf.WriteByte('.')
+	writeInt3Digits(buf, nsec/1000000)
+}
+
+// writeInt2Digits writes a 2-digit integer (01-99)
+func writeInt2Digits(buf *bytes.Buffer, n int) {
+	if n < 10 {
+		buf.WriteByte('0')
+	}
+	buf.WriteByte(byte('0' + n%10))
+	if n >= 10 {
+		buf.WriteByte(byte('0' + n/10))
+	}
+}
+
+// writeInt3Digits writes a 3-digit integer (000-999)
+func writeInt3Digits(buf *bytes.Buffer, n int) {
+	if n < 100 {
+		buf.WriteByte('0')
+	}
+	if n < 10 {
+		buf.WriteByte('0')
+	}
+	buf.WriteByte(byte('0' + n%10))
+	if n >= 10 {
+		buf.WriteByte(byte('0' + (n/10)%10))
+	}
+	if n >= 100 {
+		buf.WriteByte(byte('0' + n/100))
+	}
+}
+
+// writeInt4Digits writes a 4-digit integer (0000-9999)
+func writeInt4Digits(buf *bytes.Buffer, n int) {
+	if n < 1000 {
+		buf.WriteByte('0')
+	}
+	if n < 100 {
+		buf.WriteByte('0')
+	}
+	if n < 10 {
+		buf.WriteByte('0')
+	}
+	buf.WriteByte(byte('0' + n%10))
+	if n >= 10 {
+		buf.WriteByte(byte('0' + (n/10)%10))
+	}
+	if n >= 100 {
+		buf.WriteByte(byte('0' + (n/100)%10))
+	}
+	if n >= 1000 {
+		buf.WriteByte(byte('0' + n/1000))
+	}
 }
 
 // convertValueToString manually converts common types to string without fmt

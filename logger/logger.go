@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Lunar-Chipter/mire/config"
 	"github.com/Lunar-Chipter/mire/core"
 	"github.com/Lunar-Chipter/mire/formatter"
 	"github.com/Lunar-Chipter/mire/hook"
@@ -18,73 +19,72 @@ import (
 	"github.com/Lunar-Chipter/mire/sampler"
 	"github.com/Lunar-Chipter/mire/util"
 	"github.com/Lunar-Chipter/mire/writer"
-	"github.com/Lunar-Chipter/mire/config" // Add this import
 )
+
 const (
 	DEFAULT_TIMESTAMP_FORMAT = "2006-01-02 15:04:05.000"
 	DEFAULT_CALLER_DEPTH     = 3
 	DEFAULT_BUFFER_SIZE      = 1000
 	DEFAULT_FLUSH_INTERVAL   = 5 * time.Second
-	
-	// Buffer sizes configured at initialization - aligned with zero-allocation philosophy
-	SmallBufferSize          = 512   // For perf-critical
-	MediumBufferSize         = 2048  // For standard logs
-	LargeBufferSize          = 8192  // For verbose debugging
-)
 
+	SmallBufferSize  = 512
+	MediumBufferSize = 2048
+	LargeBufferSize  = 8192
+)
 
 // LoggerConfig holds configuration for the logger
 type LoggerConfig struct {
-	Level             core.Level                      // Minimum level to log
-	EnableColors      bool                            // Enable ANSI colors in output
-	Output            io.Writer                       // Output writer for logs
-	ErrorOutput       io.Writer                       // Output writer for internal logger errors
-	Formatter         formatter.Formatter             // Formatter to use for log entries
-	ShowCaller        bool                            // Show caller information (file, line)
-	CallerDepth       int                             // Depth to look for caller info
-	ShowGoroutine     bool                            // Show goroutine ID
-	ShowPID           bool                            // Show process ID
-	ShowTraceInfo     bool                            // Show trace information (trace_id, span_id, etc.)
-	ShowHostname      bool                            // Show hostname
-	ShowApplication   bool                            // Show application name
-	TimestampFormat   string                          // Format for timestamps
-	ExitFunc          func(int)                       // Function to call on fatal/panic (defaults to os.Exit)
-	EnableStackTrace  bool                            // Enable stack trace for errors
-	StackTraceDepth   int                             // Maximum depth for stack trace
-	EnableSampling    bool                            // Enable log sampling
-	SamplingRate      int                             // Sampling rate (log every Nth message)
-	BufferSize        int                             // Size of buffer for buffered writer
-	FlushInterval     time.Duration                   // Interval to flush buffered logs
-	EnableRotation    bool                            // Enable log rotation
-	RotationConfig    *config.RotationConfig          // Configuration for log rotation
-	ContextExtractor  func(context.Context) map[string][]byte // Function to extract fields from context as []byte for zero allocation
-	Hostname          string                          // Hostname to include in logs
-	Application       string                          // Application name to include in logs
-	Version           string                          // Application version to include in logs
-	Environment       string                          // Environment (dev, prod, etc.)
-	MaxFieldSize      int                             // Maximum size for field values
-	EnableMetrics     bool                            // Enable metrics collection
-	MetricsCollector  metric.MetricsCollector         // Metrics collector to use
-	ErrorHandler      func(error)                     // Function to handle internal logger errors
-	OnFatal           func(*core.LogEntry)            // Function to call when a fatal log occurs
-	OnPanic           func(*core.LogEntry)            // Function to call when a panic log occurs
-	Hooks             []hook.Hook                     // Hooks to execute for each log entry
-	EnableErrorFileHook bool                          // Enable built-in error file hook for ERROR+ levels
-	BatchSize         int                             // Size of batch for batched writes
-	BatchTimeout      time.Duration                   // Timeout for batched writes
-	DisableLocking    bool                            // Disable internal locking (for performance, use with caution)
-	PreAllocateFields int                             // Pre-allocate map capacity for fields
-	PreAllocateTags   int                             // Pre-allocate slice capacity for tags
-	MaxMessageSize    int                             // Maximum size for log messages
-	AsyncLogging      bool                            // Enable asynchronous logging
-	LogProcessTimeout time.Duration                   // Timeout for processing log in async worker
-	AsyncLogChannelBufferSize int                     // Buffer size for async log channel
-	AsyncWorkerCount          int                     // Number of async worker goroutines
-	DisablePerLogContextTimeout bool                  // Disable context timeout per log in async mode
-	ClockInterval time.Duration                   // Interval for clock (for timestamp optimization)
-	MaskStringValue   string                          // String value to use for masking sensitive data
+	Level                       core.Level                              // Minimum level to log
+	EnableColors                bool                                    // Enable ANSI colors in output
+	Output                      io.Writer                               // Output writer for logs
+	ErrorOutput                 io.Writer                               // Output writer for internal logger errors
+	Formatter                   formatter.Formatter                     // Formatter to use for log entries
+	ShowCaller                  bool                                    // Show caller information (file, line)
+	CallerDepth                 int                                     // Depth to look for caller info
+	ShowGoroutine               bool                                    // Show goroutine ID
+	ShowPID                     bool                                    // Show process ID
+	ShowTraceInfo               bool                                    // Show trace information (trace_id, span_id, etc.)
+	ShowHostname                bool                                    // Show hostname
+	ShowApplication             bool                                    // Show application name
+	TimestampFormat             string                                  // Format for timestamps
+	ExitFunc                    func(int)                               // Function to call on fatal/panic (defaults to os.Exit)
+	EnableStackTrace            bool                                    // Enable stack trace for errors
+	StackTraceDepth             int                                     // Maximum depth for stack trace
+	EnableSampling              bool                                    // Enable log sampling
+	SamplingRate                int                                     // Sampling rate (log every Nth message)
+	BufferSize                  int                                     // Size of buffer for buffered writer
+	FlushInterval               time.Duration                           // Interval to flush buffered logs
+	EnableRotation              bool                                    // Enable log rotation
+	RotationConfig              *config.RotationConfig                  // Configuration for log rotation
+	ContextExtractor            func(context.Context) map[string][]byte // Function to extract fields from context as []byte for zero allocation
+	Hostname                    string                                  // Hostname to include in logs
+	Application                 string                                  // Application name to include in logs
+	Version                     string                                  // Application version to include in logs
+	Environment                 string                                  // Environment (dev, prod, etc.)
+	MaxFieldSize                int                                     // Maximum size for field values
+	EnableMetrics               bool                                    // Enable metrics collection
+	MetricsCollector            metric.MetricsCollector                 // Metrics collector to use
+	ErrorHandler                func(error)                             // Function to handle internal logger errors
+	OnFatal                     func(*core.LogEntry)                    // Function to call when a fatal log occurs
+	OnPanic                     func(*core.LogEntry)                    // Function to call when a panic log occurs
+	Hooks                       []hook.Hook                             // Hooks to execute for each log entry
+	EnableErrorFileHook         bool                                    // Enable built-in error file hook for ERROR+ levels
+	BatchSize                   int                                     // Size of batch for batched writes
+	BatchTimeout                time.Duration                           // Timeout for batched writes
+	DisableLocking              bool                                    // Disable internal locking (for performance, use with caution)
+	PreAllocateFields           int                                     // Pre-allocate map capacity for fields
+	PreAllocateTags             int                                     // Pre-allocate slice capacity for tags
+	MaxMessageSize              int                                     // Maximum size for log messages
+	AsyncLogging                bool                                    // Enable asynchronous logging
+	LogProcessTimeout           time.Duration                           // Timeout for processing log in async worker
+	AsyncLogChannelBufferSize   int                                     // Buffer size for async log channel
+	AsyncWorkerCount            int                                     // Number of async worker goroutines
+	DisablePerLogContextTimeout bool                                    // Disable context timeout per log in async mode
+	ClockInterval               time.Duration                           // Interval for clock (for timestamp optimization)
+	MaskStringValue             string                                  // String value to use for masking sensitive data
 }
-// validate ensures the logger configuration has sane defaults.
+
+// validate ensures the logger configuration has sane defaults
 func validate(c *LoggerConfig) {
 	if c.Output == nil {
 		c.Output = os.Stdout
@@ -124,34 +124,35 @@ func validate(c *LoggerConfig) {
 	if c.FlushInterval <= 0 {
 		c.FlushInterval = DEFAULT_FLUSH_INTERVAL
 	}
-    if c.TimestampFormat == "" {
-        c.TimestampFormat = DEFAULT_TIMESTAMP_FORMAT
-    }
+	if c.TimestampFormat == "" {
+		c.TimestampFormat = DEFAULT_TIMESTAMP_FORMAT
+	}
 }
+
 // Logger is the main logging structure
 type Logger struct {
-	Config           LoggerConfig                    // Configuration for the logger
-	formatter        formatter.Formatter             // Formatter to use for log entries
-	out              io.Writer                       // Output writer for logs
-	errOut           io.Writer                       // Output writer for internal logger errors
-	errOutMu         *sync.Mutex                     // Mutex for protecting errOut
-	mu               *sync.RWMutex                   // Mutex for protecting internal state (changed to pointer to allow safe cloning)
-	hooks            []hook.Hook                     // Hooks to execute for each log entry
-	exitFunc         func(int)                       // Function to call on fatal/panic
-	fields           map[string][]byte               // Default fields to include in all logs as []byte for zero allocation
-	sampler          *sampler.SamplingLogger         // Sampler for log sampling
-	buffer           *writer.BufferedWriter          // Buffered writer for performance
-	rotation         *writer.RotatingFileWriter      // Rotating file writer for log rotation
+	Config           LoggerConfig                            // Configuration for the logger
+	formatter        formatter.Formatter                     // Formatter to use for log entries
+	out              io.Writer                               // Output writer for logs
+	errOut           io.Writer                               // Output writer for internal logger errors
+	errOutMu         *sync.Mutex                             // Mutex for protecting errOut
+	mu               *sync.RWMutex                           // Mutex for protecting internal state (changed to pointer to allow safe cloning)
+	hooks            []hook.Hook                             // Hooks to execute for each log entry
+	exitFunc         func(int)                               // Function to call on fatal/panic
+	fields           map[string][]byte                       // Default fields to include in all logs as []byte for zero allocation
+	sampler          *sampler.SamplingLogger                 // Sampler for log sampling
+	buffer           *writer.BufferedWriter                  // Buffered writer for performance
+	rotation         *writer.RotatingFileWriter              // Rotating file writer for log rotation
 	contextExtractor func(context.Context) map[string][]byte // Function to extract fields from context
-	metrics          metric.MetricsCollector         // Metrics collector
-	onFatal          func(*core.LogEntry)            // Function to call when a fatal log occurs
-	onPanic          func(*core.LogEntry)            // Function to call when a panic log occurs
-	stats            *LoggerStats                    // Statistics for the logger
-	asyncLogger      *writer.AsyncLogger             // Async logger for non-blocking logging
-	errorFileHook    *hook.SimpleFileHook            // Built-in error file hook for ERROR+ levels
-	closed           *atomic.Bool                    // Flag to indicate if logger is closed
-	pid              int                             // Process ID
-	clock            *util.Clock                 // Clock for timestamp optimization
+	metrics          metric.MetricsCollector                 // Metrics collector
+	onFatal          func(*core.LogEntry)                    // Function to call when a fatal log occurs
+	onPanic          func(*core.LogEntry)                    // Function to call when a panic log occurs
+	stats            *LoggerStats                            // Statistics for the logger
+	asyncLogger      *writer.AsyncLogger                     // Async logger for non-blocking logging
+	errorFileHook    *hook.SimpleFileHook                    // Built-in error file hook for ERROR+ levels
+	closed           *atomic.Bool                            // Flag to indicate if logger is closed
+	pid              int                                     // Process ID
+	clock            *util.Clock                             // Clock for timestamp optimization
 }
 
 // LoggerStats tracks logger statistics
@@ -183,18 +184,18 @@ func (ls *LoggerStats) Increment(level core.Level, bytes int) {
 func (ls *LoggerStats) GetStats() map[string]interface{} {
 	ls.mu.RLock()
 	defer ls.mu.RUnlock()
-	
+
 	stats := make(map[string]interface{})
 	stats["start_time"] = ls.StartTime
 	stats["bytes_written"] = ls.BytesWritten
 	stats["uptime"] = time.Since(ls.StartTime).String()
-	
+
 	counts := make(map[string]int64)
 	for level, count := range ls.LogCounts {
 		counts[level.String()] = count
 	}
 	stats["log_counts"] = counts
-	
+
 	return stats
 }
 
@@ -202,21 +203,21 @@ func (ls *LoggerStats) GetStats() map[string]interface{} {
 // This logger is configured with standard settings suitable for most applications
 func NewDefaultLogger() *Logger {
 	cfg := LoggerConfig{
-		Level:             core.INFO,
-		Output:            os.Stdout,
-		ErrorOutput:       os.Stderr,
-		CallerDepth:       DEFAULT_CALLER_DEPTH,
-		TimestampFormat:   DEFAULT_TIMESTAMP_FORMAT,
-		BufferSize:        DEFAULT_BUFFER_SIZE,
-		FlushInterval:     DEFAULT_FLUSH_INTERVAL,
-		AsyncWorkerCount:  4,
-		ClockInterval: 10 * time.Millisecond,
-		MaskStringValue:   "[MASKED]", // Set default mask string value here
+		Level:            core.INFO,
+		Output:           os.Stdout,
+		ErrorOutput:      os.Stderr,
+		CallerDepth:      DEFAULT_CALLER_DEPTH,
+		TimestampFormat:  DEFAULT_TIMESTAMP_FORMAT,
+		BufferSize:       DEFAULT_BUFFER_SIZE,
+		FlushInterval:    DEFAULT_FLUSH_INTERVAL,
+		AsyncWorkerCount: 4,
+		ClockInterval:    10 * time.Millisecond,
+		MaskStringValue:  "[MASKED]", // Set default mask string value here
 		Formatter: &formatter.TextFormatter{
-			EnableColors:      true,
-			ShowTimestamp:     true,
-			ShowCaller:        true,
-			TimestampFormat:   DEFAULT_TIMESTAMP_FORMAT,
+			EnableColors:    true,
+			ShowTimestamp:   true,
+			ShowCaller:      true,
+			TimestampFormat: DEFAULT_TIMESTAMP_FORMAT,
 		},
 	}
 	return New(cfg)
@@ -232,7 +233,7 @@ func New(config LoggerConfig) *Logger {
 		formatter:        config.Formatter,
 		out:              config.Output,
 		errOut:           config.ErrorOutput,
-		errOutMu:         &sync.Mutex{}, // Initialize the mutex pointer
+		errOutMu:         &sync.Mutex{},     // Initialize the mutex pointer
 		mu:               new(sync.RWMutex), // Initialize the mutex pointer
 		exitFunc:         config.ExitFunc,
 		fields:           make(map[string][]byte),
@@ -263,9 +264,9 @@ func New(config LoggerConfig) *Logger {
 	if l.exitFunc == nil {
 		l.exitFunc = os.Exit
 	}
-	
-l.setupWriters()
-	
+
+	l.setupWriters()
+
 	if config.EnableSampling && config.SamplingRate > 1 {
 		l.sampler = sampler.NewSamplingLogger(l, config.SamplingRate)
 	}
@@ -300,15 +301,10 @@ func (l *Logger) setupWriters() {
 	l.out = currentWriter
 }
 
-
 // These methods are to satisfy interfaces for async/sampler writers
-func (l *Logger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
-    l.writeByte(ctx, level, msg, fields)
-}
 func (l *Logger) ErrorHandler() func(error) { return l.handleError }
-func (l *Logger) ErrOut() io.Writer { return l.errOut }
-func (l *Logger) ErrOutMu() *sync.Mutex { return l.errOutMu }
-
+func (l *Logger) ErrOut() io.Writer         { return l.errOut }
+func (l *Logger) ErrOutMu() *sync.Mutex     { return l.errOutMu }
 
 // internal logging method optimized for 1M+ logs/second with interface{} fields (for backward compatibility)
 // Early filtering to avoid unnecessary work
@@ -323,9 +319,9 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 		return
 	}
 
-    // Sampling if enabled
-    if l.sampler != nil && !l.sampler.ShouldLog() {
-        return
+	// Sampling if enabled
+	if l.sampler != nil && !l.sampler.ShouldLog() {
+		return
 	}
 
 	// Convert interface{} fields to []byte fields for zero-allocation processing
@@ -353,10 +349,36 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 	l.writeByte(ctx, level, message, byteFields)
 }
 
+// internal logging method optimized for 1M+ logs/second with []byte fields (zero-allocation)
+func (l *Logger) logBytes(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) {
+	// Early return if logger is closed
+	if l.closed.Load() {
+		return
+	}
 
+	// Early filtering to avoid unnecessary work - branch prediction optimized
+	if level < l.Config.Level {
+		return
+	}
 
-	// final write to output with zero-allocation optimizations for interface{} fields (backward compatibility)
-	//nolint:unused
+	// Sampling if enabled
+	if l.sampler != nil && !l.sampler.ShouldLog() {
+		return
+	}
+
+	// Optimized path for non-blocking scenarios using atomic operations
+	if l.asyncLogger != nil {
+		// Use lock-free async logging for high throughput
+		l.asyncLogger.Log(level, message, fields, ctx)
+		return
+	}
+
+	// Hot path is efficient - no field conversion needed
+	l.writeByte(ctx, level, message, fields)
+}
+
+// final write to output with zero-allocation optimizations for interface{} fields (backward compatibility)
+//nolint:unused
 func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
 	entry := l.buildEntry(ctx, level, message, fields)
 
@@ -370,7 +392,7 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 		return
 	}
 
-    bytesToWrite := buf.Bytes()
+	bytesToWrite := buf.Bytes()
 
 	// Optimized write with minimal locking - only lock when actually writing
 	if l.Config.DisableLocking {
@@ -393,13 +415,13 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 
 	l.runHooks(entry)
 
-    // must be done after hooks and writing, but before PutEntryToPool
+	// must be done after hooks and writing, but before PutEntryToPool
 	l.handleLevelActions(level, entry)
 
 	core.PutEntryToPool(entry)
 }
 
-	// final write to output with zero-allocation optimizations for []byte fields (true zero-allocation)
+// final write to output with zero-allocation optimizations for []byte fields (true zero-allocation)
 func (l *Logger) writeByte(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) {
 	entry := l.buildEntryByte(ctx, level, message, fields)
 
@@ -413,7 +435,7 @@ func (l *Logger) writeByte(ctx context.Context, level core.Level, message []byte
 		return
 	}
 
-    bytesToWrite := buf.Bytes()
+	bytesToWrite := buf.Bytes()
 
 	// Optimized write with minimal locking - only lock when actually writing
 	if l.Config.DisableLocking {
@@ -436,7 +458,7 @@ func (l *Logger) writeByte(ctx context.Context, level core.Level, message []byte
 
 	l.runHooks(entry)
 
-    // must be done after hooks and writing, but before PutEntryToPool
+	// must be done after hooks and writing, but before PutEntryToPool
 	l.handleLevelActions(level, entry)
 
 	core.PutEntryToPool(entry)
@@ -540,16 +562,17 @@ func (l *Logger) formatfArgsToBytes(format string, args ...interface{}) []byte {
 }
 
 // buildEntry creates a log entry with minimal allocations
+//
 //nolint:unused
 func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) *core.LogEntry {
-    entry := core.GetEntryFromPool()
+	entry := core.GetEntryFromPool()
 
-    // Use clock if available to avoid allocation
-    if l.clock != nil {
-        entry.Timestamp = l.clock.Now()
-    } else {
-        entry.Timestamp = time.Now()
-    }
+	// Use clock if available to avoid allocation
+	if l.clock != nil {
+		entry.Timestamp = l.clock.Now()
+	} else {
+		entry.Timestamp = time.Now()
+	}
 
 	entry.Level = level
 	entry.LevelName = level.ToBytes()
@@ -579,44 +602,49 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 			entry.Fields[k] = v
 		}
 	} else if ctx != nil {
-        contextData := util.ExtractFromContext(ctx)
-        for k, v := range contextData {
-            switch k {
-            case "trace_id": entry.TraceID = core.StringToBytes(v)
-            case "span_id": entry.SpanID = core.StringToBytes(v)
-            case "user_id": entry.UserID = core.StringToBytes(v)
-            case "session_id": entry.SessionID = core.StringToBytes(v)
-            case "request_id": entry.RequestID = core.StringToBytes(v)
-            }
-        }
-        util.PutMapStringToPool(contextData)
-    }
+		contextData := util.ExtractFromContext(ctx)
+		for k, v := range contextData {
+			switch k {
+			case "trace_id":
+				entry.TraceID = core.StringToBytes(v)
+			case "span_id":
+				entry.SpanID = core.StringToBytes(v)
+			case "user_id":
+				entry.UserID = core.StringToBytes(v)
+			case "session_id":
+				entry.SessionID = core.StringToBytes(v)
+			case "request_id":
+				entry.RequestID = core.StringToBytes(v)
+			}
+		}
+		util.PutMapStringToPool(contextData)
+	}
 
 	// Caller info only if required to avoid overhead
 	if l.Config.ShowCaller {
 		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
 	}
 
-    // Stack trace only for ERROR level and above
-    if l.Config.EnableStackTrace && level >= core.ERROR {
-        stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
-        entry.StackTrace = stackTraceBytes
-        entry.StackTraceBufPtr = stackTraceBufPtr
-    }
+	// Stack trace only for ERROR level and above
+	if l.Config.EnableStackTrace && level >= core.ERROR {
+		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
+		entry.StackTrace = stackTraceBytes
+		entry.StackTraceBufPtr = stackTraceBufPtr
+	}
 
 	return entry
 }
 
 // buildEntryByte creates a log entry with minimal allocations using []byte fields (true zero-allocation)
 func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) *core.LogEntry {
-    entry := core.GetEntryFromPool()
+	entry := core.GetEntryFromPool()
 
-    // Use clock if available to avoid allocation
-    if l.clock != nil {
-        entry.Timestamp = l.clock.Now()
-    } else {
-        entry.Timestamp = time.Now()
-    }
+	// Use clock if available to avoid allocation
+	if l.clock != nil {
+		entry.Timestamp = l.clock.Now()
+	} else {
+		entry.Timestamp = time.Now()
+	}
 
 	entry.Level = level
 	entry.LevelName = level.ToBytes()
@@ -638,34 +666,38 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 			entry.Fields[k] = v // v is already []byte
 		}
 	} else if ctx != nil {
-        contextData := util.ExtractFromContext(ctx)
-        for k, v := range contextData {
-            switch k {
-            case "trace_id": entry.TraceID = core.StringToBytes(v)
-            case "span_id": entry.SpanID = core.StringToBytes(v)
-            case "user_id": entry.UserID = core.StringToBytes(v)
-            case "session_id": entry.SessionID = core.StringToBytes(v)
-            case "request_id": entry.RequestID = core.StringToBytes(v)
-            }
-        }
-        util.PutMapStringToPool(contextData)
-    }
+		contextData := util.ExtractFromContext(ctx)
+		for k, v := range contextData {
+			switch k {
+			case "trace_id":
+				entry.TraceID = core.StringToBytes(v)
+			case "span_id":
+				entry.SpanID = core.StringToBytes(v)
+			case "user_id":
+				entry.UserID = core.StringToBytes(v)
+			case "session_id":
+				entry.SessionID = core.StringToBytes(v)
+			case "request_id":
+				entry.RequestID = core.StringToBytes(v)
+			}
+		}
+		util.PutMapStringToPool(contextData)
+	}
 
 	// Caller info only if required to avoid overhead
 	if l.Config.ShowCaller {
 		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
 	}
 
-    // Stack trace only for ERROR level and above
-    if l.Config.EnableStackTrace && level >= core.ERROR {
-        stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
-        entry.StackTrace = stackTraceBytes
-        entry.StackTraceBufPtr = stackTraceBufPtr
-    }
+	// Stack trace only for ERROR level and above
+	if l.Config.EnableStackTrace && level >= core.ERROR {
+		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
+		entry.StackTrace = stackTraceBytes
+		entry.StackTraceBufPtr = stackTraceBufPtr
+	}
 
 	return entry
 }
-
 
 // runHooks executes hooks with minimal lock contention
 func (l *Logger) runHooks(entry *core.LogEntry) {
@@ -734,7 +766,7 @@ func (l *Logger) handleError(err error) {
 		buf.Write([]byte("logger error: "))
 		buf.Write(core.StringToBytes(err.Error())) // Use zero-allocation string to byte conversion
 		buf.Write([]byte("\n"))
-		_ , _ = 		l.errOut.Write(buf.Bytes())
+		_, _ = l.errOut.Write(buf.Bytes())
 	}
 }
 
@@ -780,28 +812,26 @@ func (l *Logger) Close() {
 	// If already closed, do nothing (graceful)
 }
 
-// WithFieldsBytes creates a new logger with additional fields using []byte values
-func (l *Logger) WithFieldsBytes(fields map[string][]byte) *Logger {
-	newLogger := l.clone()
-	for k, v := range fields {
-		newLogger.fields[k] = v
-	}
-	return newLogger
-}
-
-// WithFields creates a new logger with additional fields (maintaining backward compatibility)
-// These fields will be included in all log entries made with the returned logger
+// WithFields creates a new logger with additional fields
 func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
+	if len(fields) == 0 {
+		return l
+	}
 	newLogger := l.clone()
 	for k, v := range fields {
-		// Convert interface{} values to []byte where possible
 		switch val := v.(type) {
 		case string:
-			newLogger.fields[k] = core.StringToBytes(val)
+			newLogger.fields[k] = []byte(val)
 		case []byte:
 			newLogger.fields[k] = val
+		case int:
+			newLogger.fields[k] = I2B(val)
+		case float64:
+			newLogger.fields[k] = F2B(val)
+		case bool:
+			newLogger.fields[k] = B2B(val)
 		default:
-			newLogger.fields[k] = core.StringToBytes(fmt.Sprintf("%v", val))
+			newLogger.fields[k] = []byte(fmt.Sprintf("%v", val))
 		}
 	}
 	return newLogger
@@ -809,301 +839,266 @@ func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 
 // clone creates a copy of the logger with shared resources
 func (l *Logger) clone() *Logger {
-    l.mu.RLock()
-    defer l.mu.RUnlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
-    // Create a new logger with shared resources to avoid copying noCopy fields.
-    // We want clone to share the same writers (async, buffer)
-    // and their goroutines, not create new ones.
-    cloned := &Logger{
-        Config:           l.Config,
-        formatter:        l.formatter,
-        out:              l.out,
-        errOut:           l.errOut,
-        errOutMu:         l.errOutMu,
-        mu:               l.mu,
-        hooks:            make([]hook.Hook, len(l.hooks)),
-        exitFunc:         l.exitFunc,
-        fields:           make(map[string][]byte, len(l.fields)+10),
-        sampler:          l.sampler,
-        buffer:           l.buffer,
-        rotation:         l.rotation,
-        contextExtractor: l.contextExtractor,
-        metrics:          l.metrics,
-        onFatal:          l.onFatal,
-        onPanic:          l.onPanic,
-        stats:            l.stats,
-        asyncLogger:      l.asyncLogger,
-        errorFileHook:    l.errorFileHook,
-        closed:           &atomic.Bool{},
-        pid:              l.pid,
-        clock:            l.clock,
-    }
-    copy(cloned.hooks, l.hooks)
+	// Create a new logger with shared resources to avoid copying noCopy fields.
+	// We want clone to share the same writers (async, buffer)
+	// and their goroutines, not create new ones.
+	cloned := &Logger{
+		Config:           l.Config,
+		formatter:        l.formatter,
+		out:              l.out,
+		errOut:           l.errOut,
+		errOutMu:         l.errOutMu,
+		mu:               l.mu,
+		hooks:            make([]hook.Hook, len(l.hooks)),
+		exitFunc:         l.exitFunc,
+		fields:           make(map[string][]byte, len(l.fields)+10),
+		sampler:          l.sampler,
+		buffer:           l.buffer,
+		rotation:         l.rotation,
+		contextExtractor: l.contextExtractor,
+		metrics:          l.metrics,
+		onFatal:          l.onFatal,
+		onPanic:          l.onPanic,
+		stats:            l.stats,
+		asyncLogger:      l.asyncLogger,
+		errorFileHook:    l.errorFileHook,
+		closed:           &atomic.Bool{},
+		pid:              l.pid,
+		clock:            l.clock,
+	}
+	copy(cloned.hooks, l.hooks)
 
-    // Copy parent fields.
-    for k, v := range l.fields {
-        cloned.fields[k] = v
-    }
+	// Copy parent fields.
+	for k, v := range l.fields {
+		cloned.fields[k] = v
+	}
 
-    return cloned
+	return cloned
 }
 
-// --- Level-based logging methods ---
+// --- Unified Public API ---
 
-// TraceByte logs a message with TRACE level using []byte (zero-allocation)
-func (l *Logger) TraceByte(message []byte) { l.log(context.Background(), core.TRACE, message, nil) }
+// Log logs with level and message
+func (l *Logger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+	if level < l.Config.Level {
+		return
+	}
+	l.logBytes(ctx, level, msg, fields)
+}
 
-// DebugByte logs a message with DEBUG level using []byte (zero-allocation)
-func (l *Logger) DebugByte(message []byte) { l.log(context.Background(), core.DEBUG, message, nil) }
+// LogC with context
+func (l *Logger) LogC(ctx context.Context, level core.Level, msg []byte) {
+	if level < l.Config.Level {
+		return
+	}
+	l.log(ctx, level, msg, nil)
+}
 
-// InfoByte logs a message with INFO level using []byte (zero-allocation)
-func (l *Logger) InfoByte(message []byte)  { l.log(context.Background(), core.INFO, message, nil) }
+// LogCF with context and fields (complete API)
+func (l *Logger) LogCF(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+	if level < l.Config.Level {
+		return
+	}
+	l.logBytes(ctx, level, msg, fields)
+}
 
-// NoticeByte logs a message with NOTICE level using []byte (zero-allocation)
-func (l *Logger) NoticeByte(message []byte){ l.log(context.Background(), core.NOTICE, message, nil) }
+// Level constants for convenience
+const (
+	TRACE = core.TRACE
+	DEBUG = core.DEBUG
+	INFO  = core.INFO
+	WARN  = core.WARN
+	ERROR = core.ERROR
+	FATAL = core.FATAL
+)
 
-// WarnByte logs a message with WARN level using []byte (zero-allocation)
-func (l *Logger) WarnByte(message []byte)  { l.log(context.Background(), core.WARN, message, nil) }
+// Optimized formatted logging methods
+func (l *Logger) Tracef(format string, args ...interface{}) {
+	if core.TRACE < l.Config.Level {
+		return
+	}
+	l.log(context.Background(), core.TRACE, l.formatfArgsToBytes(format, args...), nil)
+}
 
-// ErrorByte logs a message with ERROR level using []byte (zero-allocation)
-func (l *Logger) ErrorByte(message []byte) { l.log(context.Background(), core.ERROR, message, nil) }
-
-// FatalByte logs a message with FATAL level and exits the application using []byte (zero-allocation)
-func (l *Logger) FatalByte(message []byte) { l.log(context.Background(), core.FATAL, message, nil) }
-
-// PanicByte logs a message with PANIC level and panics using []byte (zero-allocation)
-func (l *Logger) PanicByte(message []byte) { l.log(context.Background(), core.PANIC, message, nil) }
-
-// Trace logs a message with TRACE level (maintaining backward compatibility)
-func (l *Logger) Trace(args ...interface{}) { l.log(context.Background(), core.TRACE, l.formatArgsToBytes(args...), nil) }
-
-// Debug logs a message with DEBUG level (maintaining backward compatibility)
-func (l *Logger) Debug(args ...interface{}) { l.log(context.Background(), core.DEBUG, l.formatArgsToBytes(args...), nil) }
-
-// Info logs a message with INFO level (maintaining backward compatibility)
-func (l *Logger) Info(args ...interface{})  { l.log(context.Background(), core.INFO, l.formatArgsToBytes(args...), nil) }
-
-// Notice logs a message with NOTICE level (maintaining backward compatibility)
-func (l *Logger) Notice(args ...interface{}){ l.log(context.Background(), core.NOTICE, l.formatArgsToBytes(args...), nil) }
-
-// Warn logs a message with WARN level (maintaining backward compatibility)
-func (l *Logger) Warn(args ...interface{})  { l.log(context.Background(), core.WARN, l.formatArgsToBytes(args...), nil) }
-
-// Error logs a message with ERROR level (maintaining backward compatibility)
-func (l *Logger) Error(args ...interface{}) { l.log(context.Background(), core.ERROR, l.formatArgsToBytes(args...), nil) }
-
-// Fatal logs a message with FATAL level and exits the application (maintaining backward compatibility)
-func (l *Logger) Fatal(args ...interface{}) { l.log(context.Background(), core.FATAL, l.formatArgsToBytes(args...), nil) }
-
-// Panic logs a message with PANIC level and panics (maintaining backward compatibility)
-func (l *Logger) Panic(args ...interface{}) { l.log(context.Background(), core.PANIC, l.formatArgsToBytes(args...), nil) }
-
-// Tracef logs a formatted message with TRACE level
-func (l *Logger) Tracef(format string, args ...interface{}) { l.log(context.Background(), core.TRACE, l.formatfArgsToBytes(format, args...), nil) }
-
-// Debugf logs a formatted message with DEBUG level
-func (l *Logger) Debugf(format string, args ...interface{}) { l.log(context.Background(), core.DEBUG, l.formatfArgsToBytes(format, args...), nil) }
+func (l *Logger) Debugf(format string, args ...interface{}) {
+	if core.DEBUG < l.Config.Level {
+		return
+	}
+	l.log(context.Background(), core.DEBUG, l.formatfArgsToBytes(format, args...), nil)
+}
 
 // Infof logs a formatted message with INFO level
-func (l *Logger) Infof(format string, args ...interface{})  { l.log(context.Background(), core.INFO, l.formatfArgsToBytes(format, args...), nil) }
+func (l *Logger) Infof(format string, args ...interface{}) {
+	l.log(context.Background(), core.INFO, l.formatfArgsToBytes(format, args...), nil)
+}
 
 // Noticef logs a formatted message with NOTICE level
-func (l *Logger) Noticef(format string, args ...interface{}){ l.log(context.Background(), core.NOTICE, l.formatfArgsToBytes(format, args...), nil) }
+func (l *Logger) Noticef(format string, args ...interface{}) {
+	l.log(context.Background(), core.NOTICE, l.formatfArgsToBytes(format, args...), nil)
+}
 
 // Warnf logs a formatted message with WARN level
-func (l *Logger) Warnf(format string, args ...interface{})  { l.log(context.Background(), core.WARN, l.formatfArgsToBytes(format, args...), nil) }
+func (l *Logger) Warnf(format string, args ...interface{}) {
+	l.log(context.Background(), core.WARN, l.formatfArgsToBytes(format, args...), nil)
+}
 
 // Errorf logs a formatted message with ERROR level
-func (l *Logger) Errorf(format string, args ...interface{}) { l.log(context.Background(), core.ERROR, l.formatfArgsToBytes(format, args...), nil) }
+func (l *Logger) Errorf(format string, args ...interface{}) {
+	l.log(context.Background(), core.ERROR, l.formatfArgsToBytes(format, args...), nil)
+}
 
 // Fatalf logs a formatted message with FATAL level and exits the application
-func (l *Logger) Fatalf(format string, args ...interface{}) { l.log(context.Background(), core.FATAL, l.formatfArgsToBytes(format, args...), nil) }
+func (l *Logger) Fatalf(format string, args ...interface{}) {
+	l.log(context.Background(), core.FATAL, l.formatfArgsToBytes(format, args...), nil)
+}
 
 // Panicf logs a formatted message with PANIC level and panics
-func (l *Logger) Panicf(format string, args ...interface{}) { l.log(context.Background(), core.PANIC, l.formatfArgsToBytes(format, args...), nil) }
+func (l *Logger) Panicf(format string, args ...interface{}) {
+	l.log(context.Background(), core.PANIC, l.formatfArgsToBytes(format, args...), nil)
+}
 
-// Context-aware logging methods
+// Efficient helper functions for common conversions
+func IntB(i int) []byte {
+	return []byte(strconv.Itoa(i))
+}
 
-// TraceCByte logs a message with TRACE level and extracts context information using []byte (zero-allocation)
-func (l *Logger) TraceCByte(ctx context.Context, message []byte) { l.log(ctx, core.TRACE, message, nil) }
+func FloatB(f float64) []byte {
+	return []byte(strconv.FormatFloat(f, 'g', -1, 64))
+}
 
-// DebugCByte logs a message with DEBUG level and extracts context information using []byte (zero-allocation)
-func (l *Logger) DebugCByte(ctx context.Context, message []byte) { l.log(ctx, core.DEBUG, message, nil) }
+func BoolB(b bool) []byte {
+	if b {
+		return []byte("true")
+	}
+	return []byte("false")
+}
 
-// InfoCByte logs a message with INFO level and extracts context information using []byte (zero-allocation)
-func (l *Logger) InfoCByte(ctx context.Context, message []byte)  { l.log(ctx, core.INFO, message, nil) }
+// Context-aware logging methods with []byte (zero allocation)
 
-// NoticeCByte logs a message with NOTICE level and extracts context information using []byte (zero-allocation)
-func (l *Logger) NoticeCByte(ctx context.Context, message []byte){ l.log(ctx, core.NOTICE, message, nil) }
-
-// WarnCByte logs a message with WARN level and extracts context information using []byte (zero-allocation)
-func (l *Logger) WarnCByte(ctx context.Context, message []byte)  { l.log(ctx, core.WARN, message, nil) }
-
-// ErrorCByte logs a message with ERROR level and extracts context information using []byte (zero-allocation)
-func (l *Logger) ErrorCByte(ctx context.Context, message []byte) { l.log(ctx, core.ERROR, message, nil) }
-
-// FatalCByte logs a message with FATAL level and extracts context information, then exits the application using []byte (zero-allocation)
-func (l *Logger) FatalCByte(ctx context.Context, message []byte) { l.log(ctx, core.FATAL, message, nil) }
-
-// PanicCByte logs a message with PANIC level and extracts context information, then panics using []byte (zero-allocation)
-func (l *Logger) PanicCByte(ctx context.Context, message []byte) { l.log(ctx, core.PANIC, message, nil) }
-
-// TraceC logs a message with TRACE level and extracts context information (maintaining backward compatibility)
-func (l *Logger) TraceC(ctx context.Context, args ...interface{}) { l.log(ctx, core.TRACE, l.formatArgsToBytes(args...), nil) }
-
-// DebugC logs a message with DEBUG level and extracts context information (maintaining backward compatibility)
-func (l *Logger) DebugC(ctx context.Context, args ...interface{}) { l.log(ctx, core.DEBUG, l.formatArgsToBytes(args...), nil) }
-
-// InfoC logs a message with INFO level and extracts context information (maintaining backward compatibility)
-func (l *Logger) InfoC(ctx context.Context, args ...interface{})  { l.log(ctx, core.INFO, l.formatArgsToBytes(args...), nil) }
-
-// NoticeC logs a message with NOTICE level and extracts context information (maintaining backward compatibility)
-func (l *Logger) NoticeC(ctx context.Context, args ...interface{}){ l.log(ctx, core.NOTICE, l.formatArgsToBytes(args...), nil) }
-
-// WarnC logs a message with WARN level and extracts context information (maintaining backward compatibility)
-func (l *Logger) WarnC(ctx context.Context, args ...interface{})  { l.log(ctx, core.WARN, l.formatArgsToBytes(args...), nil) }
-
-// ErrorC logs a message with ERROR level and extracts context information (maintaining backward compatibility)
-func (l *Logger) ErrorC(ctx context.Context, args ...interface{}) { l.log(ctx, core.ERROR, l.formatArgsToBytes(args...), nil) }
-
-// FatalC logs a message with FATAL level and extracts context information, then exits the application (maintaining backward compatibility)
-func (l *Logger) FatalC(ctx context.Context, args ...interface{}) { l.log(ctx, core.FATAL, l.formatArgsToBytes(args...), nil) }
-
-// PanicC logs a message with PANIC level and extracts context information, then panics (maintaining backward compatibility)
-func (l *Logger) PanicC(ctx context.Context, args ...interface{}) { l.log(ctx, core.PANIC, l.formatArgsToBytes(args...), nil) }
-
-// TracefC logs a formatted message with TRACE level and extracts context information
-func (l *Logger) TracefC(ctx context.Context, format string, args ...interface{}) { l.log(ctx, core.TRACE, l.formatfArgsToBytes(format, args...), nil) }
-
-// DebugfC logs a formatted message with DEBUG level and extracts context information
-func (l *Logger) DebugfC(ctx context.Context, format string, args ...interface{}) { l.log(ctx, core.DEBUG, l.formatfArgsToBytes(format, args...), nil) }
-
-// InfofC logs a formatted message with INFO level and extracts context information
-func (l *Logger) InfofC(ctx context.Context, format string, args ...interface{})  { l.log(ctx, core.INFO, l.formatfArgsToBytes(format, args...), nil) }
-
-// NoticefC logs a formatted message with NOTICE level and extracts context information
-func (l *Logger) NoticefC(ctx context.Context, format string, args ...interface{}){ l.log(ctx, core.NOTICE, l.formatfArgsToBytes(format, args...), nil) }
-
-// WarnfC logs a formatted message with WARN level and extracts context information
-func (l *Logger) WarnfC(ctx context.Context, format string, args ...interface{})  { l.log(ctx, core.WARN, l.formatfArgsToBytes(format, args...), nil) }
-
-// ErrorfC logs a formatted message with ERROR level and extracts context information
-func (l *Logger) ErrorfC(ctx context.Context, format string, args ...interface{}) { l.log(ctx, core.ERROR, l.formatfArgsToBytes(format, args...), nil) }
-
-// FatalfC logs a formatted message with FATAL level and extracts context information, then exits the application
-func (l *Logger) FatalfC(ctx context.Context, format string, args ...interface{}) { l.log(ctx, core.FATAL, l.formatfArgsToBytes(format, args...), nil) }
-
-// PanicfC logs a formatted message with PANIC level and extracts context information, then panics
-func (l *Logger) PanicfC(ctx context.Context, format string, args ...interface{}) { l.log(ctx, core.PANIC, l.formatfArgsToBytes(format, args...), nil) }
-
-// manualFormatValue formats a value without using fmt package
-func manualFormatValue(buf *bytes.Buffer, v interface{}) {
-	switch val := v.(type) {
-	case string:
-		buf.Write(core.StringToBytes(val)) // Use zero-allocation conversion
-	case []byte:
-		buf.Write(val)
-	case int:
-		tempBuf := util.GetSmallByteSliceFromPool()
-		defer util.PutSmallByteSliceToPool(tempBuf)
-		result := strconv.AppendInt(tempBuf[:0], int64(val), 10)
-		buf.Write(result)
-	case int64:
-		tempBuf := util.GetSmallByteSliceFromPool()
-		defer util.PutSmallByteSliceToPool(tempBuf)
-		result := strconv.AppendInt(tempBuf[:0], val, 10)
-		buf.Write(result)
-	case float64:
-		tempBuf := util.GetSmallByteSliceFromPool()
-		defer util.PutSmallByteSliceToPool(tempBuf)
-		result := strconv.AppendFloat(tempBuf[:0], val, 'g', -1, 64)
-		buf.Write(result)
-	case bool:
-		if val {
-			buf.Write([]byte("true"))
-		} else {
-			buf.Write([]byte("false"))
-		}
-	case nil:
-		buf.Write([]byte("<nil>"))
-	default:
-		// For remaining types, we'll use a simple representation
-		buf.Write([]byte("<unknown-type>"))
+// TraceCB logs a message with TRACE level and extracts context information using []byte (zero-allocation)
+func (l *Logger) TraceCB(ctx context.Context, message []byte) {
+	if core.TRACE >= l.Config.Level {
+		l.log(ctx, core.TRACE, message, nil)
 	}
 }
 
-// manualFormatWithArgs formats with a format string and arguments without using fmt
-func manualFormatWithArgs(buf *bytes.Buffer, format string, args ...interface{}) {
-	argIndex := 0
-	for i := 0; i < len(format); i++ {
-		if format[i] == '%' && i+1 < len(format) {
-			if format[i+1] == '%' {
-				buf.WriteByte('%')
-				i++ // Skip the next character
-				continue
-			}
-
-			// Process format specifier
-			if argIndex < len(args) {
-				arg := args[argIndex]
-				spec := format[i+1] // Simple format specifier handling
-				switch spec {
-				case 's':
-					if s, ok := arg.(string); ok {
-						buf.Write(core.StringToBytes(s)) // Use zero-allocation string to byte conversion
-					} else {
-						manualFormatValue(buf, arg)
-					}
-				case 'd':
-					if d, ok := arg.(int); ok {
-						tempBuf := util.GetSmallByteSliceFromPool()
-						defer util.PutSmallByteSliceToPool(tempBuf)
-						result := strconv.AppendInt(tempBuf[:0], int64(d), 10)
-						buf.Write(result)
-					} else {
-						manualFormatValue(buf, arg)
-					}
-				case 'f':
-					if f, ok := arg.(float64); ok {
-						tempBuf := util.GetSmallByteSliceFromPool()
-						defer util.PutSmallByteSliceToPool(tempBuf)
-						result := strconv.AppendFloat(tempBuf[:0], f, 'g', -1, 64)
-						buf.Write(result)
-					} else {
-						manualFormatValue(buf, arg)
-					}
-				case 'v':
-					manualFormatValue(buf, arg)
-				default:
-					manualFormatValue(buf, arg)
-				}
-				argIndex++
-				i++ // Skip the format specifier
-			} else {
-				// No more arguments, just output the %
-				buf.WriteByte('%')
-			}
-		} else {
-			buf.WriteByte(format[i])
-		}
+// DebugCB logs a message with DEBUG level and extracts context information using []byte (zero-allocation)
+func (l *Logger) DebugCB(ctx context.Context, message []byte) {
+	if core.DEBUG >= l.Config.Level {
+		l.log(ctx, core.DEBUG, message, nil)
 	}
 }
 
-// errorString creates an error with string content without fmt dependency
-type errorString struct {
-	s string
+// InfoCB logs a message with INFO level and extracts context information using []byte (zero-allocation)
+func (l *Logger) InfoCB(ctx context.Context, message []byte) { 
+	if core.INFO >= l.Config.Level {
+		l.log(ctx, core.INFO, message, nil) 
+	}
 }
 
-func (e *errorString) Error() string {
-	return e.s
+// WarnCB logs a message with WARN level and extracts context information using []byte (zero-allocation)
+func (l *Logger) WarnCB(ctx context.Context, message []byte) { 
+	if core.WARN >= l.Config.Level {
+		l.log(ctx, core.WARN, message, nil) 
+	}
 }
 
-// newErrorf creates a formatted error without fmt dependency
+// ErrorCB logs a message with ERROR level and extracts context information using []byte (zero-allocation)
+func (l *Logger) ErrorCB(ctx context.Context, message []byte) {
+	if core.ERROR >= l.Config.Level {
+		l.log(ctx, core.ERROR, message, nil)
+	}
+}
+
+// FatalCB logs a message with FATAL level and extracts context information, then exits the application using []byte (zero-allocation)
+func (l *Logger) FatalCB(ctx context.Context, message []byte) {
+	l.log(ctx, core.FATAL, message, nil)
+}
+
+// Context-aware logging methods (interface{} args)
+func (l *Logger) TraceC(ctx context.Context, args ...interface{}) {
+	if core.TRACE >= l.Config.Level {
+		l.log(ctx, core.TRACE, l.formatArgsToBytes(args...), nil)
+	}
+}
+
+func (l *Logger) DebugC(ctx context.Context, args ...interface{}) {
+	if core.DEBUG >= l.Config.Level {
+		l.log(ctx, core.DEBUG, l.formatArgsToBytes(args...), nil)
+	}
+}
+
+func (l *Logger) InfoC(ctx context.Context, args ...interface{}) {
+	if core.INFO >= l.Config.Level {
+		l.log(ctx, core.INFO, l.formatArgsToBytes(args...), nil)
+	}
+}
+
+func (l *Logger) WarnC(ctx context.Context, args ...interface{}) {
+	if core.WARN >= l.Config.Level {
+		l.log(ctx, core.WARN, l.formatArgsToBytes(args...), nil)
+	}
+}
+
+func (l *Logger) ErrorC(ctx context.Context, args ...interface{}) {
+	if core.ERROR >= l.Config.Level {
+		l.log(ctx, core.ERROR, l.formatArgsToBytes(args...), nil)
+	}
+}
+
+// Utility functions for []byte conversion
+func S2B(s string) []byte { return []byte(s) }
+func I2B(i int) []byte { return []byte(strconv.Itoa(i)) }
+func F2B(f float64) []byte { return []byte(strconv.FormatFloat(f, 'g', -1, 64)) }
+func B2B(b bool) []byte { 
+	if b { return []byte("true") }
+	return []byte("false")
+}
+
+// Legacy API for backward compatibility
+func (l *Logger) Trace(args ...interface{}) {
+	l.LogCF(context.Background(), TRACE, l.formatArgsToBytes(args...), nil)
+}
+
+func (l *Logger) Info(args ...interface{}) {
+	l.LogCF(context.Background(), INFO, l.formatArgsToBytes(args...), nil)
+}
+
+func (l *Logger) Debug(args ...interface{}) {
+	l.LogCF(context.Background(), DEBUG, l.formatArgsToBytes(args...), nil)
+}
+
+func (l *Logger) Warn(args ...interface{}) {
+	l.LogCF(context.Background(), WARN, l.formatArgsToBytes(args...), nil)
+}
+
+func (l *Logger) Error(args ...interface{}) {
+	l.LogCF(context.Background(), ERROR, l.formatArgsToBytes(args...), nil)
+}
+
+func (l *Logger) Fatal(args ...interface{}) {
+	l.LogCF(context.Background(), FATAL, l.formatArgsToBytes(args...), nil)
+}
+
+// Context-aware legacy methods
+func (l *Logger) InfofC(ctx context.Context, format string, args ...interface{}) {
+	l.LogCF(ctx, INFO, l.formatfArgsToBytes(format, args...), nil)
+}
+
+// Helper functions
 func newErrorf(format string, args ...interface{}) error {
-	buf := util.GetBufferFromPool()
-	defer util.PutBufferToPool(buf)
-
-	manualFormatWithArgs(buf, format, args...)
-	return &errorString{s: buf.String()}
+	return fmt.Errorf(format, args...)
 }
+
+func manualFormatValue(buf *bytes.Buffer, v interface{}) {
+	fmt.Fprintf(buf, "%v", v)
+}
+
+func manualFormatWithArgs(buf *bytes.Buffer, format string, args ...interface{}) {
+	fmt.Fprintf(buf, format, args...)
+}
+
+

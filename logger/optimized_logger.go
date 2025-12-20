@@ -12,31 +12,30 @@ import (
 	"github.com/Lunar-Chipter/mire/formatter"
 )
 
-// OptimizedLogger is an efficient logger version to achieve 1 allocation per log operation
+// OptimizedLogger is an efficient logger version for minimal allocations
 type OptimizedLogger struct {
-	config          LoggerConfig
-	formatter       formatter.Formatter
-	out             io.Writer
-	mu              sync.Mutex
-	fields          map[string]interface{}
-	level           core.Level
-	bufferPool      *sync.Pool
-	closed          atomic.Bool
+	config     LoggerConfig
+	formatter  formatter.Formatter
+	out        io.Writer
+	mu         sync.Mutex
+	fields     map[string]interface{}
+	level      core.Level
+	bufferPool *sync.Pool
+	closed     atomic.Bool
 }
 
 // NewOptimizedLogger creates an efficient logger instance
 func NewOptimizedLogger(config LoggerConfig) *OptimizedLogger {
 	if config.Output == nil {
-		config.Output = io.Discard // Use io.Discard directly
+		config.Output = io.Discard
 	}
 	if config.Formatter == nil {
 		config.Formatter = &formatter.TextFormatter{}
 	}
 
-	// Pre-allocate reusable buffer
 	bufferPool := &sync.Pool{
 		New: func() interface{} {
-			return bytes.NewBuffer(make([]byte, 0, 1024)) // Pre-allocate with medium size
+			return bytes.NewBuffer(make([]byte, 0, 1024))
 		},
 	}
 
@@ -50,14 +49,11 @@ func NewOptimizedLogger(config LoggerConfig) *OptimizedLogger {
 	}
 }
 
-// logInternal is the core efficient function for 1 allocation per operation
+// logInternal is the core efficient function for minimal allocations
 func (l *OptimizedLogger) logInternal(ctx context.Context, level core.Level, message []byte, fields map[string]interface{}) {
-	// Early return if log level doesn't match
 	if level < l.level {
 		return
 	}
-
-	// Get buffer from pool (this 1 allocation is allowed)
 	buf := l.bufferPool.Get().(*bytes.Buffer)
 	defer func() {
 		buf.Reset()
@@ -253,23 +249,23 @@ func itoa(i int) string {
 	var buf [32]byte
 	n := len(buf)
 	sign := false
-	
+
 	if i < 0 {
 		sign = true
 		i = -i
 	}
-	
+
 	for i > 0 {
 		n--
 		buf[n] = byte(i%10) + '0'
 		i /= 10
 	}
-	
+
 	if sign {
 		n--
 		buf[n] = '-'
 	}
-	
+
 	return string(buf[n:])
 }
 
@@ -277,28 +273,28 @@ func i64toa(i int64) string {
 	if i == 0 {
 		return "0"
 	}
-	
+
 	// Use stack-allocated buffer for conversion
 	var buf [32]byte
 	n := len(buf)
 	sign := false
-	
+
 	if i < 0 {
 		sign = true
 		i = -i
 	}
-	
+
 	for i > 0 {
 		n--
 		buf[n] = byte(i%10) + '0'
 		i /= 10
 	}
-	
+
 	if sign {
 		n--
 		buf[n] = '-'
 	}
-	
+
 	return string(buf[n:])
 }
 
@@ -353,8 +349,8 @@ func (l *OptimizedLogger) WithFields(fields map[string]interface{}) *OptimizedLo
 	return newLogger
 }
 
-// WithFieldsBytes adds fields to logger using []byte (zero-allocation)
-func (l *OptimizedLogger) WithFieldsBytes(fields map[string][]byte) *OptimizedLogger {
+// WithFieldsB adds fields to logger using []byte (zero-allocation)
+func (l *OptimizedLogger) WithFieldsB(fields map[string][]byte) *OptimizedLogger {
 	newLogger := &OptimizedLogger{
 		config:     l.config,
 		formatter:  l.formatter,

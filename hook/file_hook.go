@@ -53,7 +53,7 @@ func NewFileHook(filePath string) (*SimpleFileHook, error) {
 
 	// Use a simple JSON formatter for the error log file
 	jsonFormatter := &formatter.JSONFormatter{
-		TimestampFormat: "2006-01-02T15:04:05.000Z07:00", // ISO 8601
+		TimestampFormat:  "2006-01-02T15:04:05.000Z07:00", // ISO 8601
 		EnableStackTrace: true,
 	}
 

@@ -14,18 +14,18 @@ import (
 
 // mockLogProcessor implements LogProcessor interface for testing
 type mockLogProcessor struct {
-	loggedEntries   []*logJob
-	errorHandler    func(error)
-	errOut          io.Writer
-	errOutMu        *sync.Mutex
-	logCalls        int
-	mu              sync.Mutex
+	loggedEntries []*logJob
+	errorHandler  func(error)
+	errOut        io.Writer
+	errOutMu      *sync.Mutex
+	logCalls      int
+	mu            sync.Mutex
 }
 
 func (m *mockLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.loggedEntries = append(m.loggedEntries, &logJob{
 		level:  level,
 		msg:    msg,
@@ -35,28 +35,28 @@ func (m *mockLogProcessor) Log(ctx context.Context, level core.Level, msg []byte
 	m.logCalls++
 }
 
-func (m *mockLogProcessor) ErrorHandler() func(error) { 
-	return m.errorHandler 
+func (m *mockLogProcessor) ErrorHandler() func(error) {
+	return m.errorHandler
 }
 
-func (m *mockLogProcessor) ErrOut() io.Writer { 
-	return m.errOut 
+func (m *mockLogProcessor) ErrOut() io.Writer {
+	return m.errOut
 }
 
-func (m *mockLogProcessor) ErrOutMu() *sync.Mutex { 
-	return m.errOutMu 
+func (m *mockLogProcessor) ErrOutMu() *sync.Mutex {
+	return m.errOutMu
 }
 
 // TestNewAsyncLogger tests creating a new AsyncLogger
 func TestNewAsyncLogger(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	asyncLogger := NewAsyncLogger(processor, 2, 100, 5*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	if asyncLogger.processor != processor {
 		t.Error("AsyncLogger processor not set correctly")
 	}
@@ -74,32 +74,32 @@ func TestNewAsyncLogger(t *testing.T) {
 // TestAsyncLoggerLog tests the Log method of AsyncLogger
 func TestAsyncLoggerLog(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	asyncLogger := NewAsyncLogger(processor, 2, 100, 5*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	ctx := context.Background()
-	
+
 	// Log a message asynchronously
 	asyncLogger.Log(core.INFO, []byte("test message"), map[string][]byte{"key": []byte("value")}, ctx)
-	
+
 	// Give some time for the async processing
 	time.Sleep(50 * time.Millisecond)
-	
+
 	// Close the logger to ensure all messages are processed
 	asyncLogger.Close()
-	
+
 	// Check that the message was processed by the mock
 	processor.mu.Lock()
 	defer processor.mu.Unlock()
-	
+
 	if processor.logCalls != 1 {
 		t.Errorf("Expected 1 log call, got %d", processor.logCalls)
 	}
-	
+
 	if len(processor.loggedEntries) != 1 {
 		t.Errorf("Expected 1 logged entry, got %d", len(processor.loggedEntries))
 	} else {
@@ -119,35 +119,35 @@ func TestAsyncLoggerLog(t *testing.T) {
 // TestAsyncLoggerMultipleLogs tests multiple log messages
 func TestAsyncLoggerMultipleLogs(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	asyncLogger := NewAsyncLogger(processor, 3, 200, 5*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	ctx := context.Background()
-	
+
 	// Log multiple messages
 	for i := 0; i < 10; i++ {
-		asyncLogger.Log(core.DEBUG, []byte("message "+string(rune(i+'0'))), 
+		asyncLogger.Log(core.DEBUG, []byte("message "+string(rune(i+'0'))),
 			map[string][]byte{"idx": []byte(fmt.Sprintf("%d", i))}, ctx)
 	}
-	
+
 	// Give some time for the async processing
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// Close the logger to ensure all messages are processed
 	asyncLogger.Close()
-	
+
 	// Check that all messages were processed
 	processor.mu.Lock()
 	defer processor.mu.Unlock()
-	
+
 	if processor.logCalls != 10 {
 		t.Errorf("Expected 10 log calls, got %d", processor.logCalls)
 	}
-	
+
 	if len(processor.loggedEntries) != 10 {
 		t.Errorf("Expected 10 logged entries, got %d", len(processor.loggedEntries))
 	}
@@ -165,24 +165,24 @@ func TestAsyncLoggerBufferFull(t *testing.T) {
 				// Don't block if error channel is full
 			}
 		},
-		errOut: nil, // We'll use custom error handling
+		errOut:   nil, // We'll use custom error handling
 		errOutMu: &sync.Mutex{},
 	}
-	
+
 	// Create async logger with small buffer
 	asyncLogger := NewAsyncLogger(processor, 1, 5, 1*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	ctx := context.Background()
-	
+
 	// Send more messages than the buffer can hold
 	for i := 0; i < 10; i++ {
 		asyncLogger.Log(core.INFO, []byte("test message"), nil, ctx)
 	}
-	
+
 	// Check if any errors were reported
 	select {
 	case err := <-errChan:
@@ -193,34 +193,34 @@ func TestAsyncLoggerBufferFull(t *testing.T) {
 		// No error reported within timeout - this might be expected based on implementation
 		t.Log("No error reported - buffer full errors might be handled differently")
 	}
-	
+
 	asyncLogger.Close()
 }
 
 // TestAsyncLoggerWithTimeout tests async logger with log processing timeout
 func TestAsyncLoggerWithTimeout(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	// Create async logger with short timeout
 	asyncLogger := NewAsyncLogger(processor, 2, 100, 10*time.Millisecond, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	ctx := context.Background()
-	
+
 	// Log a message
 	asyncLogger.Log(core.INFO, []byte("timeout test"), nil, ctx)
-	
+
 	// Give time for processing
 	time.Sleep(50 * time.Millisecond)
 	asyncLogger.Close()
-	
+
 	// Check that the message was processed despite the timeout
 	processor.mu.Lock()
 	defer processor.mu.Unlock()
-	
+
 	if processor.logCalls < 1 {
 		t.Errorf("Expected at least 1 log call, got %d", processor.logCalls)
 	}
@@ -229,27 +229,27 @@ func TestAsyncLoggerWithTimeout(t *testing.T) {
 // at
 func TestAsyncLoggerWithoutTimeout(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	// at
 	asyncLogger := NewAsyncLogger(processor, 2, 100, 0, true) // at
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	ctx := context.Background()
-	
+
 	// Log a message
 	asyncLogger.Log(core.INFO, []byte("no timeout test"), nil, ctx)
-	
+
 	// Give time for processing
 	time.Sleep(50 * time.Millisecond)
 	asyncLogger.Close()
-	
+
 	// Check that the message was processed
 	processor.mu.Lock()
 	defer processor.mu.Unlock()
-	
+
 	if processor.logCalls < 1 {
 		t.Errorf("Expected at least 1 log call, got %d", processor.logCalls)
 	}
@@ -258,18 +258,18 @@ func TestAsyncLoggerWithoutTimeout(t *testing.T) {
 // TestAsyncLoggerClose tests closing the AsyncLogger multiple times
 func TestAsyncLoggerClose(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	asyncLogger := NewAsyncLogger(processor, 1, 10, 1*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
-	
+
 	// Close once - should work
 	asyncLogger.Close()
-	
+
 	// Close again - should not cause an error or panic
 	asyncLogger.Close()
-	
+
 	// Double close should be safe
 }
 
@@ -277,21 +277,21 @@ func TestAsyncLoggerClose(t *testing.T) {
 func TestAsyncLoggerWorkerPanicRecovery(t *testing.T) {
 	// Create a processor that will cause a panic when Log is called
 	panicProcessor := &panicLogProcessor{}
-	
+
 	asyncLogger := NewAsyncLogger(panicProcessor, 1, 10, 1*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	ctx := context.Background()
-	
+
 	// to
 	asyncLogger.Log(core.INFO, []byte("panic test"), nil, ctx)
-	
+
 	// to
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// The logger should still be functional after the panic/recovery
 	// Close should work without issues
 	asyncLogger.Close()
@@ -300,23 +300,23 @@ func TestAsyncLoggerWorkerPanicRecovery(t *testing.T) {
 // TestAsyncLoggerConcurrent tests the AsyncLogger in a concurrent context
 func TestAsyncLoggerConcurrent(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	asyncLogger := NewAsyncLogger(processor, 5, 500, 5*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	// Run multiple goroutines that log concurrently
 	const numGoroutines = 10
 	const messagesPerGoroutine = 50
 	done := make(chan bool, numGoroutines)
-	
+
 	startTime := time.Now()
 	for i := 0; i < numGoroutines; i++ {
 		go func(goroutineID int) {
 			defer func() { done <- true }()
-			
+
 			ctx := context.Background()
 			for j := 0; j < messagesPerGoroutine; j++ {
 				msg := []byte("message from goroutine " + string(rune(goroutineID+'0')) + " - " + string(rune(j+'0')))
@@ -324,33 +324,33 @@ func TestAsyncLoggerConcurrent(t *testing.T) {
 			}
 		}(i)
 	}
-	
+
 	// at
 	for i := 0; i < numGoroutines; i++ {
 		<-done
 	}
-	
+
 	// Wait a bit more to ensure all messages are processed
 	time.Sleep(500 * time.Millisecond)
-	
+
 	// Close the logger to ensure all messages are processed
 	asyncLogger.Close()
-	
+
 	// Check that all messages were processed
 	processor.mu.Lock()
 	defer processor.mu.Unlock()
-	
+
 	expectedMessages := numGoroutines * messagesPerGoroutine
 	actualMessages := len(processor.loggedEntries)
-	
+
 	if actualMessages != expectedMessages {
 		t.Errorf("Expected %d messages, got %d", expectedMessages, actualMessages)
 	}
-	
+
 	if processor.logCalls != expectedMessages {
 		t.Errorf("Expected %d log calls, got %d", expectedMessages, processor.logCalls)
 	}
-	
+
 	elapsed := time.Since(startTime)
 	t.Logf("Processed %d messages in %v with %d workers", actualMessages, elapsed, asyncLogger.workerCount)
 }
@@ -362,38 +362,38 @@ func (p *panicLogProcessor) Log(ctx context.Context, level core.Level, msg []byt
 	panic("intentional panic for testing")
 }
 
-func (p *panicLogProcessor) ErrorHandler() func(error) { 
+func (p *panicLogProcessor) ErrorHandler() func(error) {
 	return func(err error) {} // No-op error handler
 }
 
-func (p *panicLogProcessor) ErrOut() io.Writer { 
-	return nil 
+func (p *panicLogProcessor) ErrOut() io.Writer {
+	return nil
 }
 
-func (p *panicLogProcessor) ErrOutMu() *sync.Mutex { 
+func (p *panicLogProcessor) ErrOutMu() *sync.Mutex {
 	return &sync.Mutex{}
 }
 
 // to
 func TestAsyncLoggerWorker(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	asyncLogger := NewAsyncLogger(processor, 1, 50, 1*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
 	defer asyncLogger.Close()
-	
+
 	ctx := context.Background()
-	
+
 	// at
 	job := &logJob{
-		level: core.INFO,
-		msg: []byte("direct job"),
+		level:  core.INFO,
+		msg:    []byte("direct job"),
 		fields: map[string][]byte{"source": []byte("direct")},
-		ctx: ctx,
+		ctx:    ctx,
 	}
-	
+
 	// Try to send to the channel
 	select {
 	case asyncLogger.logChan <- job:
@@ -401,17 +401,17 @@ func TestAsyncLoggerWorker(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Could not send job to async logger channel in time")
 	}
-	
+
 	// Wait for processing
 	time.Sleep(200 * time.Millisecond)
-	
+
 	// Close to ensure processing completes
 	asyncLogger.Close()
-	
+
 	// Verify the job was processed
 	processor.mu.Lock()
 	defer processor.mu.Unlock()
-	
+
 	if processor.logCalls < 1 {
 		t.Errorf("Expected at least 1 log call, got %d", processor.logCalls)
 	}
@@ -420,19 +420,19 @@ func TestAsyncLoggerWorker(t *testing.T) {
 // TestAsyncLoggerClosedBehavior tests logging to a closed AsyncLogger
 func TestAsyncLoggerClosedBehavior(t *testing.T) {
 	processor := &mockLogProcessor{}
-	
+
 	asyncLogger := NewAsyncLogger(processor, 1, 10, 1*time.Second, false)
 	if asyncLogger == nil {
 		t.Fatal("NewAsyncLogger returned nil")
 	}
-	
+
 	// at
 	asyncLogger.Close()
-	
+
 	// Try to log after closing - this should not panic
 	ctx := context.Background()
 	asyncLogger.Log(core.INFO, []byte("message after close"), nil, ctx)
-	
+
 	// at
 	// but it should not cause a panic
 }

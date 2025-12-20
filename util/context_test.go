@@ -9,19 +9,19 @@ import (
 func TestWithTraceID(t *testing.T) {
 	ctx := context.Background()
 	traceID := "test-trace-id"
-	
+
 	newCtx := WithTraceID(ctx, traceID)
-	
+
 	// Extract the trace ID from the context
 	extractedTraceID, ok := newCtx.Value(TraceIDKey).(string)
 	if !ok {
 		t.Fatal("Trace ID was not set properly in context")
 	}
-	
+
 	if extractedTraceID != traceID {
 		t.Errorf("Expected trace ID %s, got %s", traceID, extractedTraceID)
 	}
-	
+
 	// Verify original context is unchanged
 	originalTraceID, ok := ctx.Value(TraceIDKey).(string)
 	if ok {
@@ -33,19 +33,19 @@ func TestWithTraceID(t *testing.T) {
 func TestWithSpanID(t *testing.T) {
 	ctx := context.Background()
 	spanID := "test-span-id"
-	
+
 	newCtx := WithSpanID(ctx, spanID)
-	
+
 	// Extract the span ID from the context
 	extractedSpanID, ok := newCtx.Value(SpanIDKey).(string)
 	if !ok {
 		t.Fatal("Span ID was not set properly in context")
 	}
-	
+
 	if extractedSpanID != spanID {
 		t.Errorf("Expected span ID %s, got %s", spanID, extractedSpanID)
 	}
-	
+
 	// Verify original context is unchanged
 	originalSpanID, ok := ctx.Value(SpanIDKey).(string)
 	if ok {
@@ -57,19 +57,19 @@ func TestWithSpanID(t *testing.T) {
 func TestWithUserID(t *testing.T) {
 	ctx := context.Background()
 	userID := "test-user-id"
-	
+
 	newCtx := WithUserID(ctx, userID)
-	
+
 	// Extract the user ID from the context
 	extractedUserID, ok := newCtx.Value(UserIDKey).(string)
 	if !ok {
 		t.Fatal("User ID was not set properly in context")
 	}
-	
+
 	if extractedUserID != userID {
 		t.Errorf("Expected user ID %s, got %s", userID, extractedUserID)
 	}
-	
+
 	// Verify original context is unchanged
 	originalUserID, ok := ctx.Value(UserIDKey).(string)
 	if ok {
@@ -81,19 +81,19 @@ func TestWithUserID(t *testing.T) {
 func TestWithSessionID(t *testing.T) {
 	ctx := context.Background()
 	sessionID := "test-session-id"
-	
+
 	newCtx := WithSessionID(ctx, sessionID)
-	
+
 	// Extract the session ID from the context
 	extractedSessionID, ok := newCtx.Value(SessionIDKey).(string)
 	if !ok {
 		t.Fatal("Session ID was not set properly in context")
 	}
-	
+
 	if extractedSessionID != sessionID {
 		t.Errorf("Expected session ID %s, got %s", sessionID, extractedSessionID)
 	}
-	
+
 	// Verify original context is unchanged
 	originalSessionID, ok := ctx.Value(SessionIDKey).(string)
 	if ok {
@@ -105,26 +105,25 @@ func TestWithSessionID(t *testing.T) {
 func TestWithRequestID(t *testing.T) {
 	ctx := context.Background()
 	requestID := "test-request-id"
-	
+
 	newCtx := WithRequestID(ctx, requestID)
-	
+
 	// Extract the request ID from the context
 	extractedRequestID, ok := newCtx.Value(RequestIDKey).(string)
 	if !ok {
 		t.Fatal("Request ID was not set properly in context")
 	}
-	
+
 	if extractedRequestID != requestID {
 		t.Errorf("Expected request ID %s, got %s", requestID, extractedRequestID)
 	}
-	
+
 	// Verify original context is unchanged
 	originalRequestID, ok := ctx.Value(RequestIDKey).(string)
 	if ok {
 		t.Errorf("Original context should not have request ID, but got %s", originalRequestID)
 	}
 }
-
 
 // TestExtractFromContext tests extracting all context values
 func TestExtractFromContext(t *testing.T) {
@@ -211,11 +210,11 @@ func TestExtractFromContextWithMissingValues(t *testing.T) {
 // TestExtractFromContextEmpty tests extracting from an empty context
 func TestExtractFromContextEmpty(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Extract from empty context
 	result := ExtractFromContext(ctx)
 	defer PutMapStringToPool(result) // Important: return the map to the pool
-	
+
 	// Should be an empty map
 	if len(result) != 0 {
 		t.Errorf("Expected empty map, got map with %d keys", len(result))
@@ -253,16 +252,16 @@ func TestContextKeyString(t *testing.T) {
 // TestExtractFromContextWithEmptyStringValues tests extracting context values when values are empty strings
 func TestExtractFromContextWithEmptyStringValues(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Add empty string values
 	ctx = WithTraceID(ctx, "")
 	ctx = WithUserID(ctx, "")
 	ctx = WithRequestID(ctx, "")
-	
+
 	// Extract values
 	result := ExtractFromContext(ctx)
 	defer PutMapStringToPool(result) // Important: return the map to the pool
-	
+
 	// Empty string values should not be included in the result
 	// at
 	for key, value := range result {
@@ -277,16 +276,16 @@ func TestExtractFromContextWithEmptyStringValues(t *testing.T) {
 // TestContextValueTypes tests that context values are stored and retrieved as strings
 func TestContextValueTypes(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Add a value using WithTraceID (which stores as string)
 	ctx = WithTraceID(ctx, "test-id")
-	
+
 	// Extract and verify it's a string
 	rawValue := ctx.Value(TraceIDKey)
 	if rawValue == nil {
 		t.Fatal("Value not found in context")
 	}
-	
+
 	if _, ok := rawValue.(string); !ok {
 		t.Errorf("Expected value to be string, got %T", rawValue)
 	}

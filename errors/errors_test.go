@@ -63,7 +63,7 @@ func TestInvalidLogLevelErrorError(t *testing.T) {
 // TestCustomError tests the customError type
 func TestCustomError(t *testing.T) {
 	err := &customError{msg: "test error"}
-	
+
 	if err.Error() != "test error" {
 		t.Errorf("customError.Error() returned %s, want test error", err.Error())
 	}
@@ -74,7 +74,7 @@ func TestErrAsyncBufferFull(t *testing.T) {
 	if ErrAsyncBufferFull == nil {
 		t.Error("ErrAsyncBufferFull is nil")
 	}
-	
+
 	if ErrAsyncBufferFull.Error() != "async log channel full" {
 		t.Errorf("ErrAsyncBufferFull.Error() returned %s, want 'async log channel full'", ErrAsyncBufferFull.Error())
 	}
@@ -83,26 +83,26 @@ func TestErrAsyncBufferFull(t *testing.T) {
 // TestInvalidLogLevelErrorConcurrent tests the InvalidLogLevelError in a concurrent context
 func TestInvalidLogLevelErrorConcurrent(t *testing.T) {
 	done := make(chan bool, 10)
-	
+
 	for i := 0; i < 10; i++ {
 		go func() {
 			err := NewInvalidLogLevelError("concurrent_test")
 			if err == nil {
 				t.Error("NewInvalidLogLevelError returned nil in concurrent test")
 			}
-			
+
 			buf := new(bytes.Buffer)
 			err.AppendError(buf)
 			result := buf.String()
 			if result != "invalid log level: concurrent_test" {
 				t.Errorf("Concurrent AppendError returned %s, want 'invalid log level: concurrent_test'", result)
 			}
-			
+
 			PutInvalidLogLevelError(err)
 			done <- true
 		}()
 	}
-	
+
 	// Wait for all goroutines to complete
 	for i := 0; i < 10; i++ {
 		<-done
@@ -116,21 +116,21 @@ func TestInvalidLogLevelErrorPoolReuse(t *testing.T) {
 	if err1.level != "first" {
 		t.Errorf("First error should have level 'first', got %s", err1.level)
 	}
-	
+
 	// Return it to the pool
 	PutInvalidLogLevelError(err1)
-	
+
 	// Get another error from the pool
 	err2 := NewInvalidLogLevelError("second")
 	if err2.level != "second" {
 		t.Errorf("Second error should have level 'second', got %s", err2.level)
 	}
-	
+
 	// The internal buffer should have been reset
 	if err2.buf.Len() != 0 {
 		t.Error("Buffer should have been reset when error was returned to pool")
 	}
-	
+
 	PutInvalidLogLevelError(err2)
 }
 
@@ -138,7 +138,7 @@ func TestInvalidLogLevelErrorPoolReuse(t *testing.T) {
 func TestInvalidLogLevelErrorImplementsErrorAppender(t *testing.T) {
 	err := NewInvalidLogLevelError("test")
 	defer PutInvalidLogLevelError(err)
-	
+
 	// This should compile without error if the interface is implemented
 	var appender interface{} = err
 	_, ok := appender.(interface{ AppendError(*bytes.Buffer) })
@@ -151,7 +151,7 @@ func TestInvalidLogLevelErrorImplementsErrorAppender(t *testing.T) {
 func TestInvalidLogLevelErrorErrorInterface(t *testing.T) {
 	err := NewInvalidLogLevelError("test")
 	defer PutInvalidLogLevelError(err)
-	
+
 	// This should compile without error if the error interface is implemented
 	var stdErr error = err
 	if stdErr.Error() == "" {

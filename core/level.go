@@ -81,16 +81,16 @@ var (
 
 	// LevelColors contains the ANSI color codes for each log level
 	LevelColors = []string{
-		"\033[38;5;246m",    // Gray - TRACE
-		"\033[36m",          // Cyan - DEBUG
-		"\033[32m",          // Green - INFO
-		"\033[38;5;220m",    // Yellow - NOTICE
-		"\033[33m",          // Orange - WARN
-		"\033[31m",          // Red - ERROR
-		"\033[38;5;198m",    // Magenta - FATAL
-		"\033[38;5;196m",    // Bright Red - PANIC
+		"\033[38;5;246m", // Gray - TRACE
+		"\033[36m",       // Cyan - DEBUG
+		"\033[32m",       // Green - INFO
+		"\033[38;5;220m", // Yellow - NOTICE
+		"\033[33m",       // Orange - WARN
+		"\033[31m",       // Red - ERROR
+		"\033[38;5;198m", // Magenta - FATAL
+		"\033[38;5;196m", // Bright Red - PANIC
 	}
-	
+
 	// LevelColorBytes contains the ANSI color codes for each log level as byte slices
 	LevelColorBytes = func() [][]byte {
 		b := make([][]byte, len(LevelColors))
@@ -99,10 +99,10 @@ var (
 		}
 		return b
 	}()
-	
+
 	// LevelBackgrounds contains the ANSI background color codes for each log level
 	LevelBackgrounds = []string{
-		"\033[48;5;238m",    // Dark gray background
+		"\033[48;5;238m", // Dark gray background
 		"\033[48;5;236m",
 		"\033[48;5;28m",
 		"\033[48;5;94m",
@@ -157,22 +157,21 @@ func s2b(s string) (b []byte) {
 	return b
 }
 
-// ParseLevel parses a level from a string.
-// It accepts both uppercase and lowercase level names (e.g., "info", "INFO", "Info").
-// It also handles "WARNING" as a special case for "WARN".
+// ParseLevel parses a level from string (case-insensitive)
 func ParseLevel(levelStr string) (Level, error) {
-	levelBytes := s2b(levelStr) // Use local function
+	levelBytes := s2b(levelStr)
 
-	for i, b := range LevelBytes {
-		if bytes.EqualFold(levelBytes, b) {
+	for i, levelBytesSlice := range LevelBytes {
+		if bytes.EqualFold(levelBytes, levelBytesSlice) {
 			return Level(i), nil
 		}
 	}
-	// Handle "WARNING" as a special case for "WARN"
-	if bytes.EqualFold(levelBytes, s2b("WARNING")) { // Use local function
+
+	// Handle "WARNING" as alias for "WARN"
+	warningBytes := []byte("WARNING")
+	if bytes.EqualFold(levelBytes, warningBytes) {
 		return WARN, nil
 	}
 
 	return INFO, errors.NewInvalidLogLevelError(levelStr)
 }
-

@@ -13,12 +13,12 @@ import (
 // BenchmarkBasicLogging benchmarks basic logging operations
 func BenchmarkBasicLogging(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 	})
 	defer logger.Close()
@@ -33,12 +33,12 @@ func BenchmarkBasicLogging(b *testing.B) {
 // at
 func BenchmarkLoggingWithFields(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 	})
 	defer logger.Close()
@@ -57,12 +57,12 @@ func BenchmarkLoggingWithFields(b *testing.B) {
 // BenchmarkContextAwareLogging benchmarks context-aware logging
 func BenchmarkContextAwareLogging(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 	})
 	defer logger.Close()
@@ -81,12 +81,12 @@ func BenchmarkContextAwareLogging(b *testing.B) {
 // BenchmarkAsyncLoggingOps benchmarks asynchronous logging operations
 func BenchmarkAsyncLoggingOps(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 		AsyncLogging:                true,
 		AsyncWorkerCount:            4,
@@ -106,12 +106,12 @@ func BenchmarkAsyncLoggingOps(b *testing.B) {
 // BenchmarkConcurrentLogging benchmarks concurrent logging operations
 func BenchmarkConcurrentLogging(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 	})
 	defer logger.Close()
@@ -122,7 +122,7 @@ func BenchmarkConcurrentLogging(b *testing.B) {
 		for pb.Next() {
 			logger.WithFields(map[string]interface{}{
 				"goroutine_id": pb,
-				"iteration":   time.Now().UnixNano(),
+				"iteration":    time.Now().UnixNano(),
 			}).Info("concurrent test message")
 		}
 	})
@@ -131,12 +131,12 @@ func BenchmarkConcurrentLogging(b *testing.B) {
 // BenchmarkSamplingLogging benchmarks logging with sampling
 func BenchmarkSamplingLogging(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 		EnableSampling: true,
 		SamplingRate:   5, // Log every 5th message
@@ -153,8 +153,8 @@ func BenchmarkSamplingLogging(b *testing.B) {
 // BenchmarkFormattedLogging benchmarks logging with text formatter
 func BenchmarkFormattedLogging(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
 			EnableColors:    false,
 			ShowTimestamp:   true,
@@ -182,15 +182,15 @@ func BenchmarkFormattedLogging(b *testing.B) {
 // BenchmarkJSONLogging benchmarks logging with JSON formatter
 func BenchmarkJSONLogging(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.JSONFormatter{
-			PrettyPrint:       false,
-			TimestampFormat:   "2006-01-02 15:04:05.000",
-			ShowCaller:        true,
-			EnableDuration:    false,
-			ShowTraceInfo:     true,
-			EnableStackTrace:  false,
+			PrettyPrint:      false,
+			TimestampFormat:  "2006-01-02 15:04:05.000",
+			ShowCaller:       true,
+			EnableDuration:   false,
+			ShowTraceInfo:    true,
+			EnableStackTrace: false,
 		},
 	})
 	defer logger.Close()
@@ -209,11 +209,11 @@ func BenchmarkJSONLogging(b *testing.B) {
 // BenchmarkCSVLogging benchmarks logging with CSV formatter
 func BenchmarkCSVLogging(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &testWriteSyncer{},
+		Level:  core.INFO,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.CSVFormatter{
 			IncludeHeader: false,
-			FieldOrder: []string{"timestamp", "level_name", "message", "user_id", "action"},
+			FieldOrder:    []string{"timestamp", "level_name", "message", "user_id", "action"},
 		},
 	})
 	defer logger.Close()
@@ -231,17 +231,17 @@ func BenchmarkCSVLogging(b *testing.B) {
 // at
 func BenchmarkMultipleLevels(b *testing.B) {
 	logger := New(LoggerConfig{
-		Level:   core.TRACE,
-		Output:  &testWriteSyncer{},
+		Level:  core.TRACE,
+		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 	})
 	defer logger.Close()
 
-	levels := []func(args ...interface{}) {
+	levels := []func(args ...interface{}){
 		logger.Trace, logger.Debug, logger.Info,
 		logger.Warn, logger.Error,
 	}

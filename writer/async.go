@@ -2,14 +2,14 @@ package writer
 
 import (
 	"context"
+	"github.com/Lunar-Chipter/mire/core"
+	"github.com/Lunar-Chipter/mire/errors"
+	"github.com/Lunar-Chipter/mire/util"
 	"io"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
-	"github.com/Lunar-Chipter/mire/core"
-	"github.com/Lunar-Chipter/mire/errors"
-	"github.com/Lunar-Chipter/mire/util"
 )
 
 // LogProcessor defines the interface for the underlying logger that the AsyncLogger will use.
@@ -23,12 +23,12 @@ type LogProcessor interface {
 
 // AsyncLogger provides asynchronous logging to reduce latency
 type AsyncLogger struct {
-	processor   LogProcessor
-	logChan     chan *logJob
-	wg          sync.WaitGroup
-	workerCount int
-	closed      atomic.Bool
-	logProcessTimeout time.Duration
+	processor                   LogProcessor
+	logChan                     chan *logJob
+	wg                          sync.WaitGroup
+	workerCount                 int
+	closed                      atomic.Bool
+	logProcessTimeout           time.Duration
 	disablePerLogContextTimeout bool
 }
 
@@ -43,10 +43,10 @@ type logJob struct {
 // NewAsyncLogger creates a new AsyncLogger
 func NewAsyncLogger(processor LogProcessor, workerCount int, bufferSize int, logProcessTimeout time.Duration, disablePerLogContextTimeout bool) *AsyncLogger {
 	al := &AsyncLogger{
-		processor:   processor,
-		logChan:     make(chan *logJob, bufferSize),
-		workerCount: workerCount,
-		logProcessTimeout: logProcessTimeout,
+		processor:                   processor,
+		logChan:                     make(chan *logJob, bufferSize),
+		workerCount:                 workerCount,
+		logProcessTimeout:           logProcessTimeout,
 		disablePerLogContextTimeout: disablePerLogContextTimeout,
 	}
 

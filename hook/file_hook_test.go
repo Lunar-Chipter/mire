@@ -14,21 +14,21 @@ import (
 func TestSimpleFileHookCreation(t *testing.T) {
 	tempFile := "test_hook.log"
 	hook, err := NewFileHook(tempFile)
-	
+
 	if err != nil {
 		t.Fatalf("NewFileHook failed: %v", err)
 	}
-	
+
 	if hook == nil {
 		t.Fatal("NewFileHook returned nil")
 	}
-	
+
 	// Check that the correct formatter is used
 	_, ok := hook.formatter.(*formatter.JSONFormatter)
 	if !ok {
 		t.Error("SimpleFileHook should use JSONFormatter")
 	}
-	
+
 	// Clean up
 	_ = hook.Close()
 	os.Remove(tempFile)
@@ -38,7 +38,7 @@ func TestSimpleFileHookCreation(t *testing.T) {
 func TestSimpleFileHookCreationError(t *testing.T) {
 	// Try to create a hook with an invalid path
 	hook, err := NewFileHook("/invalid/path/that/does/not/exist/file.log")
-	
+
 	if err == nil {
 		t.Error("NewFileHook should have failed with invalid path")
 		// Close hook if it was created despite the error
@@ -47,7 +47,7 @@ func TestSimpleFileHookCreationError(t *testing.T) {
 		}
 		return
 	}
-	
+
 	if hook != nil {
 		t.Error("NewFileHook should have returned nil on error")
 		hook.Close()
@@ -65,27 +65,27 @@ func TestSimpleFileHookFire(t *testing.T) {
 		hook.Close()
 		os.Remove(tempFile)
 	}()
-	
+
 	// Create a log entry with ERROR level (should be logged)
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
 	entry.Level = core.ERROR
 	entry.Message = []byte("test error message")
 	entry.Timestamp = core.GetEntryFromPool().Timestamp
-	
+
 	// Fire the hook - this should write to the file
 	err = hook.Fire(entry)
 	if err != nil {
 		t.Errorf("Fire returned error: %v", err)
 	}
-	
+
 	// Create a log entry with INFO level (should NOT be logged)
 	infoEntry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(infoEntry)
 	infoEntry.Level = core.INFO
 	infoEntry.Message = []byte("test info message")
 	infoEntry.Timestamp = core.GetEntryFromPool().Timestamp
-	
+
 	// Fire the hook - this should NOT write to the file
 	err = hook.Fire(infoEntry)
 	if err != nil {
@@ -97,27 +97,27 @@ func TestSimpleFileHookFire(t *testing.T) {
 func TestSimpleFileHookFireError(t *testing.T) {
 	// Create a mock formatter that always fails
 	failingFormatter := &failingTestFormatter{}
-	
+
 	tempFile := "test_failing_hook.log"
 	// Create hook with failing formatter
 	file, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
-	
+
 	hook := &SimpleFileHook{
 		writer:    file,
 		formatter: failingFormatter,
 		file:      file,
 	}
-	
+
 	// Create a log entry
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
 	entry.Level = core.ERROR
 	entry.Message = []byte("test message")
 	entry.Timestamp = core.GetEntryFromPool().Timestamp
-	
+
 	// Fire the hook - this should return an error
 	err = hook.Fire(entry)
 	if err == nil {
@@ -133,7 +133,7 @@ func TestSimpleFileHookFireError(t *testing.T) {
 			t.Error("Fire should have returned wrappedError")
 		}
 	}
-	
+
 	_ = hook.Close()
 	os.Remove(tempFile)
 }
@@ -179,18 +179,18 @@ func TestSimpleFileHookClose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewFileHook failed: %v", err)
 	}
-	
+
 	// Close the hook
 	err = hook.Close()
 	if err != nil {
 		t.Errorf("Close returned error: %v", err)
 	}
-	
+
 	// Try to close again - this should not cause issues
 	_ = hook.Close()
 	// Note: Whether closing an already closed file returns an error depends on the OS/file system
 	// For this test, we just ensure it doesn't panic
-	
+
 	os.Remove(tempFile)
 }
 
@@ -199,7 +199,7 @@ func TestSimpleFileHookCloseNilFile(t *testing.T) {
 	hook := &SimpleFileHook{
 		file: nil,
 	}
-	
+
 	// This should not panic
 	err := hook.Close()
 	if err != nil {
@@ -214,20 +214,20 @@ func TestWrappedError(t *testing.T) {
 		msg:   "wrapped message",
 		cause: originalErr,
 	}
-	
+
 	// Test Error() method
 	errorStr := wrapped.Error()
 	expected := "wrapped message: original error"
 	if errorStr != expected {
 		t.Errorf("Error() returned %s, want %s", errorStr, expected)
 	}
-	
+
 	// Test Unwrap() method
 	unwrapped := wrapped.Unwrap()
 	if unwrapped != originalErr {
 		t.Errorf("Unwrap() returned %v, want %v", unwrapped, originalErr)
 	}
-	
+
 	// Test with nil cause
 	wrappedNil := &wrappedError{
 		msg:   "wrapped message",
@@ -293,7 +293,7 @@ func TestHookInterfaceImplementation(t *testing.T) {
 // at
 func TestSimpleFileHookWithDifferentFormatters(t *testing.T) {
 	tempFile := "test_formatter_hook.log"
-	
+
 	// Test with JSON formatter (default)
 	hook, err := NewFileHook(tempFile)
 	if err != nil {
@@ -303,7 +303,7 @@ func TestSimpleFileHookWithDifferentFormatters(t *testing.T) {
 		hook.Close()
 		os.Remove(tempFile)
 	}()
-	
+
 	// Verify the formatter is JSON
 	_, ok := hook.formatter.(*formatter.JSONFormatter)
 	if !ok {

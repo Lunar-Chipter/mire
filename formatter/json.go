@@ -13,17 +13,17 @@ var (
 	jsonTimestampKey = []byte("\"timestamp\":\"")
 	jsonLevelKey     = []byte("\"level_name\":\"")
 	jsonMessageKey   = []byte("\"message\":\"")
-	jsonPidKey     = []byte(",\"pid\":")
-	jsonCallerKey  = []byte(",\"caller\":\"")
-	jsonTraceKey   = []byte(",\"trace_id\":\"")
-	jsonSpanKey    = []byte(",\"span_id\":\"")
-	jsonUserKey    = []byte(",\"user_id\":\"")
-	jsonFieldsKey  = []byte(",\"fields\":")
-	jsonStackKey   = []byte(",\"stack_trace\":")
-	jsonQuote      = []byte("\"")
-	jsonComma      = []byte(",")
-	jsonColon      = []byte(":")
-	jsonBraceOpen  = []byte("{")
+	jsonPidKey       = []byte(",\"pid\":")
+	jsonCallerKey    = []byte(",\"caller\":\"")
+	jsonTraceKey     = []byte(",\"trace_id\":\"")
+	jsonSpanKey      = []byte(",\"span_id\":\"")
+	jsonUserKey      = []byte(",\"user_id\":\"")
+	jsonFieldsKey    = []byte(",\"fields\":")
+	jsonStackKey     = []byte(",\"stack_trace\":")
+	jsonQuote        = []byte("\"")
+	jsonComma        = []byte(",")
+	jsonColon        = []byte(":")
+	jsonBraceOpen    = []byte("{")
 )
 
 // JSONFormatter formats log entries in JSON format
@@ -55,18 +55,16 @@ func NewJSONFormatter() *JSONFormatter {
 	}
 }
 
-// Format formats a log entry into JSON byte slice with zero allocations
+// Format formats a log entry into JSON
 func (f *JSONFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 	if f.PrettyPrint {
-		// to
 		return f.formatWithStandardEncoder(buf, entry)
 	}
 
-	// Use manual JSON formatting for zero allocation
 	return f.formatManually(buf, entry)
 }
 
-// formatManually creates JSON manually without allocations
+// formatManually creates JSON manually
 func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) error {
 	buf.Write(jsonBraceOpen)
 
@@ -140,29 +138,19 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 	return nil
 }
 
-// formatWithStandardEncoder uses standard encoder (less efficient but with pretty printing)
+// formatWithStandardEncoder handles pretty printing
 func (f *JSONFormatter) formatWithStandardEncoder(buf *bytes.Buffer, entry *core.LogEntry) error {
-	// For compatibility with JSON marshaling, we need to convert the LogEntry
-	// at
-	// We'll create a JSON-compatible struct representation manually for full control.
-
 	if f.PrettyPrint {
-		// at
 		return f.formatManuallyWithIndent(buf, entry)
-	} else {
-		// Even for non-pretty printing, we need to avoid the standard encoder's base64 behavior
-		// at
-		return f.formatManually(buf, entry)
 	}
+	return f.formatManually(buf, entry)
 }
 
-// formatManuallyWithIndent formats JSON with indentation for pretty printing
+// formatManuallyWithIndent formats JSON with indentation
 func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.LogEntry) error {
-	// Pre-allocate indent string to reuse and avoid repeated allocations
 	indentBuf := util.GetBufferFromPool()
 	defer util.PutBufferToPool(indentBuf)
 
-	// Pre-allocate 10 levels of indentation (should be sufficient for most cases)
 	for i := 0; i < 10; i++ {
 		indentBuf.WriteString("  ")
 	}
@@ -287,7 +275,6 @@ func escapeJSON(buf *bytes.Buffer, data []byte) {
 		return
 	}
 
-	// Pre-allocate a working buffer to avoid multiple allocations
 	escaped := util.GetBufferFromPool()
 	defer util.PutBufferToPool(escaped)
 
@@ -309,9 +296,7 @@ func escapeJSON(buf *bytes.Buffer, data []byte) {
 			escaped.Write([]byte("\\t"))
 		default:
 			if b < 0x20 {
-				// Manual hex formatting to avoid fmt.Sprintf allocation
 				escaped.Write([]byte("\\u00"))
-				// Convert to hex manually
 				hex1 := b / 16
 				hex2 := b % 16
 				if hex1 < 10 {
@@ -329,14 +314,12 @@ func escapeJSON(buf *bytes.Buffer, data []byte) {
 			}
 		}
 
-		// at
 		if escaped.Len() > 1024 {
 			buf.Write(escaped.Bytes())
 			escaped.Reset()
 		}
 	}
 
-	// Write any remaining escaped data
 	if escaped.Len() > 0 {
 		buf.Write(escaped.Bytes())
 	}
@@ -346,9 +329,6 @@ func escapeJSON(buf *bytes.Buffer, data []byte) {
 func (f *JSONFormatter) formatJSONValue(buf *bytes.Buffer, v interface{}) {
 	switch val := v.(type) {
 	case string:
-		// For strings, we need to determine if this is part of a field value or a standalone value
-		// Since we can't know the field name here, we'll just format the string normally
-		// The field-level sensitivity check is handled in formatFields
 		buf.WriteByte('"')
 		escapeJSON(buf, core.StringToBytes(val))
 		buf.WriteByte('"')
@@ -380,7 +360,6 @@ func (f *JSONFormatter) formatJSONValue(buf *bytes.Buffer, v interface{}) {
 	case nil:
 		buf.Write([]byte("null"))
 	default:
-		// Apply field transformers if available
 		transformed := f.transformValue(val, "<complex-type>")
 		buf.WriteByte('"')
 		escapeJSON(buf, core.StringToBytes(transformed))
@@ -421,15 +400,13 @@ func (f *JSONFormatter) createSensitiveFieldMap() map[string]bool {
 	return fieldMap
 }
 
-// transformValue applies field transformers to a value
+// transformValue converts value to string
 func (f *JSONFormatter) transformValue(val interface{}, defaultVal string) string {
-	// We need to determine which field this is from the context
-	// For now, we'll use the default approach and return a string representation
 	switch v := val.(type) {
 	case string:
 		return v
 	case []byte:
-		return string(v) // This is unavoidable for []byte to string
+		return string(v)
 	case int:
 		return strconv.Itoa(v)
 	case int8:
@@ -462,8 +439,6 @@ func (f *JSONFormatter) transformValue(val interface{}, defaultVal string) strin
 	case nil:
 		return "null"
 	default:
-		// For complex types that can't be easily converted
-		// at
 		return defaultVal
 	}
 }
@@ -483,18 +458,14 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 		}
 		first = false
 
-		// Write field name
 		buf.WriteByte('"')
 		buf.Write(core.StringToBytes(k))
 		buf.Write([]byte("\":"))
 
-		// at
 		buf.WriteByte('"')
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
-			// Apply masking if needed
 			buf.Write(f.MaskStringBytes)
 		} else {
-			// Escape the byte value for JSON
 			escapeJSON(buf, v)
 		}
 		buf.WriteByte('"')
@@ -505,13 +476,11 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 
 // formatFieldsIndented formats the fields map in JSON format with indentation
 func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[string][]byte, indentLevel int) {
-	// Pre-allocate indent string to avoid repeated string operations
 	indentBuf := util.GetBufferFromPool()
 	defer util.PutBufferToPool(indentBuf)
 
-	// Pre-build the indentation string
 	for i := 0; i < indentLevel; i++ {
-		indentBuf.WriteString("  ") // 2 spaces per indent level
+		indentBuf.WriteString("  ")
 	}
 	indentBytes := indentBuf.Bytes()
 
@@ -526,9 +495,7 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 
 	buf.WriteByte('{')
 
-	// Add a newline after opening brace if there are fields
 	if len(fields) > 0 {
-		// Add one more level of indentation
 		indentBuf.WriteString("  ")
 		indentBytes = indentBuf.Bytes()
 		newlineAndIndent()
@@ -553,30 +520,24 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 		}
 		fieldNewline()
 
-		// Write field name
 		buf.WriteByte('"')
 		buf.Write(core.StringToBytes(k))
 		buf.Write([]byte("\": "))
 
-		// at
 		buf.WriteByte('"')
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
-			// Apply masking if needed
 			buf.Write(f.MaskStringBytes)
 		} else {
-			// Escape the byte value for JSON
 			escapeJSON(buf, v)
 		}
 		buf.WriteByte('"')
 		first = false
 	}
 
-	// Add newline and closing brace with proper indentation
-	// Adjust indent level back by one
 	if len(originalIndent) >= 2 {
 		indentBytes = originalIndent[:len(originalIndent)-2]
 	} else {
-		indentBytes = originalIndent[:0] // Empty slice
+		indentBytes = originalIndent[:0]
 	}
 
 	buf.WriteByte('\n')

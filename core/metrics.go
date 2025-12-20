@@ -13,22 +13,22 @@ type CoreMetrics struct {
 	EntryReusedCount     atomic.Int64
 	EntryPoolMissCount   atomic.Int64
 	EntrySerializedCount atomic.Int64
-	
+
 	// Buffer-related metrics
-	BufferGetCount       atomic.Int64
-	BufferPutCount       atomic.Int64
-	BufferMissCount      atomic.Int64
-	
+	BufferGetCount  atomic.Int64
+	BufferPutCount  atomic.Int64
+	BufferMissCount atomic.Int64
+
 	// Slice-related metrics
-	SliceGetCount        atomic.Int64
-	SlicePutCount        atomic.Int64
-	
+	SliceGetCount atomic.Int64
+	SlicePutCount atomic.Int64
+
 	// Error metrics
-	ErrorCount           atomic.Int64
-	
+	ErrorCount atomic.Int64
+
 	// Timing metrics
-	LastOperationTime    atomic.Int64
-	ProcessingTime       atomic.Int64
+	LastOperationTime atomic.Int64
+	ProcessingTime    atomic.Int64
 }
 
 // Global metrics instance
@@ -139,13 +139,13 @@ func (cm *CoreMetrics) GetTimingMetrics() map[string]int64 {
 // GetAllMetrics returns all metrics
 func (cm *CoreMetrics) GetAllMetrics() map[string]interface{} {
 	allMetrics := make(map[string]interface{})
-	
+
 	allMetrics["entries"] = cm.GetEntryMetrics()
 	allMetrics["buffers"] = cm.GetBufferMetrics()
 	allMetrics["slices"] = cm.GetSliceMetrics()
 	allMetrics["errors"] = cm.GetErrorMetrics()
 	allMetrics["timing"] = cm.GetTimingMetrics()
-	
+
 	return allMetrics
 }
 
@@ -155,16 +155,16 @@ func (cm *CoreMetrics) ResetMetrics() {
 	cm.EntryReusedCount.Store(0)
 	cm.EntryPoolMissCount.Store(0)
 	cm.EntrySerializedCount.Store(0)
-	
+
 	cm.BufferGetCount.Store(0)
 	cm.BufferPutCount.Store(0)
 	cm.BufferMissCount.Store(0)
-	
+
 	cm.SliceGetCount.Store(0)
 	cm.SlicePutCount.Store(0)
-	
+
 	cm.ErrorCount.Store(0)
-	
+
 	cm.LastOperationTime.Store(0)
 	cm.ProcessingTime.Store(0)
 }

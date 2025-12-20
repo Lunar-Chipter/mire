@@ -10,14 +10,13 @@ import (
 
 // Constants for compile-time configuration
 const (
-	// Buffer sizes for different pool types - aligned with zero-allocation philosophy
-	SmallBufferSize       = 512  // For perf-critical
-	MediumBufferSize      = 2048 // For standard logs
-	LargeBufferSize       = 8192 // For verbose debugging
+	SmallBufferSize       = 512
+	MediumBufferSize      = 2048
+	LargeBufferSize       = 8192
 	DefaultBufferSize     = MediumBufferSize
 	MaxBufferPoolSize     = LargeBufferSize
 	SmallByteSliceSize    = 64
-	MaxSmallSlicePoolSize = 1024 // 1KB
+	MaxSmallSlicePoolSize = 1024
 	StringSliceCapacity   = 10
 	MapInitialCapacity    = 8
 )
@@ -28,7 +27,6 @@ var (
 )
 
 // PoolMetrics for observability with atomic operations
-// Built-in performance metrics with zero allocation overhead
 type PoolMetrics struct {
 	bufferGetCount int64
 	bufferPutCount int64

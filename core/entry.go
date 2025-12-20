@@ -9,35 +9,33 @@ import (
 )
 
 // LogEntry represents a single log entry with all its metadata
-// LogEntry represents a single log entry with all its metadata
 type LogEntry struct {
-	Timestamp     time.Time            `json:"timestamp"`              // When the log was created
-	Level         Level                `json:"level"`                  // Log severity level
-	LevelName     []byte               `json:"level_name"`             // Byte representation of level for zero-allocation formatting
-	Message       []byte               `json:"message"`                // Log message
-	Caller        *CallerInfo          `json:"caller,omitempty"`       // Caller information
-	Fields        map[string][]byte      `json:"fields,omitempty"`     // Additional fields as []byte for zero allocation
-	PID           int                  `json:"pid"`                    // Process ID
-	GoroutineID   []byte               `json:"goroutine_id,omitempty"` // Goroutine ID as byte slice
-	TraceID       []byte               `json:"trace_id,omitempty"`     // Trace ID for distributed tracing as byte slice
-	SpanID        []byte               `json:"span_id,omitempty"`      // Span ID for distributed tracing as byte slice
-	UserID        []byte               `json:"user_id,omitempty"`      // User ID as byte slice
-	SessionID     []byte               `json:"session_id,omitempty"`   // Session ID as byte slice
-	RequestID     []byte               `json:"request_id,omitempty"`   // Request ID as byte slice
-	Duration      time.Duration        `json:"duration,omitempty"`     // Operation duration
-	Error         error                `json:"error,omitempty"`        // Error information
-	StackTrace    []byte               `json:"stack_trace,omitempty"`  // Stack trace
-	StackTraceBufPtr *[]byte           `json:"-"`                      // Pointer to the pooled buffer for StackTrace
-	Hostname      []byte               `json:"hostname,omitempty"`     // Hostname as byte slice
-	Application   []byte               `json:"application,omitempty"`  // Application name as byte slice
-	Version       []byte               `json:"version,omitempty"`      // Application version as byte slice
-	Environment   []byte               `json:"environment,omitempty"`  // Environment (dev/prod/etc) as byte slice
-	CustomMetrics map[string]float64   `json:"custom_metrics,omitempty"` // Custom metrics
-	Tags          [][]byte             `json:"tags,omitempty"`         // Tags for categorization as byte slices
-	_             [64 - unsafe.Sizeof(time.Time{})%64]byte // Padding for cache alignment
+	Timestamp        time.Time                                `json:"timestamp"`                // When the log was created
+	Level            Level                                    `json:"level"`                    // Log severity level
+	LevelName        []byte                                   `json:"level_name"`               // Byte representation of level for zero-allocation formatting
+	Message          []byte                                   `json:"message"`                  // Log message
+	Caller           *CallerInfo                              `json:"caller,omitempty"`         // Caller information
+	Fields           map[string][]byte                        `json:"fields,omitempty"`         // Additional fields as []byte for zero allocation
+	PID              int                                      `json:"pid"`                      // Process ID
+	GoroutineID      []byte                                   `json:"goroutine_id,omitempty"`   // Goroutine ID as byte slice
+	TraceID          []byte                                   `json:"trace_id,omitempty"`       // Trace ID for distributed tracing as byte slice
+	SpanID           []byte                                   `json:"span_id,omitempty"`        // Span ID for distributed tracing as byte slice
+	UserID           []byte                                   `json:"user_id,omitempty"`        // User ID as byte slice
+	SessionID        []byte                                   `json:"session_id,omitempty"`     // Session ID as byte slice
+	RequestID        []byte                                   `json:"request_id,omitempty"`     // Request ID as byte slice
+	Duration         time.Duration                            `json:"duration,omitempty"`       // Operation duration
+	Error            error                                    `json:"error,omitempty"`          // Error information
+	StackTrace       []byte                                   `json:"stack_trace,omitempty"`    // Stack trace
+	StackTraceBufPtr *[]byte                                  `json:"-"`                        // Pointer to the pooled buffer for StackTrace
+	Hostname         []byte                                   `json:"hostname,omitempty"`       // Hostname as byte slice
+	Application      []byte                                   `json:"application,omitempty"`    // Application name as byte slice
+	Version          []byte                                   `json:"version,omitempty"`        // Application version as byte slice
+	Environment      []byte                                   `json:"environment,omitempty"`    // Environment (dev/prod/etc) as byte slice
+	CustomMetrics    map[string]float64                       `json:"custom_metrics,omitempty"` // Custom metrics
+	Tags             [][]byte                                 `json:"tags,omitempty"`           // Tags for categorization as byte slices
+	_                [64 - unsafe.Sizeof(time.Time{})%64]byte // Padding for cache alignment
 }
 
-// CallerInfo contains information about the code location where the log was created
 // CallerInfo contains information about the code location where the log was created
 type CallerInfo struct {
 	File     string `json:"file"`     // Source file name
@@ -197,14 +195,10 @@ func clearByteSliceSlice(s [][]byte) [][]byte {
 	return s[:0]
 }
 
-
-// Object pool for reusing LogEntry objects to reduce memory allocation
-// Object pool for reusing LogEntry objects to reduce memory allocation
+// Object pool for reusing LogEntry objects
 var entryPool = sync.Pool{
 	New: func() interface{} {
-		// Use pooled resources for slices and maps within the LogEntry
 		tags := GetStringSliceFromPool()
-		// Convert []string to [][]byte for the Tags field
 		tagsAsBytes := make([][]byte, 0, len(*tags))
 		for _, tag := range *tags {
 			tagsAsBytes = append(tagsAsBytes, StringToBytes(tag))
@@ -225,17 +219,16 @@ const (
 	LargeEntryBufferSize  = 4096
 
 	// Pre-allocated slice capacities
-	TagsSliceCapacity     = 10
-	FieldsMapCapacity     = 8
-	MetricsMapCapacity    = 4
+	TagsSliceCapacity  = 10
+	FieldsMapCapacity  = 8
+	MetricsMapCapacity = 4
 
 	// Performance optimization constants
-	PreallocatedPoolSize  = 32   // Number of pre-allocated entries
-	MaxOptimizedPathAttempts   = 5    // Max attempts to use optimized path before fallback
+	PreallocatedPoolSize     = 32 // Number of pre-allocated entries
+	MaxOptimizedPathAttempts = 5  // Max attempts to use optimized path before fallback
 )
 
 // GetEntryFromPool gets a LogEntry from the pool
-// Gets a LogEntry from the pool
 func GetEntryFromPool() *LogEntry {
 	// Fallback: Use regular goroutine-local pool
 	localPool := GetGoroutineLocalEntryPool()
@@ -304,13 +297,13 @@ func GetGoroutineLocalEntryPool() *GoroutineLocalEntryPool {
 	if pool, ok := goroutineLocalEntryPool.Load(gid); ok {
 		return pool.(*GoroutineLocalEntryPool)
 	}
-	
+
 	// Create new pool for this goroutine
 	newPool := &GoroutineLocalEntryPool{
 		entries: make(chan *LogEntry, 100), // Buffered channel for 100 entries
 	}
 	goroutineLocalEntryPool.Store(gid, newPool)
-	
+
 	return newPool
 }
 
@@ -354,23 +347,22 @@ func (g *GoroutineLocalEntryPool) GetEntryFromLocalPool() *LogEntry {
 }
 
 // PutEntryToPool returns a LogEntry to the pool
-// Returns LogEntry to pool
 func PutEntryToPool(entry *LogEntry) {
-    if entry.Caller != nil {
-        PutCallerInfoToPool(entry.Caller)
-        entry.Caller = nil
-    }
-    // Return stack trace buffer to pool if it was used
-    if entry.StackTraceBufPtr != nil {
-        PutBufferToPool(entry.StackTraceBufPtr)
-        entry.StackTraceBufPtr = nil
-    }
+	if entry.Caller != nil {
+		PutCallerInfoToPool(entry.Caller)
+		entry.Caller = nil
+	}
+	// Return stack trace buffer to pool if it was used
+	if entry.StackTraceBufPtr != nil {
+		PutBufferToPool(entry.StackTraceBufPtr)
+		entry.StackTraceBufPtr = nil
+	}
 	// Use goroutine-local pool if available
 	localPool := GetGoroutineLocalEntryPool()
 	localPool.PutEntryToLocalPool(entry)
 }
 
-// ZeroAllocJSONSerialize serializes the LogEntry to JSON without memory allocation
+// ZeroAllocJSONSerialize serializes LogEntry to JSON without allocation
 func (le *LogEntry) ZeroAllocJSONSerialize() []byte {
 	// Get buffer from pool for zero allocation
 	bufPtr := GetBufferFromPool()
@@ -483,8 +475,7 @@ type ErrorAppender interface {
 	AppendError(buf *bytes.Buffer)
 }
 
-
-// formatLogToBytes writes log data manually to byte buffer for maximum efficiency
+// formatLogToBytes writes log data manually to byte buffer
 func (le *LogEntry) formatLogToBytes(buf []byte) []byte {
 	// Format: TIMESTAMP LEVEL MESSAGE [FIELDS] [TAGS]
 
@@ -625,11 +616,11 @@ func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
 		PutCallerInfoToPool(entry.Caller)
 		entry.Caller = nil
 	}
-	
+
 	// Update metrics
 	globalEntryMetrics.IncEntrySerialized()
 	globalEntryMetrics.SetLastOperationTime(time.Now())
-	
+
 	// Try to put into local pool
 	select {
 	case g.entries <- entry:
@@ -639,6 +630,3 @@ func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
 		entryPool.Put(entry)
 	}
 }
-
-
-

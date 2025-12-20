@@ -62,5 +62,3 @@ func (w *RotatingFileWriter) Close() error {
 	w.closed = true
 	return err
 }
-
-

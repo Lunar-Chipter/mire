@@ -30,19 +30,19 @@ func TestMainFunction(t *testing.T) {
 	output := buf.String()
 
 	// Check for the header
-	if !strings.Contains(output, "DEMONSTRATION OF MIRE LOGGING LIBRARY USAGE") {
+	if !strings.Contains(output, "MIRE LOGGING LIBRARY DEMONSTRATION") {
 		t.Error("Output should contain the main header")
 	}
 
 	// Check for various section headers
 	expectedSections := []string{
-		"### 1. Default Logger (More Concise Console Output)",
+		"### 1. Default Logger ###",
 		"### 2. Logger with Fields & Context",
 		"### 3. Error Logging with Stack Trace",
 		"### 4. JSON Logger to File (app.log)",
 		"### 5. Custom Text Logger",
 	}
-	
+
 	for _, section := range expectedSections {
 		if !strings.Contains(output, section) {
 			t.Errorf("Output should contain section: %s", section)
@@ -52,7 +52,7 @@ func TestMainFunction(t *testing.T) {
 	// Check for content that should definitely appear in console output
 	definitelyExpectedContent := []string{
 		"There are 2 warnings in the system", // Console output from default logger
-		"A simple error occurred",    // Console output from default logger
+		"A simple error occurred",            // Console output from default logger
 	}
 
 	for _, content := range definitelyExpectedContent {
@@ -64,10 +64,10 @@ func TestMainFunction(t *testing.T) {
 
 	// Log info for content that might not appear in console but is expected in logs
 	possibleExpectedContent := []string{
-		"token-ABC",                  // From context-aware logging (might be in output)
+		"token-ABC",                            // From context-aware logging (might be in output)
 		"Processing authorization request for", // Part of context log message
-		"Transaction processed successfully",     // From JSON file logging (might not be in console)
-		"level: INFO",                     // Might not be in console output
+		"Transaction processed successfully",   // From JSON file logging (might not be in console)
+		"level: INFO",                          // Might not be in console output
 	}
 
 	for _, content := range possibleExpectedContent {
@@ -80,22 +80,22 @@ func TestMainFunction(t *testing.T) {
 // TestWrappedError tests the wrappedError type used in main
 func TestWrappedError(t *testing.T) {
 	originalErr := &os.PathError{Op: "open", Path: "/invalid/path", Err: os.ErrNotExist}
-	
+
 	wrapped := &wrappedError{
 		msg:   "failed to open file",
 		cause: originalErr,
 	}
-	
+
 	// Test Error() method
 	errorStr := wrapped.Error()
 	if !strings.Contains(errorStr, "failed to open file") {
 		t.Errorf("Error() should contain the wrapper message, got: %s", errorStr)
 	}
-	
+
 	if !strings.Contains(errorStr, "open /invalid/path") {
 		t.Logf("Error() may contain the wrapped error message: %s", errorStr)
 	}
-	
+
 	// Test Unwrap() method
 	unwrapped := wrapped.Unwrap()
 	if unwrapped != originalErr {
@@ -109,14 +109,14 @@ func TestWrappedErrorWithoutCause(t *testing.T) {
 		msg:   "error message without cause",
 		cause: nil,
 	}
-	
+
 	// Test Error() method
 	errorStr := wrapped.Error()
 	expected := "error message without cause"
 	if errorStr != expected {
 		t.Errorf("Error() should return only the message when cause is nil, expected: %s, got: %s", expected, errorStr)
 	}
-	
+
 	// Test Unwrap() method
 	unwrapped := wrapped.Unwrap()
 	if unwrapped != nil {
@@ -182,18 +182,18 @@ func TestSetupJSONFileLogger(t *testing.T) {
 	// This function creates a logger that writes to a file
 	// We'll test that it returns a non-nil logger and doesn't error with a temporary file
 	logger, err := setupJSONFileLogger("test_json.log")
-	
+
 	if err != nil {
 		t.Fatalf("setupJSONFileLogger returned error: %v", err)
 	}
-	
+
 	if logger == nil {
 		t.Error("setupJSONFileLogger returned nil logger")
 	}
-	
+
 	// Close the logger
 	logger.Close()
-	
+
 	// Clean up the test file if it was created
 	os.Remove("test_json.log")
 }
@@ -201,18 +201,18 @@ func TestSetupJSONFileLogger(t *testing.T) {
 // TestSetupCustomTextLogger tests the setupCustomTextLogger function
 func TestSetupCustomTextLogger(t *testing.T) {
 	logger := setupCustomTextLogger()
-	
+
 	if logger == nil {
 		t.Error("setupCustomTextLogger returned nil logger")
 	}
-	
+
 	// Test that the logger has the expected configuration
 	// The implementation details are in setupCustomTextLogger function
 	// At minimum, it should be able to log without error
-	
+
 	// to
 	logger.Info("Test message from custom text logger")
-	
+
 	// Close the logger
 	logger.Close()
 }
@@ -221,7 +221,7 @@ func TestSetupCustomTextLogger(t *testing.T) {
 func TestMainFunctionDoesNotPanic(t *testing.T) {
 	// This test ensures that the main function completes without panicking
 	// We can't easily verify all functionality, but at least ensure it doesn't crash
-	
+
 	// Capture stdout to prevent it from appearing in test output
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -240,7 +240,7 @@ func TestMainFunctionDoesNotPanic(t *testing.T) {
 	// Restore stdout and clean up
 	w.Close()
 	os.Stdout = oldStdout
-	
+
 	// Drain the pipe to prevent blocking
 	_, err := io.Copy(io.Discard, r)
 	if err != nil {

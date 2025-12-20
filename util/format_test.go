@@ -196,7 +196,7 @@ func TestConvertValue(t *testing.T) {
 		{nil, "null"},
 		{struct{ A int }{A: 1}, "<complex-type>"}, // Complex type fallback
 	}
-	
+
 	for _, test := range tests {
 		result := ConvertValue(test.input)
 		if result != test.expected {
@@ -208,25 +208,25 @@ func TestConvertValue(t *testing.T) {
 // TestWriteInt tests the WriteInt function
 func TestWriteInt(t *testing.T) {
 	buf := &bytes.Buffer{}
-	
+
 	WriteInt(buf, 12345)
-	
+
 	if buf.String() != "12345" {
 		t.Errorf("WriteInt(12345) = %s, want '12345'", buf.String())
 	}
-	
+
 	// Test with negative number
 	buf.Reset()
 	WriteInt(buf, -6789)
-	
+
 	if buf.String() != "-6789" {
 		t.Errorf("WriteInt(-6789) = %s, want '-6789'", buf.String())
 	}
-	
+
 	// Test with zero
 	buf.Reset()
 	WriteInt(buf, 0)
-	
+
 	if buf.String() != "0" {
 		t.Errorf("WriteInt(0) = %s, want '0'", buf.String())
 	}
@@ -235,17 +235,17 @@ func TestWriteInt(t *testing.T) {
 // TestWriteUint tests the WriteUint function
 func TestWriteUint(t *testing.T) {
 	buf := &bytes.Buffer{}
-	
+
 	WriteUint(buf, 12345)
-	
+
 	if buf.String() != "12345" {
 		t.Errorf("WriteUint(12345) = %s, want '12345'", buf.String())
 	}
-	
+
 	// Test with zero
 	buf.Reset()
 	WriteUint(buf, 0)
-	
+
 	if buf.String() != "0" {
 		t.Errorf("WriteUint(0) = %s, want '0'", buf.String())
 	}
@@ -254,15 +254,15 @@ func TestWriteUint(t *testing.T) {
 // TestWriteFloat tests the WriteFloat function
 func TestWriteFloat(t *testing.T) {
 	buf := &bytes.Buffer{}
-	
+
 	WriteFloat(buf, 3.14159)
-	
+
 	// The exact output depends on the float formatting, but it should contain "3.14159" or similar
 	output := buf.String()
 	if len(output) == 0 {
 		t.Error("WriteFloat should produce output")
 	}
-	
+
 	if output != "3.14159" && output != "3.14" {
 		t.Logf("WriteFloat(3.14159) produced: %s", output) // Log actual result
 	}
@@ -275,7 +275,7 @@ func TestConvertValueString(t *testing.T) {
 	if result != "test string" {
 		t.Errorf("ConvertValue with string = %s, want 'test string'", result)
 	}
-	
+
 	// Test []byte to string conversion
 	result = ConvertValue([]byte("test bytes"))
 	if result != "test bytes" {
@@ -300,7 +300,7 @@ func TestConvertValueIntegers(t *testing.T) {
 		{uint32(4294967295), "4294967295"},
 		{uint64(18446744073709551615), "18446744073709551615"},
 	}
-	
+
 	for _, test := range tests {
 		result := ConvertValue(test.input)
 		if result != test.expected {
@@ -320,13 +320,13 @@ func TestConvertValueFloats(t *testing.T) {
 		{float32(0.0), "0"},
 		{float64(-7.89), "-7.89"},
 	}
-	
+
 	for _, test := range tests {
 		result := ConvertValue(test.input)
 		// For floats, we might get more precision than expected, so check if it contains the expected value
-		if result != test.expected && 
-		   !(test.input == float32(0.0) && result == "0") &&
-		   !(test.input == float64(0.0) && result == "0") {
+		if result != test.expected &&
+			!(test.input == float32(0.0) && result == "0") &&
+			!(test.input == float64(0.0) && result == "0") {
 			t.Errorf("ConvertValue(%v) = %s, want %s", test.input, result, test.expected)
 		}
 	}
@@ -338,7 +338,7 @@ func TestConvertValueBooleans(t *testing.T) {
 	if result != "true" {
 		t.Errorf("ConvertValue(true) = %s, want 'true'", result)
 	}
-	
+
 	result = ConvertValue(false)
 	if result != "false" {
 		t.Errorf("ConvertValue(false) = %s, want 'false'", result)
@@ -360,13 +360,13 @@ func TestConvertValueComplexType(t *testing.T) {
 	if result != "<complex-type>" {
 		t.Errorf("ConvertValue(complex type) = %s, want '<complex-type>'", result)
 	}
-	
+
 	// Test with a slice
 	result = ConvertValue([]int{1, 2, 3})
 	if result != "<complex-type>" {
 		t.Errorf("ConvertValue(slice) = %s, want '<complex-type>'", result)
 	}
-	
+
 	// Test with a map
 	result = ConvertValue(map[string]int{"a": 1})
 	if result != "<complex-type>" {

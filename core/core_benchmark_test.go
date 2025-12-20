@@ -9,14 +9,14 @@ import (
 // BenchmarkLogEntryPoolOperations benchmarks the log entry pool operations
 func BenchmarkLogEntryPoolOperations(b *testing.B) {
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		entry := GetEntryFromPool()
 		entry.Timestamp = time.Now()
 		entry.Level = INFO
 		entry.Message = []byte("test message")
 		entry.Fields["test"] = []byte(fmt.Sprintf("%d", i))
-		
+
 		PutEntryToPool(entry)
 	}
 }
@@ -40,9 +40,9 @@ func BenchmarkPutEntryToPool(b *testing.B) {
 		entries[i].Level = DEBUG
 		entries[i].Message = []byte("test message")
 	}
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		PutEntryToPool(entries[i])
 	}
@@ -52,7 +52,7 @@ func BenchmarkPutEntryToPool(b *testing.B) {
 func BenchmarkLogEntryFormatLogToBytes(b *testing.B) {
 	entry := GetEntryFromPool()
 	defer PutEntryToPool(entry)
-	
+
 	entry.Timestamp = time.Now()
 	entry.Level = ERROR
 	entry.LevelName = []byte("ERROR")
@@ -64,7 +64,7 @@ func BenchmarkLogEntryFormatLogToBytes(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		buf := make([]byte, 0, 1024)
 		_ = entry.formatLogToBytes(buf)
@@ -74,9 +74,9 @@ func BenchmarkLogEntryFormatLogToBytes(b *testing.B) {
 // BenchmarkLevelBytesConversion benchmarks the conversion of level to bytes
 func BenchmarkLevelBytesConversion(b *testing.B) {
 	levels := []Level{TRACE, DEBUG, INFO, NOTICE, WARN, ERROR, FATAL, PANIC}
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		level := levels[i%len(levels)]
 		_ = level.Bytes()
@@ -86,9 +86,9 @@ func BenchmarkLevelBytesConversion(b *testing.B) {
 // BenchmarkLevelToBytesMethod benchmarks the ToBytes method
 func BenchmarkLevelToBytesMethod(b *testing.B) {
 	levels := []Level{TRACE, DEBUG, INFO, NOTICE, WARN, ERROR, FATAL, PANIC}
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		level := levels[i%len(levels)]
 		_ = level.ToBytes()
@@ -98,14 +98,14 @@ func BenchmarkLevelToBytesMethod(b *testing.B) {
 // BenchmarkCallerInfoPoolOperations benchmarks the caller info pool operations
 func BenchmarkCallerInfoPoolOperations(b *testing.B) {
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		info := GetCallerInfoFromPool()
 		info.File = "test.go"
 		info.Line = i
 		info.Function = "BenchmarkFunction"
 		info.Package = "main"
-		
+
 		PutCallerInfoToPool(info)
 	}
 }
@@ -113,12 +113,12 @@ func BenchmarkCallerInfoPoolOperations(b *testing.B) {
 // BenchmarkMapInterfacePoolOperations benchmarks the map interface pool operations
 func BenchmarkMapInterfacePoolOperations(b *testing.B) {
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		m := GetMapByteFromPool()
 		m["key"] = []byte("value")
 		m["num"] = []byte(fmt.Sprintf("%d", i))
-		
+
 		PutMapByteToPool(m)
 	}
 }
@@ -126,12 +126,12 @@ func BenchmarkMapInterfacePoolOperations(b *testing.B) {
 // BenchmarkMapFloatPoolOperations benchmarks the map float pool operations
 func BenchmarkMapFloatPoolOperations(b *testing.B) {
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		m := GetMapFloatFromPool()
 		m["metric1"] = 1.5
 		m["metric2"] = float64(i)
-		
+
 		PutMapFloatToPool(m)
 	}
 }
@@ -139,11 +139,11 @@ func BenchmarkMapFloatPoolOperations(b *testing.B) {
 // BenchmarkBufferPoolOperations benchmarks the buffer pool operations
 func BenchmarkBufferPoolOperations(b *testing.B) {
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		buf := GetBufferFromPool()
 		*buf = append(*buf, []byte("test data")...)
-		
+
 		PutBufferToPool(buf)
 	}
 }
@@ -151,9 +151,9 @@ func BenchmarkBufferPoolOperations(b *testing.B) {
 // BenchmarkIntToBytesConversion benchmarks converting int to bytes manually
 func BenchmarkIntToBytesConversion(b *testing.B) {
 	entry := &LogEntry{}
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		buf := make([]byte, 0, 20)
 		_ = entry.intToBytes(buf, i)
@@ -163,9 +163,9 @@ func BenchmarkIntToBytesConversion(b *testing.B) {
 // BenchmarkInt64ToBytesConversion benchmarks converting int64 to bytes manually
 func BenchmarkInt64ToBytesConversion(b *testing.B) {
 	entry := &LogEntry{}
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		buf := make([]byte, 0, 20)
 		_ = entry.int64ToBytes(buf, int64(i))
@@ -176,7 +176,7 @@ func BenchmarkInt64ToBytesConversion(b *testing.B) {
 func BenchmarkZeroAllocJSONSerialize(b *testing.B) {
 	entry := GetEntryFromPool()
 	defer PutEntryToPool(entry)
-	
+
 	entry.Timestamp = time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)
 	entry.Level = INFO
 	entry.LevelName = []byte("INFO")
@@ -185,9 +185,9 @@ func BenchmarkZeroAllocJSONSerialize(b *testing.B) {
 		"user_id": []byte("123"),
 		"action":  []byte("login"),
 	}
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		_ = entry.ZeroAllocJSONSerialize()
 	}

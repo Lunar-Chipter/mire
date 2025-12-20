@@ -10,20 +10,20 @@ import (
 // CSVFormatter formats log entries in CSV format
 // CSVFormatter formats log entries in CSV format
 type CSVFormatter struct {
-	IncludeHeader     bool                                       // Include header row in output
-	FieldOrder        []string                                   // Order of fields in CSV
-	TimestampFormat   string                                     // Custom timestamp format
-	SensitiveFields   []string                                   // List of sensitive field names to mask
-	MaskSensitiveData bool                                       // Whether to mask sensitive data
-	MaskStringValue   string                                     // String value to use for masking
-	FieldTransformers map[string]func(interface{}) string        // Functions to transform field values
+	IncludeHeader     bool                                // Include header row in output
+	FieldOrder        []string                            // Order of fields in CSV
+	TimestampFormat   string                              // Custom timestamp format
+	SensitiveFields   []string                            // List of sensitive field names to mask
+	MaskSensitiveData bool                                // Whether to mask sensitive data
+	MaskStringValue   string                              // String value to use for masking
+	FieldTransformers map[string]func(interface{}) string // Functions to transform field values
 }
 
 // NewCSVFormatter creates a new CSVFormatter
 // NewCSVFormatter creates a new CSVFormatter
 func NewCSVFormatter() *CSVFormatter {
 	return &CSVFormatter{
-		MaskStringValue: "[MASKED]",
+		MaskStringValue:   "[MASKED]",
 		FieldTransformers: make(map[string]func(interface{}) string),
 	}
 }
@@ -225,4 +225,3 @@ func (f *CSVFormatter) isSensitiveField(field string) bool {
 	}
 	return false
 }
-

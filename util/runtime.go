@@ -1,10 +1,10 @@
 package util
 
 import (
-	"path/filepath"
-	runtime "runtime"
-	"strings"
 	"github.com/Lunar-Chipter/mire/core"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 func GetCallerInfo(skip int) *core.CallerInfo {
@@ -16,7 +16,7 @@ func GetCallerInfo(skip int) *core.CallerInfo {
 	ci := core.GetCallerInfoFromPool()
 	ci.File = filepath.Base(file)
 	ci.Line = line
-	
+
 	fn := runtime.FuncForPC(pc)
 	if fn != nil {
 		fullName := fn.Name()
@@ -33,7 +33,7 @@ func GetCallerInfo(skip int) *core.CallerInfo {
 			ci.Function = fullName
 		}
 	}
-	
+
 	return ci
 }
 
@@ -42,14 +42,14 @@ func GetCallerInfo(skip int) *core.CallerInfo {
 // the buffer to the pool using core.PutBufferToPool (via the returned pointer).
 func GetStackTrace(depth int) ([]byte, *[]byte) {
 	bufPtr := core.GetBufferFromPool() // Get a pooled buffer
-	tempBuf := *bufPtr // Dereference to get the actual []byte slice
+	tempBuf := *bufPtr                 // Dereference to get the actual []byte slice
 
 	n := runtime.Stack(tempBuf, false)
 	if n == 0 {
 		core.PutBufferToPool(bufPtr) // Return empty buffer if no stack trace
 		return nil, nil
 	}
-	
+
 	// Trim to actual size used by runtime.Stack
 	trace := tempBuf[:n]
 
@@ -66,13 +66,13 @@ func GetStackTrace(depth int) ([]byte, *[]byte) {
 			// Each stack frame is typically two lines, plus initial goroutine line.
 			// So 2*depth+1 lines for frames + 1 for goroutine header
 			// Adjusting for the initial "goroutine" line
-			if lineCount > (2 * depth + 1) { // 1 for goroutine header, 2 lines per frame
+			if lineCount > (2*depth + 1) { // 1 for goroutine header, 2 lines per frame
 				trace = trace[:lastNewline]
 				break
 			}
 		}
 	}
-	
+
 	// The returned slice is part of the pooled buffer, and we return the pointer to it.
 	// The caller will put the bufPtr back to the pool.
 	return trace, bufPtr

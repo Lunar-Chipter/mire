@@ -24,13 +24,12 @@ func (b *ZeroAllocBuffer) WriteBytes(data []byte) error {
 		return ErrBufferOverflow
 	}
 
-	// Manual byte copying for maximum performance
 	copy(b.buf[b.len:], data)
 	b.len += len(data)
 	return nil
 }
 
-// WriteByte writes a single byte to the buffer with O(1) performance
+// WriteByte writes a single byte to the buffer
 func (b *ZeroAllocBuffer) WriteByte(c byte) error {
 	if b.len >= len(b.buf) {
 		return ErrBufferOverflow
@@ -88,15 +87,14 @@ func PutZeroAllocBuffer(buf *ZeroAllocBuffer) {
 
 // ColorByteSlice represents pre-allocated color byte slices
 var (
-	ErrorColor   = []byte("\x1b[38;5;196m")
-	WarnColor    = []byte("\x1b[38;5;220m")
-	InfoColor    = []byte("\x1b[38;5;75m")
-	DebugColor   = []byte("\x1b[38;5;245m")
-	ResetColor   = []byte("\x1b[0m")
+	ErrorColor = []byte("\x1b[38;5;196m")
+	WarnColor  = []byte("\x1b[38;5;220m")
+	InfoColor  = []byte("\x1b[38;5;75m")
+	DebugColor = []byte("\x1b[38;5;245m")
+	ResetColor = []byte("\x1b[0m")
 )
 
-// StringToBytes converts a string to a byte slice without memory allocation.
-// WARNING: The returned byte slice shares memory with the string. It is read-only.
+// StringToBytes converts string to []byte without allocation (shares memory)
 func StringToBytes(s string) (b []byte) {
 	bh := (*[3]int)(unsafe.Pointer(&b))
 	sh := (*[2]int)(unsafe.Pointer(&s))
@@ -106,13 +104,12 @@ func StringToBytes(s string) (b []byte) {
 	return b
 }
 
-// B2s converts byte slice to a string without memory allocation.
-// WARNING: The returned string shares memory with the byte slice. Do not modify the bytes.
+// B2s converts []byte to string without allocation (shares memory)
 func B2s(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// BytesToString is a wrapper for B2s that converts byte slice to string
+// BytesToString converts []byte to string
 func BytesToString(b []byte) string {
 	return B2s(b)
 }

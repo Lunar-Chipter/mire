@@ -13,6 +13,43 @@ import (
 	"github.com/Lunar-Chipter/mire/util"
 )
 
+// ZeroAllocExample demonstrates high-performance, zero-allocation logging
+func ZeroAllocExample() {
+	// Create logger with zero-allocation formatter
+	log := logger.New(logger.LoggerConfig{
+		Level:  core.INFO,
+		Output: os.Stdout,
+		Formatter: &formatter.TextFormatter{
+			EnableColors:  true,
+			ShowTimestamp: true,
+			ShowCaller:    true,
+		},
+	})
+	defer log.Close()
+
+	// Unified API (Recommended)
+
+	// Basic logging
+	log.Log(context.Background(), core.INFO, []byte("Application started"), nil)
+	log.Log(context.Background(), core.DEBUG, []byte("Processing request"), nil)
+
+	// Logging with fields
+	userLogger := log.WithFields(map[string]interface{}{
+		"service": "user-api",
+		"version": "1.0.0",
+	})
+	userLogger.Log(context.Background(), core.INFO, []byte("User authenticated"), nil)
+
+	// Context-aware logging
+	ctx := context.Background()
+	ctx = util.WithTraceID(ctx, "trace-12345")
+
+	log.LogC(ctx, core.INFO, []byte("Payment processed"))
+
+	// Legacy API (still works but allocates):
+	log.Info("User logged in with legacy API")
+}
+
 // ApplicationLogger demonstrates how to create a well-configured logger for an application
 type ApplicationLogger struct {
 	logger *logger.Logger
@@ -21,20 +58,20 @@ type ApplicationLogger struct {
 // NewApplicationLogger creates a new instance of ApplicationLogger with recommended configuration
 func NewApplicationLogger(output io.Writer, level core.Level, environment string) *ApplicationLogger {
 	config := logger.LoggerConfig{
-		Level:           level,
-		Output:          output,
-		ErrorOutput:     os.Stderr,
-		CallerDepth:     logger.DEFAULT_CALLER_DEPTH,
-		TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
-		BufferSize:      logger.DEFAULT_BUFFER_SIZE,
-		FlushInterval:   logger.DEFAULT_FLUSH_INTERVAL,
+		Level:            level,
+		Output:           output,
+		ErrorOutput:      os.Stderr,
+		CallerDepth:      logger.DEFAULT_CALLER_DEPTH,
+		TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
+		BufferSize:       logger.DEFAULT_BUFFER_SIZE,
+		FlushInterval:    logger.DEFAULT_FLUSH_INTERVAL,
 		AsyncWorkerCount: 4,
-		ClockInterval:   10 * time.Millisecond,
-		MaskStringValue: "[MASKED]",
-		Environment:     environment,
-		Hostname:        os.Getenv("HOSTNAME"),
-		Application:     "mire-example-app",
-		Version:         "1.0.0",
+		ClockInterval:    10 * time.Millisecond,
+		MaskStringValue:  "[MASKED]",
+		Environment:      environment,
+		Hostname:         os.Getenv("HOSTNAME"),
+		Application:      "mire-example-app",
+		Version:          "1.0.0",
 	}
 
 	// Set formatter based on output type
@@ -152,20 +189,20 @@ type HighPerformanceLogger struct {
 // NewHighPerformanceLogger creates a logger optimized for high throughput
 func NewHighPerformanceLogger() *HighPerformanceLogger {
 	config := logger.LoggerConfig{
-		Level:                         core.INFO,
-		Output:                        os.Stdout,
-		AsyncLogging:                  true,
-		AsyncWorkerCount:              8,
-		AsyncLogChannelBufferSize:     10000,
-		LogProcessTimeout:             5 * time.Second,
-		DisablePerLogContextTimeout:   true,
-		BufferSize:                    8192,
-		FlushInterval:                 100 * time.Millisecond,
-		DisableLocking:                true,
-		EnableStackTrace:              false, // Disable for performance
+		Level:                       core.INFO,
+		Output:                      os.Stdout,
+		AsyncLogging:                true,
+		AsyncWorkerCount:            8,
+		AsyncLogChannelBufferSize:   10000,
+		LogProcessTimeout:           5 * time.Second,
+		DisablePerLogContextTimeout: true,
+		BufferSize:                  8192,
+		FlushInterval:               100 * time.Millisecond,
+		DisableLocking:              true,
+		EnableStackTrace:            false, // Disable for performance
 		Formatter: &formatter.CSVFormatter{
-			IncludeHeader:   false,
-			SensitiveFields: []string{"password", "token"},
+			IncludeHeader:     false,
+			SensitiveFields:   []string{"password", "token"},
 			MaskSensitiveData: true,
 		},
 	}

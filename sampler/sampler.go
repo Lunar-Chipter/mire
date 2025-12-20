@@ -2,8 +2,8 @@ package sampler
 
 import (
 	"context"
-	"sync/atomic"
 	"github.com/Lunar-Chipter/mire/core"
+	"sync/atomic"
 )
 
 // LogSampler defines the interface for a logger that can be sampled.
@@ -37,7 +37,7 @@ func (sl *SamplingLogger) ShouldLog() bool {
 
 // Log logs a message if it passes the sampling rate.
 func (sl *SamplingLogger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
-    if sl.ShouldLog() {
-        sl.processor.Log(ctx, level, msg, fields)
-    }
+	if sl.ShouldLog() {
+		sl.processor.Log(ctx, level, msg, fields)
+	}
 }

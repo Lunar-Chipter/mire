@@ -1,12 +1,12 @@
 package writer
 
 import (
+	"github.com/Lunar-Chipter/mire/util"
 	"io"
 	"os"
 	"sync"
 	"sync/atomic"
 	"time"
-	"github.com/Lunar-Chipter/mire/util"
 )
 
 // wrappedError wraps an error with a message
@@ -255,18 +255,18 @@ func (bw *BufferedWriter) Close() error {
 	// Check if already closed using our new closed flag
 	if bw.closed {
 		bw.mu.Unlock() // Release the mutex before returning
-		return nil // Already closed
+		return nil     // Already closed
 	}
 
 	// Mark as closed
 	bw.closed = true
 	bw.mu.Unlock()
 
-// Close the done channel to signal the worker
+	// Close the done channel to signal the worker
 	close(bw.done)
 
-// Wait for the worker goroutine to finish processing and clean up.
-// The worker will close the buffer channel after processing remaining items.
+	// Wait for the worker goroutine to finish processing and clean up.
+	// The worker will close the buffer channel after processing remaining items.
 	bw.wg.Wait()
 
 	// Only close the underlying writer if it's not os.Stdout or os.Stderr

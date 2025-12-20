@@ -27,7 +27,7 @@ type sampleEntry struct {
 func (m *mockSamplerProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.loggedEntries = append(m.loggedEntries, &sampleEntry{
 		ctx:    ctx,
 		level:  level,
@@ -40,12 +40,12 @@ func (m *mockSamplerProcessor) Log(ctx context.Context, level core.Level, msg []
 // TestNewSamplingLogger tests creating a new SamplingLogger
 func TestNewSamplingLogger(t *testing.T) {
 	processor := &mockSamplerProcessor{}
-	
+
 	samplingLogger := NewSamplingLogger(processor, 5)
 	if samplingLogger == nil {
 		t.Fatal("NewSamplingLogger returned nil")
 	}
-	
+
 	if samplingLogger.processor != processor {
 		t.Error("SamplingLogger processor not set correctly")
 	}
@@ -59,13 +59,13 @@ func TestNewSamplingLogger(t *testing.T) {
 func TestSamplingLoggerShouldLog(t *testing.T) {
 	// Test with rate 1 (should always log)
 	sampler1 := NewSamplingLogger(&mockSamplerProcessor{}, 1)
-	
+
 	for i := 0; i < 10; i++ {
 		if !sampler1.ShouldLog() {
 			t.Errorf("With rate 1, ShouldLog should always return true, but failed on call %d", i+1)
 		}
 	}
-	
+
 	// Test with rate 2 (should log every 2nd call)
 	sampler2 := NewSamplingLogger(&mockSamplerProcessor{}, 2)
 	logCount := 0
@@ -82,7 +82,7 @@ func TestSamplingLoggerShouldLog(t *testing.T) {
 	if logCount != 5 {
 		t.Errorf("With rate 2, expected 5 logs out of 10, got %d", logCount)
 	}
-	
+
 	// Test with rate 3 (should log every 3rd call)
 	sampler3 := NewSamplingLogger(&mockSamplerProcessor{}, 3)
 	logCount = 0
@@ -95,7 +95,7 @@ func TestSamplingLoggerShouldLog(t *testing.T) {
 	if logCount != 4 {
 		t.Errorf("With rate 3, expected 4 logs out of 12, got %d", logCount)
 	}
-	
+
 	// to
 	sampler0 := NewSamplingLogger(&mockSamplerProcessor{}, 0)
 	// to
@@ -108,38 +108,38 @@ func TestSamplingLoggerShouldLog(t *testing.T) {
 // TestSamplingLoggerLog tests the Log method with sampling
 func TestSamplingLoggerLog(t *testing.T) {
 	processor := &mockSamplerProcessor{}
-	
+
 	// Create a sampler with rate 2 to log every 2nd entry
 	sampler := NewSamplingLogger(processor, 2)
 	if sampler == nil {
 		t.Fatal("NewSamplingLogger returned nil")
 	}
-	
+
 	ctx := context.Background()
-	
+
 	// Log 10 messages - should only log 5 (every 2nd one)
 	for i := 0; i < 10; i++ {
 		msg := []byte("message " + string(rune(i+'0')))
 		sampler.Log(ctx, core.INFO, msg, map[string][]byte{"idx": []byte(fmt.Sprintf("%d", i))})
 	}
-	
+
 	// Verify that only approximately half the messages were processed
 	processor.mu.Lock()
 	logCalls := processor.logCalls
 	loggedEntries := processor.loggedEntries
 	processor.mu.Unlock()
-	
+
 	// Based on the counter implementation: 10 calls, log when counter%2==0
 	// Counter goes 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 	// Log on 2, 4, 6, 8, 10 = 5 logs
 	if logCalls != 5 {
 		t.Errorf("Expected 5 log calls with rate 2, got %d", logCalls)
 	}
-	
+
 	if len(loggedEntries) != 5 {
 		t.Errorf("Expected 5 logged entries with rate 2, got %d", len(loggedEntries))
 	}
-	
+
 	// at
 	// Based on the ShouldLog() implementation, it should log when counter % rate == 0
 	// First call adds 1 to counter (making it 1), then checks if 1%2==0 (false)
@@ -147,7 +147,7 @@ func TestSamplingLoggerLog(t *testing.T) {
 	// Third call adds 1 to counter (making it 3), then checks if 3%2==0 (false)
 	// Fourth call adds 1 to counter (making it 4), then checks if 4%2==0 (true) -> log
 	// So calls 2, 4, 6, 8, 10 will log, meaning messages 1, 3, 5, 7, 9 will be logged
-	
+
 	if len(loggedEntries) > 0 {
 		// at
 		// The 0-indexed calls that should result in logs are 1, 3, 5, 7, 9 (the 2nd, 4th, 6th, 8th, 10th calls)
@@ -163,23 +163,23 @@ func TestSamplingLoggerLog(t *testing.T) {
 // TestSamplingLoggerWithRate1 tests sampling with rate 1 (should log everything)
 func TestSamplingLoggerWithRate1(t *testing.T) {
 	processor := &mockSamplerProcessor{}
-	
+
 	sampler := NewSamplingLogger(processor, 1)
 	if sampler == nil {
 		t.Fatal("NewSamplingLogger returned nil")
 	}
-	
+
 	ctx := context.Background()
-	
+
 	// Log 5 messages with rate 1 - should log all of them
 	for i := 0; i < 5; i++ {
 		sampler.Log(ctx, core.DEBUG, []byte("all"), nil)
 	}
-	
+
 	processor.mu.Lock()
 	logCalls := processor.logCalls
 	processor.mu.Unlock()
-	
+
 	if logCalls != 5 {
 		t.Errorf("With rate 1, expected 5 log calls, got %d", logCalls)
 	}
@@ -188,23 +188,23 @@ func TestSamplingLoggerWithRate1(t *testing.T) {
 // TestSamplingLoggerWithRate0 tests sampling with rate 0 (should log everything)
 func TestSamplingLoggerWithRate0(t *testing.T) {
 	processor := &mockSamplerProcessor{}
-	
+
 	sampler := NewSamplingLogger(processor, 0)
 	if sampler == nil {
 		t.Fatal("NewSamplingLogger returned nil")
 	}
-	
+
 	ctx := context.Background()
-	
+
 	// Log 5 messages with rate 0 - should log all of them based on code logic (rate <= 1)
 	for i := 0; i < 5; i++ {
 		sampler.Log(ctx, core.INFO, []byte("rate 0 test"), nil)
 	}
-	
+
 	processor.mu.Lock()
 	logCalls := processor.logCalls
 	processor.mu.Unlock()
-	
+
 	if logCalls != 5 {
 		t.Errorf("With rate 0, expected 5 log calls, got %d", logCalls)
 	}
@@ -213,19 +213,19 @@ func TestSamplingLoggerWithRate0(t *testing.T) {
 // TestSamplingLoggerConcurrent tests the SamplingLogger in a concurrent context
 func TestSamplingLoggerConcurrent(t *testing.T) {
 	processor := &mockSamplerProcessor{}
-	
+
 	// Use rate 3 for this test
 	sampler := NewSamplingLogger(processor, 3)
 	if sampler == nil {
 		t.Fatal("NewSamplingLogger returned nil")
 	}
-	
+
 	// Run multiple goroutines that log concurrently
 	const numGoroutines = 5
-	const logsPerGoroutine = 15  // Total of 75 logs, with rate 3 expect ~25
+	const logsPerGoroutine = 15 // Total of 75 logs, with rate 3 expect ~25
 	var wg sync.WaitGroup
 	ctx := context.Background()
-	
+
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
 		go func(goroutineID int) {
@@ -239,34 +239,34 @@ func TestSamplingLoggerConcurrent(t *testing.T) {
 			}
 		}(i)
 	}
-	
+
 	wg.Wait()
-	
+
 	// Wait briefly to ensure all operations are complete
 	time.Sleep(10 * time.Millisecond)
-	
+
 	processor.mu.Lock()
 	logCalls := processor.logCalls
 	totalExpected := numGoroutines * logsPerGoroutine
 	processor.mu.Unlock()
-	
+
 	// With rate 3 and 75 total logs, we expect around 75/3 = 25 logs
 	// But due to the concurrent nature, it might vary slightly
 	expectedApprox := totalExpected / 3
-	
-	t.Logf("Total logs attempted: %d, Actual logs: %d, Expected approximately: %d", 
+
+	t.Logf("Total logs attempted: %d, Actual logs: %d, Expected approximately: %d",
 		totalExpected, logCalls, expectedApprox)
-	
+
 	// Check that we got some sampling (not all logs)
 	if logCalls >= totalExpected {
 		t.Error("Sampling doesn't seem to be working - all logs were processed")
 	}
-	
+
 	// Check that we got some logs (not none)
 	if logCalls <= 0 {
 		t.Error("No logs were processed - sampling might be too aggressive")
 	}
-	
+
 	// The actual number should be close to expected (within a reasonable range)
 	if logCalls < expectedApprox/2 || logCalls > expectedApprox*2 {
 		t.Logf("Log count %d differs significantly from expected %d", logCalls, expectedApprox)
@@ -277,32 +277,32 @@ func TestSamplingLoggerConcurrent(t *testing.T) {
 // at
 func TestSamplingLoggerWithDifferentLevels(t *testing.T) {
 	processor := &mockSamplerProcessor{}
-	
+
 	sampler := NewSamplingLogger(processor, 2) // Rate 2
 	if sampler == nil {
 		t.Fatal("NewSamplingLogger returned nil")
 	}
-	
+
 	ctx := context.Background()
-	
+
 	// at
 	levels := []core.Level{core.TRACE, core.DEBUG, core.INFO, core.WARN, core.ERROR, core.FATAL, core.PANIC}
-	
+
 	for _, level := range levels {
 		sampler.Log(ctx, level, []byte("level test"), map[string][]byte{"level": []byte(level.String())})
 	}
-	
+
 	processor.mu.Lock()
 	logCalls := processor.logCalls
 	loggedEntries := processor.loggedEntries
 	processor.mu.Unlock()
-	
+
 	// With rate 2 and 7 messages, expect ~3-4 messages to be logged
 	expectedApprox := len(levels) / 2
 	if logCalls < expectedApprox/2 || logCalls > expectedApprox*2 {
 		t.Logf("Level test: Expected ~%d logs, got %d", expectedApprox, logCalls)
 	}
-	
+
 	// Verify that logged entries have the correct levels
 	for _, entry := range loggedEntries {
 		// Each logged entry should have a level field
@@ -317,14 +317,14 @@ func TestSamplingLoggerWithDifferentLevels(t *testing.T) {
 // TestSamplingLoggerWithFields tests sampling with fields
 func TestSamplingLoggerWithFields(t *testing.T) {
 	processor := &mockSamplerProcessor{}
-	
+
 	sampler := NewSamplingLogger(processor, 1) // Rate 1, so all should be logged for testing fields
 	if sampler == nil {
 		t.Fatal("NewSamplingLogger returned nil")
 	}
-	
+
 	ctx := context.Background()
-	
+
 	// Log with various field types
 	fields := map[string][]byte{
 		"string_field": []byte("value"),
@@ -332,17 +332,17 @@ func TestSamplingLoggerWithFields(t *testing.T) {
 		"bool_field":   []byte("true"),
 		"float_field":  []byte("3.14"),
 	}
-	
+
 	sampler.Log(ctx, core.INFO, []byte("fields test"), fields)
-	
+
 	processor.mu.Lock()
 	loggedEntries := processor.loggedEntries
 	processor.mu.Unlock()
-	
+
 	if len(loggedEntries) != 1 {
 		t.Fatalf("Expected 1 logged entry, got %d", len(loggedEntries))
 	}
-	
+
 	entry := loggedEntries[0]
 	for key, expectedValue := range fields {
 		if actualValue, exists := entry.fields[key]; !exists {
@@ -356,17 +356,17 @@ func TestSamplingLoggerWithFields(t *testing.T) {
 // at
 func TestSamplingLoggerCounterRace(t *testing.T) {
 	processor := &mockSamplerProcessor{}
-	
+
 	sampler := NewSamplingLogger(processor, 2)
 	if sampler == nil {
 		t.Fatal("NewSamplingLogger returned nil")
 	}
-	
+
 	// Create multiple goroutines that only call ShouldLog (this tests the counter)
 	const numGoroutines = 10
 	const callsPerGoroutine = 100
 	var wg sync.WaitGroup
-	
+
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
 		go func() {
@@ -376,9 +376,9 @@ func TestSamplingLoggerCounterRace(t *testing.T) {
 			}
 		}()
 	}
-	
+
 	wg.Wait()
-	
+
 	// The counter should not have been corrupted
 	// The final counter value should be numGoroutines * callsPerGoroutine
 }

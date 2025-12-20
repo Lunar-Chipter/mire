@@ -125,23 +125,34 @@ func main() {
     log := logger.NewDefaultLogger()
     defer log.Close() // Always close the logger to flush remaining messages
 
-    // Basic logging
-    log.Info("Application started")
-    log.Warn("This is a warning message")
-    log.Error("An error occurred")
+    // Unified API (Recommended for best performance)
+    ctx := context.Background()
+    
+    // Basic logging with unified API
+    log.Log(ctx, core.INFO, []byte("Application started"), nil)
+    log.Log(ctx, core.WARN, []byte("This is a warning message"), nil)
+    log.Log(ctx, core.ERROR, []byte("An error occurred"), nil)
 
-    // Logging with fields
+    // Logging with fields using unified API
+    fields := map[string][]byte{
+        "user_id": logger.I2B(123),
+        "action":  []byte("login"),
+    }
+    log.Log(ctx, core.INFO, []byte("User logged in"), fields)
+
+    // Legacy API (still supported for backward compatibility)
+    log.Info("Application started")
     log.WithFields(map[string]interface{}{
         "user_id": 123,
         "action":  "login",
     }).Info("User logged in")
 
     // Context-aware logging
-    ctx := context.Background()
     ctx = util.WithTraceID(ctx, "trace-123")
     ctx = util.WithUserID(ctx, "user-456")
 
-    log.InfoC(ctx, "Processing request") // Will include trace_id and user_id
+    log.Log(ctx, core.INFO, []byte("Processing request"), nil) // Unified API
+    log.InfoC(ctx, "Processing request") // Legacy API
 }
 ```
 

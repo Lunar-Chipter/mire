@@ -17,8 +17,8 @@ func TestAdditionalLoggerFeatures(t *testing.T) {
 	// Test logger with various configuration options
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			EnableColors:    false,
 			ShowTimestamp:   true,
@@ -29,16 +29,16 @@ func TestAdditionalLoggerFeatures(t *testing.T) {
 			ShowHostname:    true,
 			ShowApplication: true,
 		},
-		ShowGoroutine: true,
-		ShowPID:       true,
-		ShowTraceInfo: true,
-		ShowHostname:  true,
+		ShowGoroutine:   true,
+		ShowPID:         true,
+		ShowTraceInfo:   true,
+		ShowHostname:    true,
 		ShowApplication: true,
-		Hostname:     "test-host",
-		Application:  "test-app",
-		Version:      "1.0.0",
-		Environment:  "test-env",
-		MaxFieldSize: 1000,
+		Hostname:        "test-host",
+		Application:     "test-app",
+		Version:         "1.0.0",
+		Environment:     "test-env",
+		MaxFieldSize:    1000,
 	})
 	defer logger.Close()
 
@@ -60,12 +60,12 @@ func TestAdditionalLoggerFeatures(t *testing.T) {
 func TestLoggerWithCustomExitFunc(t *testing.T) {
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 		ExitFunc: func(code int) {
 			// This function will be called when fatal occurs
@@ -85,15 +85,15 @@ func TestLoggerWithCustomExitFunc(t *testing.T) {
 func TestLoggerWithCustomErrorHandler(t *testing.T) {
 	errorHandled := false
 	var capturedError error
-	
+
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 		ErrorHandler: func(err error) {
 			errorHandled = true
@@ -118,12 +118,12 @@ func TestLoggerWithHooks(t *testing.T) {
 	// For full hook functionality, see the hook package tests
 
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 	})
 	defer logger.Close()
@@ -139,15 +139,15 @@ func TestLoggerWithHooks(t *testing.T) {
 func TestLoggerBufferedWriting(t *testing.T) {
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 		BufferSize:    512,
-		FlushInterval: 10 * time.Millisecond,  // Shorter interval for test
+		FlushInterval: 10 * time.Millisecond, // Shorter interval for test
 	})
 	defer logger.Close()
 
@@ -175,12 +175,12 @@ func TestLoggerBufferedWriting(t *testing.T) {
 func TestLoggerWithSampling(t *testing.T) {
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 		EnableSampling: true,
 		SamplingRate:   2, // Every 2nd message
@@ -204,19 +204,19 @@ func TestLoggerWithSampling(t *testing.T) {
 func TestLoggerWithDisableLocking(t *testing.T) {
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
-		DisableLocking: true,  // This option exists
+		DisableLocking: true, // This option exists
 	})
 	defer logger.Close()
 
 	logger.Info("message with locking disabled")
-	
+
 	output := buf.String()
 	if !strings.Contains(output, "message with locking disabled") {
 		t.Error("Message should be in output")
@@ -227,19 +227,19 @@ func TestLoggerWithDisableLocking(t *testing.T) {
 func TestLoggerWithMetrics(t *testing.T) {
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
 		EnableMetrics: true,
 	})
 	defer logger.Close()
 
 	logger.Info("message with metrics")
-	
+
 	output := buf.String()
 	if !strings.Contains(output, "message with metrics") {
 		t.Error("Message should be in output")
@@ -250,20 +250,20 @@ func TestLoggerWithMetrics(t *testing.T) {
 func TestLoggerWithPreAllocateSettings(t *testing.T) {
 	var buf bytes.Buffer
 	logger := New(LoggerConfig{
-		Level:   core.INFO,
-		Output:  &buf,
+		Level:  core.INFO,
+		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    false,
-			ShowTimestamp:   false,
-			ShowCaller:      false,
+			EnableColors:  false,
+			ShowTimestamp: false,
+			ShowCaller:    false,
 		},
-		PreAllocateFields: 16,  // Pre-allocate for fields
-		PreAllocateTags:   32,  // Pre-allocate for tags
+		PreAllocateFields: 16, // Pre-allocate for fields
+		PreAllocateTags:   32, // Pre-allocate for tags
 	})
 	defer logger.Close()
 
 	logger.Info("message with pre-allocated settings")
-	
+
 	output := buf.String()
 	if !strings.Contains(output, "message with pre-allocated settings") {
 		t.Error("Message should be in output")

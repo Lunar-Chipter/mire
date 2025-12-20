@@ -39,32 +39,26 @@ func printLine(s string) {
 
 func main() {
 	printLine("===================================================")
-	printLine("  DEMONSTRATION OF MIRE LOGGING LIBRARY USAGE      ")
+	printLine("  MIRE LOGGING LIBRARY DEMONSTRATION")
 	printLine("===================================================")
-	printLine("This file demonstrates various ways to use the logger.")
-	printLine("Observe the output in console, app.log, and errors.log.")
-	printLine("---------------------------------------------------")
 
-	// --- Example 1: Default Logger (Console Output) ---
-	// Default logger is already configured to display colors, timestamps,
-	// caller info, and INFO level and above.
-	printLine("### 1. Default Logger (More Concise Console Output) ###")
-	// Configure default logger to reduce console output
+	// Example 1: Default Logger
+	printLine("### 1. Default Logger ###")
 	defaultConfig := logger.LoggerConfig{
-		Level:             core.WARN, // Only show WARN and above in console
-		Output:            os.Stdout,
-		ErrorOutput:       io.Discard, // Discard internal logger error messages
-		CallerDepth:       logger.DEFAULT_CALLER_DEPTH,
-		TimestampFormat:   logger.DEFAULT_TIMESTAMP_FORMAT,
-		BufferSize:        logger.DEFAULT_BUFFER_SIZE,
-		FlushInterval:     logger.DEFAULT_FLUSH_INTERVAL,
-		AsyncWorkerCount:  4,
-		ClockInterval: 10 * time.Millisecond,
+		Level:            core.WARN, // Only show WARN and above in console
+		Output:           os.Stdout,
+		ErrorOutput:      io.Discard, // Discard internal logger error messages
+		CallerDepth:      logger.DEFAULT_CALLER_DEPTH,
+		TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
+		BufferSize:       logger.DEFAULT_BUFFER_SIZE,
+		FlushInterval:    logger.DEFAULT_FLUSH_INTERVAL,
+		AsyncWorkerCount: 4,
+		ClockInterval:    10 * time.Millisecond,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:      true,
-			ShowTimestamp:     true,
-			ShowCaller:        true,
-			TimestampFormat:   logger.DEFAULT_TIMESTAMP_FORMAT,
+			EnableColors:    true,
+			ShowTimestamp:   true,
+			ShowCaller:      true,
+			TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
 		},
 	}
 	logDefault := logger.New(defaultConfig)
@@ -73,7 +67,7 @@ func main() {
 	logDefault.Info("This is an INFORMATION message from the default logger. (Will not appear in console due to WARN level).")
 	logDefault.Warnf("There are %d warnings in the system.", 2)
 	logDefault.Debug("This debug message will NOT appear because default level is WARN.") // Will not appear
-	logDefault.Trace("This trace message will also NOT appear.")                              // Will not appear
+	logDefault.Trace("This trace message will also NOT appear.")                          // Will not appear
 	logDefault.Error("A simple error occurred.")
 	printLine("---------------------------------------------------")
 	time.Sleep(10 * time.Millisecond) // Give time to flush buffer if any
@@ -90,9 +84,9 @@ func main() {
 	ctx = util.WithUserID(ctx, "user-alice")
 
 	// Using default logger to demonstrate fields and context.
-	logWithContext := logDefault.WithFieldsBytes(map[string][]byte{
-		"service": core.StringToBytes("auth-service"),
-		"version": core.StringToBytes("1.0.0"),
+	logWithContext := logDefault.WithFields(map[string]interface{}{
+		"service": "auth-service",
+		"version": "1.0.0",
 	})
 	logWithContext.WithFields(map[string]interface{}{
 		"username":   "alice",
@@ -143,7 +137,7 @@ func main() {
 	// Create logger with custom text format, hiding some metadata.
 	printLine("### 5. Custom Text Logger ###")
 	customTextLogger := setupCustomTextLogger()
-	customTextLogger.Notice("This is a 'NOTICE' message from custom logger (without timestamp/caller).")
+	customTextLogger.Info("This is an 'INFO' message from custom logger (without timestamp/caller).")
 	customTextLogger.Infof("Lowest level: %s", core.TRACE.String())
 	printLine("---------------------------------------------------")
 	time.Sleep(10 * time.Millisecond)
@@ -184,7 +178,7 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 		Level:       core.DEBUG,
 		Output:      file,
 		ErrorOutput: io.Discard, // Discard internal logger error messages
-		BufferSize:  1024, // Enable buffered writer
+		BufferSize:  1024,       // Enable buffered writer
 		Formatter: &formatter.JSONFormatter{
 			PrettyPrint:      true,
 			ShowCaller:       true,
@@ -198,14 +192,14 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 // setupCustomTextLogger creates a logger with simplified text format.
 func setupCustomTextLogger() *logger.Logger {
 	customConfig := logger.LoggerConfig{
-		Level:             core.TRACE, // Display all logs, even trace
-		ErrorOutput:       io.Discard, // Discard internal logger error messages
+		Level:       core.TRACE, // Display all logs, even trace
+		ErrorOutput: io.Discard, // Discard internal logger error messages
 		Formatter: &formatter.TextFormatter{
-			EnableColors:      true,
-			ShowTimestamp:     false, // Hide timestamp
-			ShowCaller:        false, // Hide caller info
-			ShowPID:           true,  // Show Process ID
-			ShowGoroutine:     true,  // Show Goroutine ID
+			EnableColors:  true,
+			ShowTimestamp: false, // Hide timestamp
+			ShowCaller:    false, // Hide caller info
+			ShowPID:       true,  // Show Process ID
+			ShowGoroutine: true,  // Show Goroutine ID
 		},
 	}
 	return logger.New(customConfig)

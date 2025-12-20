@@ -11,50 +11,50 @@ import (
 
 // TextFormatter formats log entries in a human-readable text format
 type TextFormatter struct {
-	EnableColors        bool                                       // Enable ANSI colors in output
-	ShowTimestamp       bool                                       // Show timestamp in output
-	ShowCaller          bool                                       // Show caller information
-	ShowGoroutine       bool                                       // Show goroutine ID
-	ShowPID             bool                                       // Show process ID
-	ShowTraceInfo       bool                                       // Show trace information
-	ShowHostname        bool                                       // Show hostname
-	ShowApplication     bool                                       // Show application name
-	FullTimestamp       bool                                       // Show full timestamp with nanoseconds
-	TimestampFormat     string                                     // Custom timestamp format
-	IndentFields        bool                                       // Indent fields for better readability
-	MaxFieldWidth       int                                        // Maximum width for field values
-	EnableStackTrace    bool                                       // Enable stack trace for errors
-	StackTraceDepth     int                                        // Maximum stack trace depth
-	EnableDuration      bool                                       // Show operation duration
-	CustomFieldOrder    []string                                   // Custom order for fields
-	EnableColorsByLevel bool                                       // Enable colors based on log level
-	FieldTransformers   map[string]func(interface{}) string        // Functions to transform field values
-	SensitiveFields     []string                                   // List of sensitive field names
-	MaskSensitiveData   bool                                       // Whether to mask sensitive data
-	MaskStringValue     string                                     // String value to use for masking
-	MaskStringBytes     []byte                                     // Byte slice for masking (zero-allocation)
-	DisableHTMLEscape   bool                                       // Disable HTML escaping in text
+	EnableColors        bool                                // Enable ANSI colors in output
+	ShowTimestamp       bool                                // Show timestamp in output
+	ShowCaller          bool                                // Show caller information
+	ShowGoroutine       bool                                // Show goroutine ID
+	ShowPID             bool                                // Show process ID
+	ShowTraceInfo       bool                                // Show trace information
+	ShowHostname        bool                                // Show hostname
+	ShowApplication     bool                                // Show application name
+	FullTimestamp       bool                                // Show full timestamp with nanoseconds
+	TimestampFormat     string                              // Custom timestamp format
+	IndentFields        bool                                // Indent fields for better readability
+	MaxFieldWidth       int                                 // Maximum width for field values
+	EnableStackTrace    bool                                // Enable stack trace for errors
+	StackTraceDepth     int                                 // Maximum stack trace depth
+	EnableDuration      bool                                // Show operation duration
+	CustomFieldOrder    []string                            // Custom order for fields
+	EnableColorsByLevel bool                                // Enable colors based on log level
+	FieldTransformers   map[string]func(interface{}) string // Functions to transform field values
+	SensitiveFields     []string                            // List of sensitive field names
+	MaskSensitiveData   bool                                // Whether to mask sensitive data
+	MaskStringValue     string                              // String value to use for masking
+	MaskStringBytes     []byte                              // Byte slice for masking (zero-allocation)
+	DisableHTMLEscape   bool                                // Disable HTML escaping in text
 }
 
 var ResetColorBytes = []byte("\033[0m")
-var metaColorBytes = []byte("\033[38;5;245m")      // Gray for meta info
-var callerColorBytes = []byte("\033[38;5;246m")    // Gray for caller info
-var durationColorBytes = []byte("\033[38;5;155m")  // Light green for duration
-var traceColorBytes = []byte("\033[38;5;141m")     // Purple for trace info
-var errorColorBytes = []byte("\033[38;5;196m")     // Bright red for errors
-var stackTraceColorBytes = []byte("\033[38;5;240m") // Dark gray for stack trace
+var metaColorBytes = []byte("\033[38;5;245m")          // Gray for meta info
+var callerColorBytes = []byte("\033[38;5;246m")        // Gray for caller info
+var durationColorBytes = []byte("\033[38;5;155m")      // Light green for duration
+var traceColorBytes = []byte("\033[38;5;141m")         // Purple for trace info
+var errorColorBytes = []byte("\033[38;5;196m")         // Bright red for errors
+var stackTraceColorBytes = []byte("\033[38;5;240m")    // Dark gray for stack trace
 var fieldsWrapperColorBytes = []byte("\033[38;5;243m") // Light gray for field wrappers
-var fieldKeyColorBytes = []byte("\033[38;5;228m")  // to
-var fieldValueColorBytes = []byte("\033[38;5;159m")// Light cyan for field values
-var tagsColorBytes = []byte("\033[38;5;135m")      // Purple for tags
-var metricsColorBytes = []byte("\033[38;5;85m")    // Green for metrics
+var fieldKeyColorBytes = []byte("\033[38;5;228m")      // to
+var fieldValueColorBytes = []byte("\033[38;5;159m")    // Light cyan for field values
+var tagsColorBytes = []byte("\033[38;5;135m")          // Purple for tags
+var metricsColorBytes = []byte("\033[38;5;85m")        // Green for metrics
 
 // NewTextFormatter creates a new TextFormatter
 func NewTextFormatter() *TextFormatter {
 	return &TextFormatter{
-		MaskStringValue: "[MASKED]",
+		MaskStringValue:   "[MASKED]",
 		FieldTransformers: make(map[string]func(interface{}) string),
-		SensitiveFields: make([]string, 0),
+		SensitiveFields:   make([]string, 0),
 	}
 }
 
@@ -152,7 +152,7 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 		// Create GID string more efficiently using a temporary buffer
 		gidPrefix := []byte("GID:")
 		buf.Write(gidPrefix)
-		buf.Write(entry.GoroutineID)  // entry.GoroutineID is already a byte slice
+		buf.Write(entry.GoroutineID) // entry.GoroutineID is already a byte slice
 		buf.WriteByte(' ')
 	}
 	if f.ShowTraceInfo {
@@ -217,8 +217,6 @@ func (f *TextFormatter) writeTraceInfo(buf *bytes.Buffer, entry *core.LogEntry) 
 		f.writeTracePartBytes(buf, []byte("REQ"), shortIDToBytes(string(entry.RequestID)))
 	}
 }
-
-
 
 func (f *TextFormatter) writeTracePartBytes(buf *bytes.Buffer, key []byte, value []byte) {
 	if f.EnableColors {
@@ -422,4 +420,3 @@ func contains(slice []string, item string) bool {
 	}
 	return false
 }
-

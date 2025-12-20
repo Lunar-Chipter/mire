@@ -23,9 +23,9 @@ var timeBufferPool = sync.Pool{
 
 // Metrics for observability
 type ClockMetrics struct {
-	updateCount  atomic.Int64
-	errorCount   atomic.Int64
-	lastUpdate   atomic.Int64
+	updateCount atomic.Int64
+	errorCount  atomic.Int64
+	lastUpdate  atomic.Int64
 }
 
 // Clock provides a clock

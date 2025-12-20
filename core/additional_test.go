@@ -20,7 +20,7 @@ func TestConcurrentPoolOperations(t *testing.T) {
 			defer wg.Done()
 			for j := 0; j < operationsPerGoroutine; j++ {
 				entry := GetEntryFromPool()
-				
+
 				// Set some values to ensure proper reset
 				entry.Timestamp = time.Now()
 				entry.Level = ERROR
@@ -36,7 +36,7 @@ func TestConcurrentPoolOperations(t *testing.T) {
 	}
 
 	wg.Wait()
-	
+
 	// Verify metrics after concurrent operations
 	metrics := GetCoreMetrics()
 	if metrics.CreatedCount() < 0 {
@@ -51,11 +51,11 @@ func TestConcurrentPoolOperations(t *testing.T) {
 func TestGoroutineLocalPoolUsage(t *testing.T) {
 	// Get entry from local pool (simulated through regular function)
 	entry := GetEntryFromPool()
-	
+
 	if entry == nil {
 		t.Fatal("Entry should not be nil")
 	}
-	
+
 	// Test reset functionality is working
 	if len(entry.Fields) != 0 {
 		t.Error("Fields map should be empty after pool retrieval")
@@ -63,7 +63,7 @@ func TestGoroutineLocalPoolUsage(t *testing.T) {
 	if !entry.Timestamp.IsZero() {
 		t.Error("Timestamp should be zero after pool retrieval")
 	}
-	
+
 	PutEntryToPool(entry)
 }
 
@@ -99,17 +99,17 @@ func TestCoreMetricsConcurrentUpdate(t *testing.T) {
 
 	// Check that metrics were incremented by at least the expected amount
 	// (may be more due to other tests using the same global metrics)
-	if metrics.CreatedCount() < initialCreated + int64(goroutines * operations) {
-		t.Logf("Created count: expected at least %d more than %d", goroutines * operations, initialCreated)
+	if metrics.CreatedCount() < initialCreated+int64(goroutines*operations) {
+		t.Logf("Created count: expected at least %d more than %d", goroutines*operations, initialCreated)
 	}
-	if metrics.ReusedCount() < initialReused + int64(goroutines * operations) {
-		t.Logf("Reused count: expected at least %d more than %d", goroutines * operations, initialReused)
+	if metrics.ReusedCount() < initialReused+int64(goroutines*operations) {
+		t.Logf("Reused count: expected at least %d more than %d", goroutines*operations, initialReused)
 	}
-	if metrics.PoolMissCount() < initialPoolMiss + int64(goroutines * operations) {
-		t.Logf("Pool miss count: expected at least %d more than %d", goroutines * operations, initialPoolMiss)
+	if metrics.PoolMissCount() < initialPoolMiss+int64(goroutines*operations) {
+		t.Logf("Pool miss count: expected at least %d more than %d", goroutines*operations, initialPoolMiss)
 	}
-	if metrics.SerializedCount() < initialSerialized + int64(goroutines * operations) {
-		t.Logf("Serialized count: expected at least %d more than %d", goroutines * operations, initialSerialized)
+	if metrics.SerializedCount() < initialSerialized+int64(goroutines*operations) {
+		t.Logf("Serialized count: expected at least %d more than %d", goroutines*operations, initialSerialized)
 	}
 }
 
@@ -117,35 +117,35 @@ func TestCoreMetricsConcurrentUpdate(t *testing.T) {
 func TestEntryFormatLogToBytesConcurrent(t *testing.T) {
 	const goroutines = 3
 	const operations = 30
-	
+
 	var wg sync.WaitGroup
 	wg.Add(goroutines)
-	
+
 	for i := 0; i < goroutines; i++ {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < operations; j++ {
 				entry := GetEntryFromPool()
 				defer PutEntryToPool(entry)
-				
+
 				entry.Timestamp = time.Now()
 				entry.Level = INFO
 				entry.LevelName = []byte("INFO")
 				entry.Message = []byte("test message")
 				entry.Fields["iteration"] = []byte(fmt.Sprintf("%d", j))
 				entry.Fields["goroutine"] = []byte(fmt.Sprintf("%d", i))
-				
+
 				// at
 				buf := make([]byte, 0, 100)
 				result := entry.formatLogToBytes(buf)
-				
+
 				if len(result) == 0 {
 					t.Error("Format result should not be empty")
 				}
 			}
 		}()
 	}
-	
+
 	wg.Wait()
 }
 
@@ -160,27 +160,27 @@ func TestPoolReuseEfficiency(t *testing.T) {
 	// Create and return many entries to test pool reuse
 	const totalEntries = 1000
 	entries := make([]*LogEntry, totalEntries)
-	
+
 	// First, create all entries (this will initially create them)
 	for i := 0; i < totalEntries; i++ {
 		entries[i] = GetEntryFromPool()
 	}
-	
+
 	// Then return them all to the pool
 	for i := 0; i < totalEntries; i++ {
 		PutEntryToPool(entries[i])
 	}
-	
+
 	// Now get them again - these should be reused from the pool
 	for i := 0; i < totalEntries; i++ {
 		entry := GetEntryFromPool()
 		PutEntryToPool(entry)
 	}
-	
+
 	// The number of created entries should be around the number of unique needs, not total operations
 	created := metrics.CreatedCount()
 	reused := metrics.ReusedCount()
-	
+
 	// In this test, we expect significant reuse since we're returning entries to the pool
 	if created > int64(totalEntries) {
 		t.Logf("Created %d entries out of %d operations - pool is working", created, totalEntries)

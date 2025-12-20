@@ -15,7 +15,7 @@ func TestNewRotatingFileWriter(t *testing.T) {
 	// Create a temporary file for testing
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "test.log")
-	
+
 	// Create a rotation config
 	rotationConfig := &config.RotationConfig{
 		MaxSize:         1024, // 1KB
@@ -26,7 +26,7 @@ func TestNewRotatingFileWriter(t *testing.T) {
 		RotationTime:    time.Hour,
 		FilenamePattern: "2006-01-02",
 	}
-	
+
 	rotatingWriter, err := NewRotatingFileWriter(tempFile, rotationConfig)
 	if err != nil {
 		t.Fatalf("NewRotatingFileWriter returned error: %v", err)
@@ -35,12 +35,12 @@ func TestNewRotatingFileWriter(t *testing.T) {
 		t.Fatal("NewRotatingFileWriter returned nil")
 	}
 	defer rotatingWriter.Close()
-	
+
 	// Verify the file was created
 	if _, err := os.Stat(tempFile); os.IsNotExist(err) {
 		t.Errorf("Log file was not created at %s", tempFile)
 	}
-	
+
 	// Verify the file field is set correctly
 	if rotatingWriter.file == nil {
 		t.Error("RotatingFileWriter file field is nil")
@@ -51,9 +51,9 @@ func TestNewRotatingFileWriter(t *testing.T) {
 func TestNewRotatingFileWriterError(t *testing.T) {
 	// Try to create a writer with an invalid path
 	rotationConfig := &config.RotationConfig{}
-	
+
 	rotatingWriter, err := NewRotatingFileWriter("/invalid/path/that/does/not/exist/file.log", rotationConfig)
-	
+
 	if err == nil {
 		t.Error("NewRotatingFileWriter should have failed with invalid path")
 		if rotatingWriter != nil {
@@ -61,7 +61,7 @@ func TestNewRotatingFileWriterError(t *testing.T) {
 		}
 		return
 	}
-	
+
 	if rotatingWriter != nil {
 		t.Error("NewRotatingFileWriter should have returned nil on error")
 		rotatingWriter.Close()
@@ -72,17 +72,17 @@ func TestNewRotatingFileWriterError(t *testing.T) {
 func TestRotatingFileWriterWrite(t *testing.T) {
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "test_write.log")
-	
+
 	rotationConfig := &config.RotationConfig{
 		MaxSize: 1024, // Small size to trigger rotation easily
 	}
-	
+
 	rotatingWriter, err := NewRotatingFileWriter(tempFile, rotationConfig)
 	if err != nil {
 		t.Fatalf("NewRotatingFileWriter returned error: %v", err)
 	}
 	defer rotatingWriter.Close()
-	
+
 	// Write data
 	data := []byte("This is a test log entry\n")
 	n, err := rotatingWriter.Write(data)
@@ -92,7 +92,7 @@ func TestRotatingFileWriterWrite(t *testing.T) {
 	if n != len(data) {
 		t.Errorf("Write returned %d, expected %d", n, len(data))
 	}
-	
+
 	// Check that the file contains the data
 	content, err := os.ReadFile(tempFile)
 	if err != nil {
@@ -106,17 +106,17 @@ func TestRotatingFileWriterWrite(t *testing.T) {
 func TestRotatingFileWriterMultipleWrites(t *testing.T) {
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "test_multiple.log")
-	
+
 	rotationConfig := &config.RotationConfig{
 		MaxSize: 2048, // Larger size for multiple writes
 	}
-	
+
 	rotatingWriter, err := NewRotatingFileWriter(tempFile, rotationConfig)
 	if err != nil {
 		t.Fatalf("NewRotatingFileWriter returned error: %v", err)
 	}
 	defer rotatingWriter.Close()
-	
+
 	// Write multiple pieces of data
 	expectedContent := ""
 	for i := 0; i < 10; i++ {
@@ -128,10 +128,10 @@ func TestRotatingFileWriterMultipleWrites(t *testing.T) {
 		if n != len(data) {
 			t.Errorf("Write %d returned %d, expected %d", i, n, len(data))
 		}
-		
+
 		expectedContent += string(data)
 	}
-	
+
 	// Check that the file contains all the data
 	content, err := os.ReadFile(tempFile)
 	if err != nil {
@@ -145,29 +145,29 @@ func TestRotatingFileWriterMultipleWrites(t *testing.T) {
 func TestRotatingFileWriterClose(t *testing.T) {
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "test_close.log")
-	
+
 	rotationConfig := &config.RotationConfig{}
-	
+
 	rotatingWriter, err := NewRotatingFileWriter(tempFile, rotationConfig)
 	if err != nil {
 		t.Fatalf("NewRotatingFileWriter returned error: %v", err)
 	}
-	
+
 	// Write some data
 	_, _ = rotatingWriter.Write([]byte("Before close\n"))
-	
+
 	// Close the writer
 	err = rotatingWriter.Close()
 	if err != nil {
 		t.Errorf("Close returned error: %v", err)
 	}
-	
+
 	// Try to close again - should not cause an error
 	err2 := rotatingWriter.Close()
 	if err2 != nil {
 		t.Errorf("Closing already closed writer returned error: %v", err2)
 	}
-	
+
 	// Verify the file still contains the data
 	content, err := os.ReadFile(tempFile)
 	if err != nil {
@@ -181,23 +181,23 @@ func TestRotatingFileWriterClose(t *testing.T) {
 func TestRotatingFileWriterWithLargeData(t *testing.T) {
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "test_large.log")
-	
+
 	rotationConfig := &config.RotationConfig{
 		MaxSize: 500, // Small size to trigger rotation with large data
 	}
-	
+
 	rotatingWriter, err := NewRotatingFileWriter(tempFile, rotationConfig)
 	if err != nil {
 		t.Fatalf("NewRotatingFileWriter returned error: %v", err)
 	}
 	defer rotatingWriter.Close()
-	
+
 	// Write larger data to potentially trigger rotation logic (though the current implementation doesn't actually rotate)
 	largeData := make([]byte, 400) // Close to max size
 	for i := range largeData {
 		largeData[i] = byte('A' + (i % 26))
 	}
-	
+
 	n, err := rotatingWriter.Write(largeData)
 	if err != nil {
 		t.Errorf("Write large data returned error: %v", err)
@@ -205,13 +205,13 @@ func TestRotatingFileWriterWithLargeData(t *testing.T) {
 	if n != len(largeData) {
 		t.Errorf("Write large data returned %d, expected %d", n, len(largeData))
 	}
-	
+
 	// Write more data
 	moreData := make([]byte, 200)
 	for i := range moreData {
 		moreData[i] = byte('B' + (i % 26))
 	}
-	
+
 	// This write might cause rotation in a full implementation
 	n2, err2 := rotatingWriter.Write(moreData)
 	if err2 != nil {
@@ -220,7 +220,7 @@ func TestRotatingFileWriterWithLargeData(t *testing.T) {
 	if n2 != len(moreData) {
 		t.Errorf("Second write returned %d, expected %d", n2, len(moreData))
 	}
-	
+
 	// Check final file size
 	content, err := os.ReadFile(tempFile)
 	if err != nil {
@@ -234,18 +234,18 @@ func TestRotatingFileWriterWithLargeData(t *testing.T) {
 func TestRotatingFileWriterWithSpecialCharacters(t *testing.T) {
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "test_special.log")
-	
+
 	rotationConfig := &config.RotationConfig{}
-	
+
 	rotatingWriter, err := NewRotatingFileWriter(tempFile, rotationConfig)
 	if err != nil {
 		t.Fatalf("NewRotatingFileWriter returned error: %v", err)
 	}
 	defer rotatingWriter.Close()
-	
+
 	// Write data with special characters
 	specialData := []byte("Log with special chars: \n \t \r \" ' & < > 日本語 Ελληνικά\n")
-	
+
 	n, err := rotatingWriter.Write(specialData)
 	if err != nil {
 		t.Errorf("Write special characters returned error: %v", err)
@@ -253,7 +253,7 @@ func TestRotatingFileWriterWithSpecialCharacters(t *testing.T) {
 	if n != len(specialData) {
 		t.Errorf("Write special characters returned %d, expected %d", n, len(specialData))
 	}
-	
+
 	// Check that the file contains the special data
 	content, err := os.ReadFile(tempFile)
 	if err != nil {
@@ -267,18 +267,18 @@ func TestRotatingFileWriterWithSpecialCharacters(t *testing.T) {
 func TestRotatingFileWriterFilePermissions(t *testing.T) {
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "test_perms.log")
-	
+
 	rotationConfig := &config.RotationConfig{}
-	
+
 	rotatingWriter, err := NewRotatingFileWriter(tempFile, rotationConfig)
 	if err != nil {
 		t.Fatalf("NewRotatingFileWriter returned error: %v", err)
 	}
 	defer rotatingWriter.Close()
-	
+
 	// Write some data
 	_, _ = rotatingWriter.Write([]byte("test content\n"))
-	
+
 	// Check file permissions
 	info, err := os.Stat(tempFile)
 	if err != nil {
@@ -296,10 +296,10 @@ func TestRotatingFileWriterFilePermissions(t *testing.T) {
 func TestRotatingFileWriterWithNonExistentDir(t *testing.T) {
 	// at
 	rotationConfig := &config.RotationConfig{}
-	
+
 	nonExistentFile := "/non/existent/dir/test.log"
 	rotatingWriter, err := NewRotatingFileWriter(nonExistentFile, rotationConfig)
-	
+
 	if err == nil {
 		t.Error("NewRotatingFileWriter should have failed for non-existent directory")
 		if rotatingWriter != nil {
@@ -307,7 +307,7 @@ func TestRotatingFileWriterWithNonExistentDir(t *testing.T) {
 		}
 		return
 	}
-	
+
 	if rotatingWriter != nil {
 		t.Error("NewRotatingFileWriter should have returned nil for non-existent directory")
 		rotatingWriter.Close()
