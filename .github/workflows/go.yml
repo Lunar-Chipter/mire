@@ -19,7 +19,7 @@ jobs:
         go-version: '1.25.0'
 
     - name: Build
-      run: go build -v ./...
+      run: go build --tags 'with_colors with_metrics' -v ./...
 
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v9
@@ -28,7 +28,7 @@ jobs:
         args: --disable errcheck,unused
 
     - name: Test
-      run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+      run: go test --tags 'with_colors with_metrics' -race -coverprofile=coverage.out -covermode=atomic ./...
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -48,5 +48,5 @@ jobs:
         go-version: '1.25.0'
 
     - name: Run Benchmarks (Performance Check)
-      run: go test -bench=. -benchmem ./...
+      run: go test --tags 'with_colors with_metrics' -bench=. -benchmem ./...
       
