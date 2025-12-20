@@ -974,8 +974,7 @@ func (l *Logger) LogLegacy(ctx context.Context, level core.Level, msg []byte, fi
 	l.logBytes(ctx, level, msg, fields)
 }
 
-// Log with zero-allocation using variadic key-value pairs
-// Usage: Log(ctx, level, msg, key1, value1, key2, value2, ...)
+// Log using variadic key-value pairs
 func (l *Logger) Log(ctx context.Context, level core.Level, msg []byte, keyvals ...[]byte) {
 	if level < l.Config.Level {
 		return
