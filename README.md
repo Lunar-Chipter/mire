@@ -851,6 +851,24 @@ Need help? Join our community:
 
 ## 📄 Changelog
 
+### v0.0.5 - Zero-Allocation Refactoring and Reliability Enhancements
+
+- **Breaking Change**: The text formatter now outputs fields in a non-deterministic order. This change was made to eliminate allocations caused by sorting field keys, improving performance.
+- **Performance**:
+    - Re-implemented goroutine-local storage with a robust, high-performance `getGoroutineID` function and a fallback mechanism to a global `sync.Pool` if the runtime format changes.
+    - Eliminated allocations in the core logging path by removing the `interface{}`-based `log` function and consolidating on a `[]byte`-based API.
+    - Removed allocations in the text formatter by iterating directly over field maps.
+- **Features**:
+    - Added `with_colors` and `with_metrics` build tags to allow for compile-time feature exclusion, creating smaller binaries.
+- **Reliability**:
+    - Added a runtime sanity check for the `getGoroutineID` implementation to ensure it can safely fall back to a global pool if the Go runtime's stack format changes.
+- **Bug Fixes**:
+    - Corrected a bug in `getGoroutineID` that caused it to always return `0`.
+    - Fixed an allocation bug in `getGoroutineID` where a byte slice was unnecessarily converted to a string.
+- **Testing**:
+    - Added new build-tagged tests to verify color and metrics functionality.
+    - Improved existing tests to be more comprehensive.
+
 ### v0.0.4 - Zero-Allocation Redesign and Test Suite Fixes
 
 - **Major Enhancement**: Complete internal redesign with []byte fields to eliminate string conversion overhead
