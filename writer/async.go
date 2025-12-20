@@ -15,7 +15,7 @@ import (
 // LogProcessor defines the interface for the underlying logger that the AsyncLogger will use.
 // This helps to break the circular dependency between the writer and the main logger.
 type LogProcessor interface {
-	Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte)
+	Log(ctx context.Context, level core.Level, msg []byte, keyvals ...[]byte)
 	ErrorHandler() func(error)
 	ErrOut() io.Writer
 	ErrOutMu() *sync.Mutex
@@ -34,10 +34,11 @@ type AsyncLogger struct {
 
 // logJob represents a logging job
 type logJob struct {
-	level  core.Level
-	msg    []byte
-	fields map[string][]byte
-	ctx    context.Context
+	level   core.Level
+	msg     []byte
+	fields  map[string][]byte
+	keyvals [][]byte
+	ctx     context.Context
 }
 
 // NewAsyncLogger creates a new AsyncLogger
@@ -95,10 +96,53 @@ func (al *AsyncLogger) worker() {
 			ctx = job.ctx
 		}
 
-		al.processor.Log(ctx, job.level, job.msg, job.fields)
+		// Handle both keyvals and fields
+		if job.keyvals != nil {
+			al.processor.Log(ctx, job.level, job.msg, job.keyvals...)
+		} else {
+			// Convert fields to keyvals for unified interface
+			keyvals := make([][]byte, 0, len(job.fields)*2)
+			for k, v := range job.fields {
+				keyvals = append(keyvals, []byte(k), v)
+			}
+			al.processor.Log(ctx, job.level, job.msg, keyvals...)
+		}
 
 		if cancel != nil {
 			cancel()
+		}
+	}
+}
+
+// LogZero queues a zero-allocation log job
+func (al *AsyncLogger) LogZero(level core.Level, msg []byte, ctx context.Context, keyvals ...[]byte) {
+	if al.closed.Load() {
+		return
+	}
+
+	msgCopy := make([]byte, len(msg))
+	copy(msgCopy, msg)
+
+	// Copy keyvals to avoid race conditions
+	keyvalsCopy := make([][]byte, len(keyvals))
+	for i, kv := range keyvals {
+		kvCopy := make([]byte, len(kv))
+		copy(kvCopy, kv)
+		keyvalsCopy[i] = kvCopy
+	}
+
+	select {
+	case al.logChan <- &logJob{level: level, msg: msgCopy, keyvals: keyvalsCopy, ctx: ctx}:
+		// Successfully sent
+	default:
+		// Channel full, handle error
+		if handler := al.processor.ErrorHandler(); handler != nil {
+			handler(errors.ErrAsyncBufferFull)
+		} else if errOut := al.processor.ErrOut(); errOut != nil {
+			mu := al.processor.ErrOutMu()
+			mu.Lock()
+			errOut.Write([]byte("async buffer full\n"))
+			mu.Unlock()
 		}
 	}
 }

@@ -22,15 +22,15 @@ type mockLogProcessor struct {
 	mu            sync.Mutex
 }
 
-func (m *mockLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+func (m *mockLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, keyvals ...[]byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	m.loggedEntries = append(m.loggedEntries, &logJob{
-		level:  level,
-		msg:    msg,
-		fields: fields,
-		ctx:    ctx,
+		level:   level,
+		msg:     msg,
+		keyvals: keyvals,
+		ctx:     ctx,
 	})
 	m.logCalls++
 }
@@ -83,8 +83,8 @@ func TestAsyncLoggerLog(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Log a message asynchronously
-	asyncLogger.Log(core.INFO, []byte("test message"), map[string][]byte{"key": []byte("value")}, ctx)
+	// Log a message asynchronously using LogZero
+	asyncLogger.LogZero(core.INFO, []byte("test message"), ctx, []byte("key"), []byte("value"))
 
 	// Give some time for the async processing
 	time.Sleep(50 * time.Millisecond)
@@ -110,8 +110,8 @@ func TestAsyncLoggerLog(t *testing.T) {
 		if string(entry.msg) != "test message" {
 			t.Errorf("Expected message 'test message', got '%s'", string(entry.msg))
 		}
-		if val, ok := entry.fields["key"]; !ok || string(val) != "value" {
-			t.Errorf("Expected field 'key' with value 'value', got %+v", entry.fields)
+		if len(entry.keyvals) != 2 || string(entry.keyvals[0]) != "key" || string(entry.keyvals[1]) != "value" {
+			t.Errorf("Expected keyvals ['key', 'value'], got %+v", entry.keyvals)
 		}
 	}
 }
@@ -358,7 +358,7 @@ func TestAsyncLoggerConcurrent(t *testing.T) {
 // panicLogProcessor is a mock processor that panics on Log
 type panicLogProcessor struct{}
 
-func (p *panicLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+func (p *panicLogProcessor) Log(ctx context.Context, level core.Level, msg []byte, keyvals ...[]byte) {
 	panic("intentional panic for testing")
 }
 

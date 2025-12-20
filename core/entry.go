@@ -33,7 +33,36 @@ type LogEntry struct {
 	Environment      []byte                                   `json:"environment,omitempty"`    // Environment (dev/prod/etc) as byte slice
 	CustomMetrics    map[string]float64                       `json:"custom_metrics,omitempty"` // Custom metrics
 	Tags             [][]byte                                 `json:"tags,omitempty"`           // Tags for categorization as byte slices
+	KeyVals          [][]byte                                 `json:"keyvals,omitempty"`        // Zero-allocation key-value pairs
 	_                [64 - unsafe.Sizeof(time.Time{})%64]byte // Padding for cache alignment
+}
+
+// Reset resets the LogEntry for reuse
+func (e *LogEntry) Reset() {
+	e.Level = 0
+	e.Message = nil
+	e.Timestamp = time.Time{}
+	e.Caller = nil
+	e.Fields = nil
+	e.KeyVals = nil
+	e.TraceID = nil
+	e.SpanID = nil
+	e.UserID = nil
+	e.RequestID = nil
+	e.SessionID = nil
+	e.Hostname = nil
+	e.Application = nil
+	e.Version = nil
+	e.Environment = nil
+	e.CustomMetrics = nil
+	e.Tags = nil
+	e.Duration = 0
+	e.Error = nil
+	e.StackTrace = nil
+	e.GoroutineID = nil
+	e.PID = 0
+	e.LevelName = nil
+	e.StackTraceBufPtr = nil
 }
 
 // CallerInfo contains information about the code location where the log was created

@@ -18,15 +18,15 @@ func efficientLoggingExample() {
 	ctx := context.Background()
 	log.Log(ctx, core.INFO, []byte("Context-aware logging"), nil)
 	
-	// With fields
-	fields := map[string][]byte{
-		"user_id": logger.I2B(12345),
-		"action":  []byte("login"),
-		"success": logger.B2B(true),
-		"score":   logger.F2B(98.5),
-	}
-	log.Log(context.Background(), core.INFO, []byte("User login successful"), fields)
+	// With fields using zero-allocation API
+	log.Log(context.Background(), core.INFO, []byte("User login successful"),
+		[]byte("user_id"), logger.I2B(12345),
+		[]byte("action"), []byte("login"),
+		[]byte("success"), logger.B2B(true),
+		[]byte("score"), logger.F2B(98.5))
 	
 	// Complete API: context + fields
-	log.Log(ctx, core.INFO, []byte("Complete logging"), fields)
+	log.Log(ctx, core.INFO, []byte("Complete logging"),
+		[]byte("user_id"), logger.I2B(12345),
+		[]byte("action"), []byte("login"))
 }

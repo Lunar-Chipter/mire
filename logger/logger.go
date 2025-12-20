@@ -153,6 +153,7 @@ type Logger struct {
 	closed           *atomic.Bool                            // Flag to indicate if logger is closed
 	pid              int                                     // Process ID
 	clock            *util.Clock                             // Clock for timestamp optimization
+	entryPool        *sync.Pool                              // Pool for LogEntry objects
 }
 
 // LoggerStats tracks logger statistics
@@ -245,6 +246,11 @@ func New(config LoggerConfig) *Logger {
 		stats:            NewLoggerStats(),
 		closed:           &atomic.Bool{},
 		pid:              os.Getpid(),
+		entryPool: &sync.Pool{
+			New: func() interface{} {
+				return &core.LogEntry{}
+			},
+		},
 	}
 
 	if config.EnableErrorFileHook {
@@ -259,6 +265,8 @@ func New(config LoggerConfig) *Logger {
 
 	if config.ClockInterval > 0 {
 		l.clock = util.NewClock(config.ClockInterval)
+	} else {
+		l.clock = util.NewClock(10 * time.Millisecond) // Default clock interval
 	}
 
 	if l.exitFunc == nil {
@@ -268,7 +276,9 @@ func New(config LoggerConfig) *Logger {
 	l.setupWriters()
 
 	if config.EnableSampling && config.SamplingRate > 1 {
-		l.sampler = sampler.NewSamplingLogger(l, config.SamplingRate)
+		// Create a wrapper that implements the old interface for sampler
+		samplerWrapper := &samplerLoggerWrapper{logger: l}
+		l.sampler = sampler.NewSamplingLogger(samplerWrapper, config.SamplingRate)
 	}
 
 	if config.AsyncLogging {
@@ -276,6 +286,15 @@ func New(config LoggerConfig) *Logger {
 	}
 
 	return l
+}
+
+// samplerLoggerWrapper wraps Logger to provide old interface for sampler
+type samplerLoggerWrapper struct {
+	logger *Logger
+}
+
+func (w *samplerLoggerWrapper) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+	w.logger.LogLegacy(ctx, level, msg, fields)
 }
 
 func (l *Logger) setupWriters() {
@@ -350,6 +369,22 @@ func (l *Logger) log(ctx context.Context, level core.Level, message []byte, fiel
 }
 
 // internal logging method optimized for 1M+ logs/second with []byte fields (zero-allocation)
+// logZero handles zero-allocation logging with variadic key-value pairs
+func (l *Logger) logZero(ctx context.Context, level core.Level, message []byte, keyvals ...[]byte) {
+	if l.sampler != nil && !l.sampler.ShouldLog() {
+		return
+	}
+
+	// For zero-allocation, we pass keyvals directly to formatter
+	if l.asyncLogger != nil {
+		l.asyncLogger.LogZero(level, message, ctx, keyvals...)
+		return
+	}
+
+	l.writeZero(ctx, level, message, keyvals...)
+}
+
+// logBytes handles logging with map fields (legacy)
 func (l *Logger) logBytes(ctx context.Context, level core.Level, message []byte, fields map[string][]byte) {
 	// Early return if logger is closed
 	if l.closed.Load() {
@@ -419,6 +454,37 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 	l.handleLevelActions(level, entry)
 
 	core.PutEntryToPool(entry)
+}
+
+// writeZero writes log entry with zero allocations using variadic key-value pairs
+func (l *Logger) writeZero(ctx context.Context, level core.Level, message []byte, keyvals ...[]byte) {
+	entry := l.entryPool.Get().(*core.LogEntry)
+	defer l.entryPool.Put(entry)
+
+	entry.Reset()
+	entry.Level = level
+	entry.Message = message
+	entry.Timestamp = l.clock.Now()
+
+	// Set keyvals directly without map allocation
+	if len(keyvals)%2 == 0 {
+		entry.KeyVals = keyvals
+	} else {
+		// Odd number of keyvals, ignore the last one
+		entry.KeyVals = keyvals[:len(keyvals)-1]
+	}
+
+	if l.Config.ShowCaller {
+		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
+	}
+
+	buf := util.GetBufferFromPool()
+	defer util.PutBufferToPool(buf)
+	
+	l.Config.Formatter.Format(buf, entry)
+	l.mu.Lock()
+	l.Config.Output.Write(buf.Bytes())
+	l.mu.Unlock()
 }
 
 // final write to output with zero-allocation optimizations for []byte fields (true zero-allocation)
@@ -882,11 +948,39 @@ func (l *Logger) clone() *Logger {
 // --- Unified Public API ---
 
 // Log logs with level and message
-func (l *Logger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+// Zero-allocation logging API using variadic parameters
+// LogZ logs with zero allocations using key-value pairs
+func (l *Logger) LogZ(ctx context.Context, level core.Level, msg []byte, keyvals ...[]byte) {
+	if level < l.Config.Level {
+		return
+	}
+	l.logZero(ctx, level, msg, keyvals...)
+}
+
+// LogZC logs with context only (zero allocation)
+func (l *Logger) LogZC(ctx context.Context, level core.Level, msg []byte) {
+	if level < l.Config.Level {
+		return
+	}
+	l.logZero(ctx, level, msg)
+}
+
+// Legacy API - Log with map (may allocate)
+// LogLegacy for sampler compatibility (legacy map interface)
+func (l *Logger) LogLegacy(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
 	if level < l.Config.Level {
 		return
 	}
 	l.logBytes(ctx, level, msg, fields)
+}
+
+// Log with zero-allocation using variadic key-value pairs
+// Usage: Log(ctx, level, msg, key1, value1, key2, value2, ...)
+func (l *Logger) Log(ctx context.Context, level core.Level, msg []byte, keyvals ...[]byte) {
+	if level < l.Config.Level {
+		return
+	}
+	l.logZero(ctx, level, msg, keyvals...)
 }
 
 // LogC with context

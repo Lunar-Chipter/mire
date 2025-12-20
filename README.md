@@ -125,23 +125,21 @@ func main() {
     log := logger.NewDefaultLogger()
     defer log.Close() // Always close the logger to flush remaining messages
 
-    // Unified API (Recommended for best performance)
+    // Zero-allocation API (Recommended for best performance)
     ctx := context.Background()
     
-    // Basic logging with unified API
-    log.Log(ctx, core.INFO, []byte("Application started"), nil)
-    log.Log(ctx, core.WARN, []byte("This is a warning message"), nil)
-    log.Log(ctx, core.ERROR, []byte("An error occurred"), nil)
+    // Basic logging with zero allocations
+    log.Log(ctx, core.INFO, []byte("Application started"))
+    log.Log(ctx, core.WARN, []byte("This is a warning message"))
+    log.Log(ctx, core.ERROR, []byte("An error occurred"))
 
-    // Logging with fields using unified API
-    fields := map[string][]byte{
-        "user_id": logger.I2B(123),
-        "action":  []byte("login"),
-    }
-    log.Log(ctx, core.INFO, []byte("User logged in"), fields)
+    // Logging with key-value pairs (zero allocation)
+    log.Log(ctx, core.INFO, []byte("User logged in"), 
+        []byte("user_id"), logger.I2B(123),
+        []byte("action"), []byte("login"),
+        []byte("success"), logger.B2B(true))
 
-    // Legacy API (still supported for backward compatibility)
-    log.Info("Application started")
+    // Legacy API (still supported but may allocate)
     log.WithFields(map[string]interface{}{
         "user_id": 123,
         "action":  "login",
@@ -151,7 +149,7 @@ func main() {
     ctx = util.WithTraceID(ctx, "trace-123")
     ctx = util.WithUserID(ctx, "user-456")
 
-    log.Log(ctx, core.INFO, []byte("Processing request"), nil) // Unified API
+    log.Log(ctx, core.INFO, []byte("Processing request")) // Zero-allocation
     log.InfoC(ctx, "Processing request") // Legacy API
 }
 ```

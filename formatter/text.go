@@ -253,6 +253,10 @@ func (f *TextFormatter) writePostMessage(buf *bytes.Buffer, entry *core.LogEntry
 		buf.WriteByte(' ')
 		f.formatFields(buf, entry.Fields)
 	}
+	if len(entry.KeyVals) > 0 {
+		buf.WriteByte(' ')
+		f.formatKeyVals(buf, entry.KeyVals)
+	}
 	if len(entry.Tags) > 0 {
 		buf.WriteByte(' ')
 		f.formatTagsBytes(buf, entry.Tags)
@@ -270,6 +274,40 @@ func (f *TextFormatter) writePostMessage(buf *bytes.Buffer, entry *core.LogEntry
 		if f.EnableColors {
 			buf.Write(ResetColorBytes)
 		}
+	}
+}
+
+// formatKeyVals formats zero-allocation key-value pairs
+func (f *TextFormatter) formatKeyVals(buf *bytes.Buffer, keyvals [][]byte) {
+	if f.EnableColors {
+		buf.Write(fieldsWrapperColorBytes)
+	}
+	buf.WriteByte('{')
+
+	for i := 0; i < len(keyvals); i += 2 {
+		if i > 0 {
+			buf.WriteByte(' ')
+		}
+
+		if f.EnableColors {
+			buf.Write(fieldKeyColorBytes)
+		}
+		buf.Write(keyvals[i]) // key
+		buf.WriteByte('=')
+		if f.EnableColors {
+			buf.Write(fieldValueColorBytes)
+		}
+		if i+1 < len(keyvals) {
+			buf.Write(keyvals[i+1]) // value
+		}
+		if f.EnableColors {
+			buf.Write(ResetColorBytes)
+		}
+	}
+
+	buf.WriteByte('}')
+	if f.EnableColors {
+		buf.Write(ResetColorBytes)
 	}
 }
 
