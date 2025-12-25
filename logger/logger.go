@@ -274,9 +274,9 @@ func New(config Config) *Logger {
 
 	l.setupWriters()
 
-	if config.EnableSampling && config.EnableSamplingRate > 1 {
+	if config.EnableSampling && config.SamplingRate > 1 {
 		samplerWrapper := &samplerLoggerWrapper{logger: l}
-		l.sampler = sampler.NewSamplingLogger(samplerWrapper, config.EnableSamplingRate)
+		l.sampler = sampler.NewSampler(samplerWrapper, config.SamplingRate)
 	}
 
 	if config.AsyncMode {
@@ -314,8 +314,8 @@ func (l *Logger) setupWriters() {
 		}
 	}
 
-	if l.Config.BufSize > 0 {
-		l.buffer = writer.NewBuffered(currentWriter, l.Config.BufSize, l.Config.Flush, l.handleError, l.Config.Batch, l.Config.BatchTime)
+	if l.Config.BufferSize > 0 {
+		l.buffer = writer.NewBuffered(currentWriter, l.Config.BufferSize, l.Config.FlushInterval, l.handleError, l.Config.BatchSize, l.Config.BatchTimeout)
 		currentWriter = l.buffer
 	}
 
@@ -477,7 +477,7 @@ func (l *Logger) writeZero(ctx context.Context, level core.Level, message []byte
 	}
 
 	if l.Config.ShowCaller {
-		entry.ShowCaller = util.GetCaller(l.Config.ShowCallerDepth)
+		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
 	}
 
 	buf := util.GetBuffer()
