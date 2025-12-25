@@ -205,6 +205,118 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 			buf.WriteByte('"')
 			buf.WriteByte('"')
 		}
+	}
+	return nil
+}
+
+// isSensitiveField checks if a field is in the sensitive fields list
+func (f *CSVFormatter) isSensitiveField(field string) bool {
+	for _, sensitiveField := range f.SensitiveFields {
+		if field == sensitiveField {
+			return true
+		}
+	}
+	return false
+}
+	case "line":
+		if entry.Caller != nil {
+			buf.WriteByte('"')
+			util.WriteInt(buf, int64(entry.Caller.Line))
+			buf.WriteByte('"')
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
+	case "error":
+		if entry.Error != nil {
+			if appender, ok := entry.Error.(core.ErrAppend); ok {
+				buf.WriteByte('"')
+				appender.AppendError(buf)
+				buf.WriteByte('"')
+			} else {
+				f.writeCSVValue(buf, entry.Error.Error())
+			}
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
+	default:
+		if val, exists := entry.Fields[field]; exists {
+			if f.MaskSensitiveData && f.isSensitiveField(field) {
+				f.writeCSVValue(buf, f.MaskValue)
+				return nil
+			}
+
+			if transformer, exists := f.FieldTransformers[field]; exists {
+				transformed := transformer(val)
+				buf.WriteByte('"')
+				util.FormatValue(buf, transformed, 0)
+				buf.WriteByte('"')
+			} else {
+				buf.WriteByte('"')
+				util.FormatValue(buf, val, 0)
+				buf.WriteByte('"')
+			}
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
+	}
+	return nil
+}
+
+// isSensitiveField checks if a field is in the sensitive fields list
+func (f *CSVFormatter) isSensitiveField(field string) bool {
+	for _, sensitiveField := range f.SensitiveFields {
+		if field == sensitiveField {
+			return true
+		}
+	}
+	return false
+}
+	case "line":
+		if entry.Caller != nil {
+			buf.WriteByte('"')
+			util.WriteInt(buf, int64(entry.Caller.Line))
+			buf.WriteByte('"')
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
+	case "error":
+		if entry.Error != nil {
+			if appender, ok := entry.Error.(core.ErrAppend); ok {
+				buf.WriteByte('"')
+				appender.AppendError(buf)
+				buf.WriteByte('"')
+			} else {
+				f.writeCSVValue(buf, entry.Error.Error())
+			}
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
+	default:
+		if val, exists := entry.Fields[field]; exists {
+			if f.MaskSensitiveData && f.isSensitiveField(field) {
+				f.writeCSVValue(buf, f.MaskValue)
+				return nil
+			}
+
+			if transformer, exists := f.FieldTransformers[field]; exists {
+				transformed := transformer(val)
+				buf.WriteByte('"')
+				util.FormatValue(buf, transformed, 0)
+				buf.WriteByte('"')
+			} else {
+				buf.WriteByte('"')
+				util.FormatValue(buf, val, 0)
+				buf.WriteByte('"')
+			}
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
 		util.FormatTimestamp(timestamp, entry.Timestamp, format)
 		f.writeCSVValueBytes(buf, timestamp.Bytes())
 		util.PutBuffer(timestamp)
