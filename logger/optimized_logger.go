@@ -14,7 +14,7 @@ import (
 
 // OptimizedLogger is an efficient logger version for minimal allocations
 type OptimizedLogger struct {
-	config     LoggerConfig
+	config     Config
 	formatter  formatter.Formatter
 	out        io.Writer
 	mu         sync.Mutex
@@ -25,7 +25,7 @@ type OptimizedLogger struct {
 }
 
 // NewOptimizedLogger creates an efficient logger instance
-func NewOptimizedLogger(config LoggerConfig) *OptimizedLogger {
+func NewOptimizedLogger(config Config) *OptimizedLogger {
 	if config.Output == nil {
 		config.Output = io.Discard
 	}

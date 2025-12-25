@@ -44,20 +44,20 @@ func (m *mockWriteCounter) GetData() []byte {
 	return m.data
 }
 
-// TestNewBufferedWriter tests creating a new BufferedWriter
-func TestNewBufferedWriter(t *testing.T) {
+// TestNewBuffered tests creating a new Buffered
+func TestNewBuffered(t *testing.T) {
 	var output bytes.Buffer
 	errorHandler := func(err error) {}
 
-	bufferedWriter := NewBufferedWriter(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
+	bufferedWriter := NewBuffered(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 	defer bufferedWriter.Close()
 
 	// Check initial state
 	if bufferedWriter.writer != &output {
-		t.Error("BufferedWriter writer not set correctly")
+		t.Error("Buffered writer not set correctly")
 	}
 	if bufferedWriter.bufferSize != 10 {
 		t.Errorf("Expected buffer size 10, got %d", bufferedWriter.bufferSize)
@@ -73,14 +73,14 @@ func TestNewBufferedWriter(t *testing.T) {
 	}
 }
 
-// TestBufferedWriterWrite tests writing to the BufferedWriter
-func TestBufferedWriterWrite(t *testing.T) {
+// TestBufferedWrite tests writing to the Buffered
+func TestBufferedWrite(t *testing.T) {
 	var output bytes.Buffer
 	errorHandler := func(err error) {}
 
-	bufferedWriter := NewBufferedWriter(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
+	bufferedWriter := NewBuffered(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 
 	data := []byte("test data")
@@ -103,14 +103,14 @@ func TestBufferedWriterWrite(t *testing.T) {
 	}
 }
 
-// TestBufferedWriterFullBuffer tests behavior when buffer is full
-func TestBufferedWriterFullBuffer(t *testing.T) {
+// TestBufferedFullBuffer tests behavior when buffer is full
+func TestBufferedFullBuffer(t *testing.T) {
 	counter := &mockWriteCounter{}
 
 	// Create a buffered writer with a small channel size
-	bufferedWriter := NewBufferedWriter(counter, 2, 100*time.Millisecond, func(err error) {}, 5, 1*time.Second)
+	bufferedWriter := NewBuffered(counter, 2, 100*time.Millisecond, func(err error) {}, 5, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 	defer bufferedWriter.Close()
 
@@ -141,8 +141,8 @@ func TestBufferedWriterFullBuffer(t *testing.T) {
 	t.Logf("Total logs: %d, Dropped logs: %d", totalLogs, droppedLogs)
 }
 
-// TestBufferedWriterWriteError tests behavior when the underlying writer returns an error
-func TestBufferedWriterWriteError(t *testing.T) {
+// TestBufferedWriteError tests behavior when the underlying writer returns an error
+func TestBufferedWriteError(t *testing.T) {
 	var capturedError error
 	var mu sync.Mutex
 	errorHandler := func(err error) {
@@ -151,9 +151,9 @@ func TestBufferedWriterWriteError(t *testing.T) {
 		mu.Unlock()
 	}
 
-	bufferedWriter := NewBufferedWriter(&mockWriteError{}, 10, 10*time.Millisecond, errorHandler, 5, 1*time.Second)
+	bufferedWriter := NewBuffered(&mockWriteError{}, 10, 10*time.Millisecond, errorHandler, 5, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 	defer bufferedWriter.Close()
 
@@ -178,14 +178,14 @@ func TestBufferedWriterWriteError(t *testing.T) {
 	bufferedWriter.Close()
 }
 
-// TestBufferedWriterClose tests closing the BufferedWriter
-func TestBufferedWriterClose(t *testing.T) {
+// TestBufferedClose tests closing the Buffered
+func TestBufferedClose(t *testing.T) {
 	var output bytes.Buffer
 	errorHandler := func(err error) {}
 
-	bufferedWriter := NewBufferedWriter(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
+	bufferedWriter := NewBuffered(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 
 	// Write some data
@@ -213,14 +213,14 @@ func TestBufferedWriterClose(t *testing.T) {
 	}
 }
 
-// TestBufferedWriterWithBatches tests batching functionality
-func TestBufferedWriterWithBatches(t *testing.T) {
+// TestBufferedWithBatches tests batching functionality
+func TestBufferedWithBatches(t *testing.T) {
 	counter := &mockWriteCounter{}
 
 	// Create buffered writer with batching enabled
-	bufferedWriter := NewBufferedWriter(counter, 20, 100*time.Millisecond, func(err error) {}, 3, 1*time.Second)
+	bufferedWriter := NewBuffered(counter, 20, 100*time.Millisecond, func(err error) {}, 3, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 	defer bufferedWriter.Close()
 
@@ -251,14 +251,14 @@ func TestBufferedWriterWithBatches(t *testing.T) {
 	}
 }
 
-// TestBufferedWriterWithTimeout tests batch timeout functionality
-func TestBufferedWriterWithTimeout(t *testing.T) {
+// TestBufferedWithTimeout tests batch timeout functionality
+func TestBufferedWithTimeout(t *testing.T) {
 	counter := &mockWriteCounter{}
 
 	// Create buffered writer with small batch size and timeout
-	bufferedWriter := NewBufferedWriter(counter, 20, 10*time.Millisecond, func(err error) {}, 10, 50*time.Millisecond)
+	bufferedWriter := NewBuffered(counter, 20, 10*time.Millisecond, func(err error) {}, 10, 50*time.Millisecond)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 	defer bufferedWriter.Close()
 
@@ -278,14 +278,14 @@ func TestBufferedWriterWithTimeout(t *testing.T) {
 	}
 }
 
-// TestBufferedWriterStats tests the Stats method
-func TestBufferedWriterStats(t *testing.T) {
+// TestBufferedStats tests the Stats method
+func TestBufferedStats(t *testing.T) {
 	var output bytes.Buffer
 	errorHandler := func(err error) {}
 
-	bufferedWriter := NewBufferedWriter(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
+	bufferedWriter := NewBuffered(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 	defer bufferedWriter.Close()
 
@@ -331,13 +331,13 @@ func TestBufferedWriterStats(t *testing.T) {
 	}
 }
 
-// TestBufferedWriterConcurrent tests the BufferedWriter in a concurrent context
-func TestBufferedWriterConcurrent(t *testing.T) {
+// TestBufferedConcurrent tests the Buffered in a concurrent context
+func TestBufferedConcurrent(t *testing.T) {
 	counter := &mockWriteCounter{}
 
-	bufferedWriter := NewBufferedWriter(counter, 200, 50*time.Millisecond, func(err error) {}, 10, 100*time.Millisecond)
+	bufferedWriter := NewBuffered(counter, 200, 50*time.Millisecond, func(err error) {}, 10, 100*time.Millisecond)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 	defer bufferedWriter.Close()
 
@@ -397,14 +397,14 @@ func TestBufferedWriterConcurrent(t *testing.T) {
 	t.Logf("Processed %d concurrent writes in %v", totalExpected, elapsed)
 }
 
-// TestBufferedWriterWriteAfterClose tests writing after closing
-func TestBufferedWriterWriteAfterClose(t *testing.T) {
+// TestBufferedWriteAfterClose tests writing after closing
+func TestBufferedWriteAfterClose(t *testing.T) {
 	var output bytes.Buffer
 	errorHandler := func(err error) {}
 
-	bufferedWriter := NewBufferedWriter(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
+	bufferedWriter := NewBuffered(&output, 10, 100*time.Millisecond, errorHandler, 5, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 
 	// Close the writer
@@ -417,14 +417,14 @@ func TestBufferedWriterWriteAfterClose(t *testing.T) {
 	}
 }
 
-// TestBufferedWriterLargeWrite tests writing large data
-func TestBufferedWriterLargeWrite(t *testing.T) {
+// TestBufferedLargeWrite tests writing large data
+func TestBufferedLargeWrite(t *testing.T) {
 	var output bytes.Buffer
 	errorHandler := func(err error) {}
 
-	bufferedWriter := NewBufferedWriter(&output, 5, 100*time.Millisecond, errorHandler, 3, 1*time.Second)
+	bufferedWriter := NewBuffered(&output, 5, 100*time.Millisecond, errorHandler, 3, 1*time.Second)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 
 	// Write a large chunk of data
@@ -452,14 +452,14 @@ func TestBufferedWriterLargeWrite(t *testing.T) {
 	}
 }
 
-// TestBufferedWriterWithRealFile tests with an in-memory representation
-func TestBufferedWriterWithBytesBuffer(t *testing.T) {
+// TestBufferedWithRealFile tests with an in-memory representation
+func TestBufferedWithBytesBuffer(t *testing.T) {
 	var buf bytes.Buffer
 	errorHandler := func(err error) {}
 
-	bufferedWriter := NewBufferedWriter(&buf, 20, 20*time.Millisecond, errorHandler, 5, 50*time.Millisecond)
+	bufferedWriter := NewBuffered(&buf, 20, 20*time.Millisecond, errorHandler, 5, 50*time.Millisecond)
 	if bufferedWriter == nil {
-		t.Fatal("NewBufferedWriter returned nil")
+		t.Fatal("NewBuffered returned nil")
 	}
 
 	// Write several pieces of data

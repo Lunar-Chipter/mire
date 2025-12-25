@@ -44,7 +44,7 @@ func main() {
 
 	// Example 1: Default Logger
 	printLine("### 1. Default Logger ###")
-	defaultConfig := logger.LoggerConfig{
+	defaultConfig := logger.Config{
 		Level:            core.WARN, // Only show WARN and above in console
 		Output:           os.Stdout,
 		ErrorOutput:      io.Discard, // Discard internal logger error messages
@@ -52,11 +52,11 @@ func main() {
 		TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
 		BufferSize:       logger.DEFAULT_BUFFER_SIZE,
 		FlushInterval:    logger.DEFAULT_FLUSH_INTERVAL,
-		AsyncWorkerCount: 4,
+		Workers: 4,
 		ClockInterval:    10 * time.Millisecond,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    true,
-			ShowTimestamp:   true,
+			UseColors:    true,
+			ShowShowTimestamp:   true,
 			ShowCaller:      true,
 			TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
 		},
@@ -152,7 +152,7 @@ func main() {
 
 	// Ensure all buffers are flushed before program ends.
 	// Especially important for buffered writers and async loggers.
-	// logger.NewDefaultLogger().Close() // If NewDefaultLogger is called multiple times, only need to close the used instance.
+	// logger.New().Close() // If NewDefaultLogger is called multiple times, only need to close the used instance.
 	// jsonFileLogger.Close() // Make sure to close if not deferred
 	// Usually, the main logger will be closed at the end of the application.
 	// For this demo, we don't explicitly close logDefault here,
@@ -174,7 +174,7 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 		}
 	}
 
-	jsonConfig := logger.LoggerConfig{
+	jsonConfig := logger.Config{
 		Level:       core.DEBUG,
 		Output:      file,
 		ErrorOutput: io.Discard, // Discard internal logger error messages
@@ -182,7 +182,7 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 		Formatter: &formatter.JSONFormatter{
 			PrettyPrint:      true,
 			ShowCaller:       true,
-			EnableStackTrace: true,
+			StackShowTrace: true,
 			TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
 		},
 	}
@@ -191,12 +191,12 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 
 // setupCustomTextLogger creates a logger with simplified text format.
 func setupCustomTextLogger() *logger.Logger {
-	customConfig := logger.LoggerConfig{
+	customConfig := logger.Config{
 		Level:       core.TRACE, // Display all logs, even trace
 		ErrorOutput: io.Discard, // Discard internal logger error messages
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  true,
-			ShowTimestamp: false, // Hide timestamp
+			UseColors:  true,
+			ShowShowTimestamp: false, // Hide timestamp
 			ShowCaller:    false, // Hide caller info
 			ShowPID:       true,  // Show Process ID
 			ShowGoroutine: true,  // Show Goroutine ID
@@ -219,16 +219,16 @@ func setupCustomTextLogger() *logger.Logger {
 // 	defer errorFileHook.Close() // Ensure the file hook is closed
 
 // 	// 2. Configure logger to use hook.
-// 	logWithHook := logger.New(logger.LoggerConfig{
+// 	logWithHook := logger.New(logger.Config{
 // 		Level:       core.INFO, // This logger will display INFO and above to console
 // 		Output:      os.Stdout, // Console output
 // 		ErrorOutput: io.Discard, // Discard internal logger errors
-// 		EnableErrorFileHook: false, // Disable the built-in error file hook
+// 		ErrorHook: false, // Disable the built-in error file hook
 // 		Hooks: []hook.Hook{
 // 			errorFileHook, // Add the manual file hook
 // 		},
 // 		Formatter: &formatter.TextFormatter{ // This formatter is for console output
-// 			EnableColors:    true,
+// 			UseColors:    true,
 // 			TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
 // 			ShowCaller:      true,
 // 		},

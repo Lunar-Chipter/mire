@@ -147,8 +147,8 @@ func (b *LogBuffer) Reset() {
 	b.len = 0
 }
 
-// GetBufferFromPool gets a byte buffer from the pool
-func GetBufferFromPool() *bytes.Buffer {
+// GetBuffer gets a byte buffer from the pool
+func GetBuffer() *bytes.Buffer {
 	atomic.AddInt64(&globalPoolMetrics.bufferGetCount, 1)
 	// Try to get from goroutine-local pool first for zero lock contention
 	localPool := GetGoroutineLocalBufferPool()
@@ -161,8 +161,8 @@ func GetBufferFromPool() *bytes.Buffer {
 	return bufferPool.Get().(*bytes.Buffer)
 }
 
-// PutBufferToPool returns a byte buffer to the pool
-func PutBufferToPool(buf *bytes.Buffer) {
+// PutBuffer returns a byte buffer to the pool
+func PutBuffer(buf *bytes.Buffer) {
 	atomic.AddInt64(&globalPoolMetrics.bufferPutCount, 1)
 	// Try to put to goroutine-local pool first for zero lock contention
 	localPool := GetGoroutineLocalBufferPool()
@@ -182,14 +182,14 @@ var smallByteSlicePool = sync.Pool{
 	},
 }
 
-// GetSmallByteSliceFromPool gets a small byte slice from the pool.
-func GetSmallByteSliceFromPool() []byte {
+// GetSmallBuf gets a small byte slice from the pool.
+func GetSmallBuf() []byte {
 	atomic.AddInt64(&globalPoolMetrics.sliceGetCount, 1)
 	return smallByteSlicePool.Get().([]byte)[:0] // Get and reset length
 }
 
-// PutSmallByteSliceToPool returns a small byte slice to the pool.
-func PutSmallByteSliceToPool(b []byte) {
+// PutSmallBuf returns a small byte slice to the pool.
+func PutSmallBuf(b []byte) {
 	// Avoid putting back overly large slices to prevent pool pollution
 	if cap(b) < MaxSmallSlicePoolSize { // Keep slices up to 1KB
 		//nolint:staticcheck
@@ -207,8 +207,8 @@ var mapStringPool = sync.Pool{
 	},
 }
 
-// GetMapStringFromPool gets a map[string]string from the pool
-func GetMapStringFromPool() map[string]string {
+// GetMapStr gets a map[string]string from the pool
+func GetMapStr() map[string]string {
 	atomic.AddInt64(&globalPoolMetrics.mapGetCount, 1)
 	m := mapStringPool.Get().(map[string]string)
 	for k := range m {
@@ -217,8 +217,8 @@ func GetMapStringFromPool() map[string]string {
 	return m
 }
 
-// PutMapStringToPool returns a map[string]string to the pool
-func PutMapStringToPool(m map[string]string) {
+// PutMapStr returns a map[string]string to the pool
+func PutMapStr(m map[string]string) {
 	mapStringPool.Put(m)
 	atomic.AddInt64(&globalPoolMetrics.mapPutCount, 1)
 }

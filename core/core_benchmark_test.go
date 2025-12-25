@@ -95,18 +95,18 @@ func BenchmarkLevelToBytesMethod(b *testing.B) {
 	}
 }
 
-// BenchmarkCallerInfoPoolOperations benchmarks the caller info pool operations
-func BenchmarkCallerInfoPoolOperations(b *testing.B) {
+// BenchmarkCallerPoolOperations benchmarks the caller info pool operations
+func BenchmarkCallerPoolOperations(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		info := GetCallerInfoFromPool()
+		info := GetCallerFromPool()
 		info.File = "test.go"
 		info.Line = i
 		info.Function = "BenchmarkFunction"
 		info.Package = "main"
 
-		PutCallerInfoToPool(info)
+		PutCallerToPool(info)
 	}
 }
 
@@ -141,10 +141,10 @@ func BenchmarkBufferPoolOperations(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		buf := GetBufferFromPool()
+		buf := GetBuffer()
 		*buf = append(*buf, []byte("test data")...)
 
-		PutBufferToPool(buf)
+		PutBuffer(buf)
 	}
 }
 

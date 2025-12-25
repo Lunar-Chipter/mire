@@ -144,7 +144,7 @@ func TestExtractFromContext(t *testing.T) {
 
 	// Extract all values using ExtractFromContext
 	result := ExtractFromContext(ctx)
-	defer PutMapStringToPool(result) // Important: return the map to the pool
+	defer PutMapStr(result) // Important: return the map to the pool
 
 	// Verify all values are present
 	if result["trace_id"] != traceID {
@@ -182,7 +182,7 @@ func TestExtractFromContextWithMissingValues(t *testing.T) {
 
 	// Extract values
 	result := ExtractFromContext(ctx)
-	defer PutMapStringToPool(result) // Important: return the map to the pool
+	defer PutMapStr(result) // Important: return the map to the pool
 
 	// Should have trace_id and user_id
 	if result["trace_id"] != traceID {
@@ -213,7 +213,7 @@ func TestExtractFromContextEmpty(t *testing.T) {
 
 	// Extract from empty context
 	result := ExtractFromContext(ctx)
-	defer PutMapStringToPool(result) // Important: return the map to the pool
+	defer PutMapStr(result) // Important: return the map to the pool
 
 	// Should be an empty map
 	if len(result) != 0 {
@@ -260,7 +260,7 @@ func TestExtractFromContextWithEmptyStringValues(t *testing.T) {
 
 	// Extract values
 	result := ExtractFromContext(ctx)
-	defer PutMapStringToPool(result) // Important: return the map to the pool
+	defer PutMapStr(result) // Important: return the map to the pool
 
 	// Empty string values should not be included in the result
 	// at

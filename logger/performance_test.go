@@ -14,16 +14,16 @@ import (
 func TestMemoryAllocations(t *testing.T) {
 	t.Run("TraceLevelAllocations", func(t *testing.T) {
 		allocs := testing.AllocsPerRun(1000, func() {
-			logger := New(LoggerConfig{
+			logger := New(Config{
 				Level:  core.TRACE,
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:  false,
-					ShowTimestamp: false,
+					UseColors:  false,
+					ShowShowTimestamp: false,
 					ShowCaller:    false,
 				},
 			})
-			logger.Trace("test message")
+			logger.ShowTrace("test message")
 			logger.Close()
 		})
 		t.Logf("Allocations per Trace call: %.2f", allocs)
@@ -31,12 +31,12 @@ func TestMemoryAllocations(t *testing.T) {
 
 	t.Run("DebugLevelAllocations", func(t *testing.T) {
 		allocs := testing.AllocsPerRun(1000, func() {
-			logger := New(LoggerConfig{
+			logger := New(Config{
 				Level:  core.DEBUG,
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:  false,
-					ShowTimestamp: false,
+					UseColors:  false,
+					ShowShowTimestamp: false,
 					ShowCaller:    false,
 				},
 			})
@@ -48,12 +48,12 @@ func TestMemoryAllocations(t *testing.T) {
 
 	t.Run("InfoLevelAllocations", func(t *testing.T) {
 		allocs := testing.AllocsPerRun(1000, func() {
-			logger := New(LoggerConfig{
+			logger := New(Config{
 				Level:  core.INFO,
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:  false,
-					ShowTimestamp: false,
+					UseColors:  false,
+					ShowShowTimestamp: false,
 					ShowCaller:    false,
 				},
 			})
@@ -65,12 +65,12 @@ func TestMemoryAllocations(t *testing.T) {
 
 	t.Run("ErrorLevelAllocations", func(t *testing.T) {
 		allocs := testing.AllocsPerRun(1000, func() {
-			logger := New(LoggerConfig{
+			logger := New(Config{
 				Level:  core.ERROR,
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:  false,
-					ShowTimestamp: false,
+					UseColors:  false,
+					ShowShowTimestamp: false,
 					ShowCaller:    false,
 				},
 			})
@@ -84,7 +84,7 @@ func TestMemoryAllocations(t *testing.T) {
 // TestThroughput benchmarks the throughput of the logger
 func TestThroughput(t *testing.T) {
 	t.Run("ThroughputWithoutFields", func(t *testing.T) {
-		logger := NewDefaultLogger()
+		logger := New()
 		defer logger.Close()
 
 		start := time.Now()
@@ -100,7 +100,7 @@ func TestThroughput(t *testing.T) {
 	})
 
 	t.Run("ThroughputWithFields", func(t *testing.T) {
-		logger := NewDefaultLogger()
+		logger := New()
 		defer logger.Close()
 
 		start := time.Now()
@@ -123,12 +123,12 @@ func TestThroughput(t *testing.T) {
 // at
 func BenchmarkMemoryAllocations(b *testing.B) {
 	b.Run("BenchmarkTraceAlloc", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.TRACE,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -137,17 +137,17 @@ func BenchmarkMemoryAllocations(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 		for i := 0; i < b.N; i++ {
-			logger.Trace("test message")
+			logger.ShowTrace("test message")
 		}
 	})
 
 	b.Run("BenchmarkDebugAlloc", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.DEBUG,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -161,12 +161,12 @@ func BenchmarkMemoryAllocations(b *testing.B) {
 	})
 
 	b.Run("BenchmarkInfoAlloc", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -180,12 +180,12 @@ func BenchmarkMemoryAllocations(b *testing.B) {
 	})
 
 	b.Run("BenchmarkErrorAlloc", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.ERROR,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -202,12 +202,12 @@ func BenchmarkMemoryAllocations(b *testing.B) {
 // BenchmarkFormatterAllocations compares memory allocations between formatters
 func BenchmarkFormatterAllocations(b *testing.B) {
 	b.Run("BenchmarkTextFormatterAllocs", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false, // Disable timestamp for benchmark consistency
+				UseColors:  false,
+				ShowShowTimestamp: false, // Disable timestamp for benchmark consistency
 				ShowCaller:    false,
 			},
 		})
@@ -221,7 +221,7 @@ func BenchmarkFormatterAllocations(b *testing.B) {
 	})
 
 	b.Run("BenchmarkJSONFormatterAllocs", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.JSONFormatter{
@@ -241,12 +241,12 @@ func BenchmarkFormatterAllocations(b *testing.B) {
 // at
 func BenchmarkFieldAllocations(b *testing.B) {
 	b.Run("BenchmarkWithNoFields", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -260,12 +260,12 @@ func BenchmarkFieldAllocations(b *testing.B) {
 	})
 
 	b.Run("BenchmarkWithOneField", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -281,12 +281,12 @@ func BenchmarkFieldAllocations(b *testing.B) {
 	})
 
 	b.Run("BenchmarkWithFiveFields", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -306,12 +306,12 @@ func BenchmarkFieldAllocations(b *testing.B) {
 	})
 
 	b.Run("BenchmarkWithTenFields", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -339,7 +339,7 @@ func BenchmarkFieldAllocations(b *testing.B) {
 // BenchmarkThroughput benchmarks the throughput of the logger
 func BenchmarkThroughput(b *testing.B) {
 	b.Run("BenchmarkThroughputNoFields", func(b *testing.B) {
-		logger := NewDefaultLogger()
+		logger := New()
 		defer logger.Close()
 
 		b.ResetTimer()
@@ -350,7 +350,7 @@ func BenchmarkThroughput(b *testing.B) {
 	})
 
 	b.Run("BenchmarkThroughputWithFields", func(b *testing.B) {
-		logger := NewDefaultLogger()
+		logger := New()
 		defer logger.Close()
 
 		b.ResetTimer()
@@ -365,7 +365,7 @@ func BenchmarkThroughput(b *testing.B) {
 	})
 
 	b.Run("BenchmarkThroughputWithFieldsAndFormatting", func(b *testing.B) {
-		logger := NewDefaultLogger()
+		logger := New()
 		defer logger.Close()
 
 		b.ResetTimer()
@@ -387,7 +387,7 @@ func BenchmarkThroughputLevels(b *testing.B) {
 		level core.Level
 		logFn func(*Logger, string)
 	}{
-		{"Trace", core.TRACE, func(l *Logger, msg string) { l.Trace(msg) }},
+		{"Trace", core.TRACE, func(l *Logger, msg string) { l.ShowTrace(msg) }},
 		{"Debug", core.DEBUG, func(l *Logger, msg string) { l.Debug(msg) }},
 		{"Info", core.INFO, func(l *Logger, msg string) { l.Info(msg) }},
 		{"Warn", core.WARN, func(l *Logger, msg string) { l.Warn(msg) }},
@@ -396,12 +396,12 @@ func BenchmarkThroughputLevels(b *testing.B) {
 
 	for _, lvl := range levels {
 		b.Run("BenchmarkThroughput"+lvl.name, func(b *testing.B) {
-			logger := New(LoggerConfig{
+			logger := New(Config{
 				Level:  core.TRACE, // Set to lowest level to ensure all logs pass through
 				Output: io.Discard,
 				Formatter: &formatter.TextFormatter{
-					EnableColors:  false,
-					ShowTimestamp: false,
+					UseColors:  false,
+					ShowShowTimestamp: false,
 					ShowCaller:    false,
 				},
 			})
@@ -422,16 +422,16 @@ func BenchmarkThroughputFormatters(b *testing.B) {
 		name string
 		fmt  formatter.Formatter
 	}{
-		{"TextFormatter", &formatter.TextFormatter{EnableColors: false, ShowTimestamp: false, ShowCaller: false}},
-		{"TextFormatterWithTS", &formatter.TextFormatter{EnableColors: false, ShowTimestamp: true, ShowCaller: false}},
-		{"TextFormatterWithTSAndCaller", &formatter.TextFormatter{EnableColors: false, ShowTimestamp: true, ShowCaller: true}},
+		{"TextFormatter", &formatter.TextFormatter{UseColors: false, ShowShowTimestamp: false, ShowCaller: false}},
+		{"TextFormatterWithTS", &formatter.TextFormatter{UseColors: false, ShowShowTimestamp: true, ShowCaller: false}},
+		{"TextFormatterWithTSAndCaller", &formatter.TextFormatter{UseColors: false, ShowShowTimestamp: true, ShowCaller: true}},
 		{"JSONFormatter", &formatter.JSONFormatter{PrettyPrint: false}},
 		{"JSONFormatterPretty", &formatter.JSONFormatter{PrettyPrint: true}},
 	}
 
 	for _, f := range formatters {
 		b.Run("BenchmarkThroughput"+f.name, func(b *testing.B) {
-			logger := New(LoggerConfig{
+			logger := New(Config{
 				Level:     core.INFO,
 				Output:    io.Discard,
 				Formatter: f.fmt,
@@ -450,12 +450,12 @@ func BenchmarkThroughputFormatters(b *testing.B) {
 // at
 func BenchmarkFormatters(b *testing.B) {
 	b.Run("BenchmarkTextFormatter", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: true,
+				UseColors:  false,
+				ShowShowTimestamp: true,
 				ShowCaller:    false,
 			},
 		})
@@ -469,7 +469,7 @@ func BenchmarkFormatters(b *testing.B) {
 	})
 
 	b.Run("BenchmarkJSONFormatter", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.JSONFormatter{
@@ -489,15 +489,15 @@ func BenchmarkFormatters(b *testing.B) {
 // BenchmarkAsyncLogging tests the async logging performance
 func BenchmarkAsyncLogging(b *testing.B) {
 	b.Run("BenchmarkAsyncLogging", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:                     core.INFO,
 			Output:                    io.Discard,
-			AsyncLogging:              true,
-			AsyncWorkerCount:          4,
-			AsyncLogChannelBufferSize: 1000,
+			Async:              true,
+			Workers:          4,
+			ChanBufSize: 1000,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: true,
+				UseColors:  false,
+				ShowShowTimestamp: true,
 				ShowCaller:    false,
 			},
 		})
@@ -511,12 +511,12 @@ func BenchmarkAsyncLogging(b *testing.B) {
 	})
 
 	b.Run("BenchmarkSyncLogging", func(b *testing.B) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: true,
+				UseColors:  false,
+				ShowShowTimestamp: true,
 				ShowCaller:    false,
 			},
 		})
@@ -535,7 +535,7 @@ func BenchmarkContextLogging(b *testing.B) {
 	ctx := context.Background()
 
 	b.Run("BenchmarkContextLogging", func(b *testing.B) {
-		logger := NewDefaultLogger()
+		logger := New()
 		defer logger.Close()
 
 		b.ResetTimer()
@@ -546,7 +546,7 @@ func BenchmarkContextLogging(b *testing.B) {
 	})
 
 	b.Run("BenchmarkStandardLogging", func(b *testing.B) {
-		logger := NewDefaultLogger()
+		logger := New()
 		defer logger.Close()
 
 		b.ResetTimer()
@@ -560,7 +560,7 @@ func BenchmarkContextLogging(b *testing.B) {
 // TestLogEntryPoolEffectiveness tests the effectiveness of the object pool
 func TestLogEntryPoolEffectiveness(t *testing.T) {
 	// First, create many log entries to populate the pool
-	logger := NewDefaultLogger()
+	logger := New()
 	for i := 0; i < 10000; i++ {
 		logger.Info("initial message")
 	}
@@ -568,7 +568,7 @@ func TestLogEntryPoolEffectiveness(t *testing.T) {
 
 	// Now test allocations with a warmed-up pool
 	allocs := testing.AllocsPerRun(1000, func() {
-		logger := NewDefaultLogger()
+		logger := New()
 		logger.Info("test message")
 		logger.Close()
 	})
@@ -585,7 +585,7 @@ func TestLogEntryPoolEffectiveness(t *testing.T) {
 
 // TestConcurrentLoggingPerformance tests performance under concurrent load
 func TestConcurrentLoggingPerformance(t *testing.T) {
-	logger := NewDefaultLogger()
+	logger := New()
 	defer logger.Close()
 
 	// Run concurrent logging from multiple goroutines
@@ -613,15 +613,15 @@ func TestConcurrentLoggingPerformance(t *testing.T) {
 	t.Logf("Concurrent logging (10 goroutines, 1000 messages each): %v", duration)
 }
 
-// TestBufferedWriterPerformance tests performance with buffered writer
-func TestBufferedWriterPerformance(t *testing.T) {
+// TestBufferedPerformance tests performance with buffered writer
+func TestBufferedPerformance(t *testing.T) {
 	t.Run("WithoutBuffer", func(t *testing.T) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:  core.INFO,
 			Output: io.Discard,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -637,13 +637,13 @@ func TestBufferedWriterPerformance(t *testing.T) {
 	})
 
 	t.Run("WithBuffer", func(t *testing.T) {
-		logger := New(LoggerConfig{
+		logger := New(Config{
 			Level:      core.INFO,
 			Output:     io.Discard,
-			BufferSize: 1000,
+			BufSize: 1000,
 			Formatter: &formatter.TextFormatter{
-				EnableColors:  false,
-				ShowTimestamp: false,
+				UseColors:  false,
+				ShowShowTimestamp: false,
 				ShowCaller:    false,
 			},
 		})
@@ -667,14 +667,14 @@ func TestFormatterPerformance(t *testing.T) {
 		name string
 		fmt  formatter.Formatter
 	}{
-		{"TextFormatter", &formatter.TextFormatter{EnableColors: false, ShowTimestamp: false, ShowCaller: false}},
-		{"TextFormatterWithTS", &formatter.TextFormatter{EnableColors: false, ShowTimestamp: true, ShowCaller: false}},
+		{"TextFormatter", &formatter.TextFormatter{UseColors: false, ShowShowTimestamp: false, ShowCaller: false}},
+		{"TextFormatterWithTS", &formatter.TextFormatter{UseColors: false, ShowShowTimestamp: true, ShowCaller: false}},
 		{"JSONFormatter", &formatter.JSONFormatter{PrettyPrint: false}},
 	}
 
 	for _, f := range formatters {
 		t.Run("Performance"+f.name, func(t *testing.T) {
-			logger := New(LoggerConfig{
+			logger := New(Config{
 				Level:     core.INFO,
 				Output:    io.Discard,
 				Formatter: f.fmt,
@@ -697,15 +697,15 @@ func TestFormatterPerformance(t *testing.T) {
 // Example usage for documentation
 func ExampleLogger_performance() {
 	// Create an efficient logger configuration
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:                     core.INFO,
 		Output:                    io.Discard, // Use io.Discard for benchmarks
-		AsyncLogging:              true,       // Enable async logging
-		AsyncWorkerCount:          4,          // to
-		AsyncLogChannelBufferSize: 1000,       // Buffer up to 1000 log messages
+		Async:              true,       // Enable async logging
+		Workers:          4,          // to
+		ChanBufSize: 1000,       // Buffer up to 1000 log messages
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false, // Disable colors for performance
-			ShowTimestamp: true,  // Include timestamps
+			UseColors:  false, // Disable colors for performance
+			ShowShowTimestamp: true,  // Include timestamps
 			ShowCaller:    false, // Disable caller info for performance
 		},
 	})

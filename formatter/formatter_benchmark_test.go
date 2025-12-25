@@ -10,7 +10,7 @@ import (
 
 // BenchmarkCSVFormatter benchmarks the CSV formatter
 func BenchmarkCSVFormatter(b *testing.B) {
-	formatter := NewCSVFormatter()
+	formatter := NewCSV()
 	formatter.IncludeHeader = false
 	formatter.FieldOrder = []string{"timestamp", "level", "message", "pid", "trace_id"}
 
@@ -28,7 +28,7 @@ func BenchmarkCSVFormatter(b *testing.B) {
 
 // BenchmarkJSONFormatter benchmarks the JSON formatter (non-pretty)
 func BenchmarkJSONFormatter(b *testing.B) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSON()
 	formatter.PrettyPrint = false
 
 	entry := createBenchmarkEntry()
@@ -45,7 +45,7 @@ func BenchmarkJSONFormatter(b *testing.B) {
 
 // BenchmarkJSONFormatterPretty benchmarks the JSON formatter (pretty-printed)
 func BenchmarkJSONFormatterPretty(b *testing.B) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSON()
 	formatter.PrettyPrint = true
 
 	entry := createBenchmarkEntry()
@@ -62,10 +62,10 @@ func BenchmarkJSONFormatterPretty(b *testing.B) {
 
 // BenchmarkTextFormatter benchmarks the Text formatter
 func BenchmarkTextFormatter(b *testing.B) {
-	formatter := NewTextFormatter()
-	formatter.ShowTimestamp = true
-	formatter.ShowCaller = true
-	formatter.EnableColors = false
+	formatter := NewText()
+	formatter.Timestamp = true
+	formatter.Caller = true
+	formatter.Colors = false
 
 	entry := createBenchmarkEntry()
 	defer core.PutEntryToPool(entry)
@@ -81,10 +81,10 @@ func BenchmarkTextFormatter(b *testing.B) {
 
 // BenchmarkTextFormatterWithColors benchmarks the Text formatter with colors
 func BenchmarkTextFormatterWithColors(b *testing.B) {
-	formatter := NewTextFormatter()
-	formatter.ShowTimestamp = true
-	formatter.ShowCaller = true
-	formatter.EnableColors = true
+	formatter := NewText()
+	formatter.Timestamp = true
+	formatter.Caller = true
+	formatter.Colors = true
 
 	entry := createBenchmarkEntry()
 	defer core.PutEntryToPool(entry)
@@ -100,7 +100,7 @@ func BenchmarkTextFormatterWithColors(b *testing.B) {
 
 // BenchmarkCSVFormatterBatch benchmarks the CSV formatter in batch mode
 func BenchmarkCSVFormatterBatch(b *testing.B) {
-	formatter := NewCSVFormatter()
+	formatter := NewCSV()
 	formatter.IncludeHeader = false
 
 	entry := createBenchmarkEntry()
@@ -121,11 +121,11 @@ func BenchmarkAllFormatters(b *testing.B) {
 		name      string
 		formatter Formatter
 	}{
-		{"CSV", NewCSVFormatter()},
-		{"JSON", NewJSONFormatter()},
+		{"CSV", NewCSV()},
+		{"JSON", NewJSON()},
 		{"JSON-Pretty", &JSONFormatter{PrettyPrint: true}},
-		{"Text", NewTextFormatter()},
-		{"Text-With-Colors", &TextFormatter{EnableColors: true}},
+		{"Text", NewText()},
+		{"Text-With-Colors", &TextFormatter{UseColors: true}},
 	}
 
 	entry := createBenchmarkEntry()
@@ -150,9 +150,9 @@ func BenchmarkFormatterWithFields(b *testing.B) {
 		name      string
 		formatter Formatter
 	}{
-		{"CSV", NewCSVFormatter()},
-		{"JSON", NewJSONFormatter()},
-		{"Text", NewTextFormatter()},
+		{"CSV", NewCSV()},
+		{"JSON", NewJSON()},
+		{"Text", NewText()},
 	}
 
 	entry := core.GetEntryFromPool()
@@ -184,20 +184,20 @@ func BenchmarkFormatterWithFields(b *testing.B) {
 
 // BenchmarkFormatterWithSensitiveData benchmarks formatters with sensitive data masking
 func BenchmarkFormatterWithSensitiveData(b *testing.B) {
-	csvFormatter := NewCSVFormatter()
+	csvFormatter := NewCSV()
 	csvFormatter.SensitiveFields = []string{"password", "token", "ssn"}
 	csvFormatter.MaskSensitiveData = true
-	csvFormatter.MaskStringValue = "[MASKED]"
+	csvFormatter.MaskStr = "[MASKED]"
 
-	jsonFormatter := NewJSONFormatter()
+	jsonFormatter := NewJSON()
 	jsonFormatter.SensitiveFields = []string{"password", "token", "ssn"}
 	jsonFormatter.MaskSensitiveData = true
-	jsonFormatter.MaskStringValue = "[MASKED]"
+	jsonFormatter.MaskStr = "[MASKED]"
 
-	textFormatter := NewTextFormatter()
+	textFormatter := NewText()
 	textFormatter.SensitiveFields = []string{"password", "token", "ssn"}
 	textFormatter.MaskSensitiveData = true
-	textFormatter.MaskStringValue = "[MASKED]"
+	textFormatter.MaskStr = "[MASKED]"
 
 	entry := core.GetEntryFromPool()
 	entry.Timestamp = time.Now()
@@ -256,7 +256,7 @@ func createBenchmarkEntry() *core.LogEntry {
 
 // BenchmarkFormatterConcurrent benchmarks concurrent formatter usage
 func BenchmarkFormatterConcurrent(b *testing.B) {
-	formatter := NewTextFormatter()
+	formatter := NewText()
 	entry := createBenchmarkEntry()
 	defer core.PutEntryToPool(entry)
 

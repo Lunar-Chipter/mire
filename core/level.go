@@ -173,5 +173,5 @@ func ParseLevel(levelStr string) (Level, error) {
 		return WARN, nil
 	}
 
-	return INFO, errors.NewInvalidLogLevelError(levelStr)
+	return INFO, errors.NewInvalidLevel(levelStr)
 }

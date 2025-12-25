@@ -26,8 +26,8 @@ func (e *wrappedError) Unwrap() error {
 	return e.cause
 }
 
-// BufferedWriter is a buffered writer with batch processing
-type BufferedWriter struct {
+// Buffered is a buffered writer with batch processing
+type Buffered struct {
 	writer        io.Writer
 	buffer        chan []byte
 	bufferSize    int
@@ -45,9 +45,9 @@ type BufferedWriter struct {
 	closed        bool
 }
 
-// NewBufferedWriter creates a new BufferedWriter
-func NewBufferedWriter(writer io.Writer, bufferSize int, flushInterval time.Duration, errorHandler func(error), batchSize int, batchTimeout time.Duration) *BufferedWriter {
-	bw := &BufferedWriter{
+// NewBuffered creates a new Buffered
+func NewBuffered(writer io.Writer, bufferSize int, flushInterval time.Duration, errorHandler func(error), batchSize int, batchTimeout time.Duration) *Buffered {
+	bw := &Buffered{
 		writer:        writer,
 		buffer:        make(chan []byte, bufferSize),
 		bufferSize:    bufferSize,
@@ -72,7 +72,7 @@ func NewBufferedWriter(writer io.Writer, bufferSize int, flushInterval time.Dura
 }
 
 // Write writes data to the buffer. If the buffer is full, the log is dropped.
-func (bw *BufferedWriter) Write(p []byte) (n int, err error) {
+func (bw *Buffered) Write(p []byte) (n int, err error) {
 	// Check if the writer is closed to avoid sending to closed channel
 	bw.mu.Lock()
 	if bw.closed {
@@ -107,7 +107,7 @@ func (bw *BufferedWriter) Write(p []byte) (n int, err error) {
 }
 
 // flushWorker is the goroutine that flushes buffered logs
-func (bw *BufferedWriter) flushWorker() {
+func (bw *Buffered) flushWorker() {
 	defer bw.wg.Done()
 
 	ticker := time.NewTicker(bw.flushInterval)
@@ -201,7 +201,7 @@ func (bw *BufferedWriter) flushWorker() {
 }
 
 // flushBatch flushes a batch of log entries
-func (bw *BufferedWriter) flushBatch(batch [][]byte) {
+func (bw *Buffered) flushBatch(batch [][]byte) {
 	if len(batch) == 0 {
 		return
 	}
@@ -237,7 +237,7 @@ func (bw *BufferedWriter) flushBatch(batch [][]byte) {
 }
 
 // Stats returns statistics about the buffered writer
-func (bw *BufferedWriter) Stats() map[string]interface{} {
+func (bw *Buffered) Stats() map[string]interface{} {
 	return map[string]interface{}{
 		"buffer_size":   bw.bufferSize,
 		"current_queue": len(bw.buffer),
@@ -248,7 +248,7 @@ func (bw *BufferedWriter) Stats() map[string]interface{} {
 }
 
 // Close closes the buffered writer, ensuring all logs are flushed.
-func (bw *BufferedWriter) Close() error {
+func (bw *Buffered) Close() error {
 	// Use a mutex to make sure Close is thread-safe and only done once
 	bw.mu.Lock()
 

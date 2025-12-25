@@ -10,8 +10,8 @@ import (
 
 func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 	// at
-	tempBuf := GetSmallByteSliceFromPool()
-	defer PutSmallByteSliceToPool(tempBuf)
+	tempBuf := GetSmallBuf()
+	defer PutSmallBuf(tempBuf)
 
 	var needsQuote bool
 	var content []byte // The content to write, potentially truncated
@@ -87,8 +87,8 @@ func FormatTimestamp(buf *bytes.Buffer, t time.Time, format string) {
 		formatSimpleWithMillis(buf, t)
 	default:
 		// Fallback for custom formats
-		tempBuf := GetSmallByteSliceFromPool()
-		defer PutSmallByteSliceToPool(tempBuf)
+		tempBuf := GetSmallBuf()
+		defer PutSmallBuf(tempBuf)
 		tsBytes := t.AppendFormat(tempBuf[:0], format)
 		buf.Write(tsBytes)
 	}
@@ -252,8 +252,8 @@ func convertValueToString(value interface{}) string {
 
 // at
 func WriteInt(buf *bytes.Buffer, value int64) {
-	tempBuf := GetSmallByteSliceFromPool()
-	defer PutSmallByteSliceToPool(tempBuf)
+	tempBuf := GetSmallBuf()
+	defer PutSmallBuf(tempBuf)
 
 	// Use AppendInt to format the integer
 	bytes := strconv.AppendInt(tempBuf[:0], value, 10) // at
@@ -262,8 +262,8 @@ func WriteInt(buf *bytes.Buffer, value int64) {
 
 // at
 func WriteUint(buf *bytes.Buffer, value uint64) {
-	tempBuf := GetSmallByteSliceFromPool()
-	defer PutSmallByteSliceToPool(tempBuf)
+	tempBuf := GetSmallBuf()
+	defer PutSmallBuf(tempBuf)
 
 	// Use AppendUint to format the unsigned integer
 	bytes := strconv.AppendUint(tempBuf[:0], value, 10) // at
@@ -272,8 +272,8 @@ func WriteUint(buf *bytes.Buffer, value uint64) {
 
 // at
 func WriteFloat(buf *bytes.Buffer, value float64) {
-	tempBuf := GetSmallByteSliceFromPool()
-	defer PutSmallByteSliceToPool(tempBuf)
+	tempBuf := GetSmallBuf()
+	defer PutSmallBuf(tempBuf)
 
 	// Use AppendFloat to format the float
 	bytes := strconv.AppendFloat(tempBuf[:0], value, 'g', -1, 64) // at

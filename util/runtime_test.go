@@ -124,7 +124,7 @@ func TestGetStackTrace(t *testing.T) {
 		}
 
 		// Ensure the buffer is returned to the pool
-		core.PutBufferToPool(bufPtr)
+		core.PutBuffer(bufPtr)
 	}
 }
 
@@ -149,7 +149,7 @@ func TestGetStackTraceDepth(t *testing.T) {
 
 				// Always return the buffer to the pool
 				if bufPtr != nil {
-					core.PutBufferToPool(bufPtr)
+					core.PutBuffer(bufPtr)
 				}
 			} else {
 				// This is acceptable if no stack trace is available
@@ -175,7 +175,7 @@ func TestGetStackTraceZeroDepth(t *testing.T) {
 
 		// Return the buffer to the pool
 		if bufPtr != nil {
-			core.PutBufferToPool(bufPtr)
+			core.PutBuffer(bufPtr)
 		}
 	} else {
 		// This is also acceptable
@@ -199,7 +199,7 @@ func TestGetStackTraceNegativeDepth(t *testing.T) {
 
 		// Return the buffer to the pool
 		if bufPtr != nil {
-			core.PutBufferToPool(bufPtr)
+			core.PutBuffer(bufPtr)
 		}
 	} else {
 		// This is also acceptable
@@ -257,7 +257,7 @@ func TestStackTracePoolReturn(t *testing.T) {
 		}
 
 		// Return the buffer to the pool
-		core.PutBufferToPool(bufPtr)
+		core.PutBuffer(bufPtr)
 
 		// at
 		// since it might be reused. The Put function should handle it properly.

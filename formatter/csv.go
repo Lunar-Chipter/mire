@@ -15,15 +15,15 @@ type CSVFormatter struct {
 	TimestampFormat   string                              // Custom timestamp format
 	SensitiveFields   []string                            // List of sensitive field names to mask
 	MaskSensitiveData bool                                // Whether to mask sensitive data
-	MaskStringValue   string                              // String value to use for masking
+	MaskValue   string                              // String value to use for masking
 	FieldTransformers map[string]func(interface{}) string // Functions to transform field values
 }
 
 // NewCSVFormatter creates a new CSVFormatter
 // NewCSVFormatter creates a new CSVFormatter
-func NewCSVFormatter() *CSVFormatter {
+func NewCSV() *CSVFormatter {
 	return &CSVFormatter{
-		MaskStringValue:   "[MASKED]",
+		MaskStr:   "[MASKED]",
 		FieldTransformers: make(map[string]func(interface{}) string),
 	}
 }
@@ -130,15 +130,15 @@ func (f *CSVFormatter) writeCSVValueBytes(buf *bytes.Buffer, value []byte) {
 func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *core.LogEntry) error {
 	switch field {
 	case "timestamp":
-		timestamp := util.GetBufferFromPool()
+		timestamp := util.GetBuffer()
 		// Use default format if none is specified
-		format := f.TimestampFormat
+		format := f.TimeFmt
 		if format == "" {
 			format = "2006-01-02 15:04:05.000" // Default timestamp format
 		}
 		util.FormatTimestamp(timestamp, entry.Timestamp, format)
 		f.writeCSVValueBytes(buf, timestamp.Bytes())
-		util.PutBufferToPool(timestamp)
+		util.PutBuffer(timestamp)
 	case "level":
 		f.writeCSVValueBytes(buf, entry.Level.Bytes())
 	case "message":
@@ -177,8 +177,8 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 		}
 	case "error":
 		if entry.Error != nil {
-			// Check if the error implements ErrorAppender for zero-allocation
-			if appender, ok := entry.Error.(core.ErrorAppender); ok {
+			// Check if the error implements ErrAppend for zero-allocation
+			if appender, ok := entry.Error.(core.ErrAppend); ok {
 				// at
 				buf.WriteByte('"')
 				appender.AppendError(buf)
@@ -194,7 +194,7 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 		if val, exists := entry.Fields[field]; exists {
 			// Check for sensitive fields that need masking
 			if f.MaskSensitiveData && f.isSensitiveField(field) {
-				f.writeCSVValue(buf, f.MaskStringValue)
+				f.writeCSVValue(buf, f.MaskStr)
 				return nil
 			}
 

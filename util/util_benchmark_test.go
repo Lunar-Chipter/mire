@@ -131,9 +131,9 @@ func BenchmarkBufferPool(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		buf := GetBufferFromPool()
+		buf := GetBuffer()
 		buf.Write([]byte("test data for buffer pool benchmark"))
-		PutBufferToPool(buf)
+		PutBuffer(buf)
 	}
 }
 
@@ -142,9 +142,9 @@ func BenchmarkSmallByteSlicePool(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		slice := GetSmallByteSliceFromPool()
+		slice := GetSmallBuf()
 		slice = append(slice, []byte("test")...)
-		PutSmallByteSliceToPool(slice)
+		PutSmallBuf(slice)
 	}
 }
 
@@ -202,7 +202,7 @@ func BenchmarkExtractFromContext(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		contextData := ExtractFromContext(ctx)
-		PutMapStringToPool(contextData)
+		PutMapStr(contextData)
 	}
 }
 
@@ -225,7 +225,7 @@ func BenchmarkGetStackTrace(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		stackTrace, bufPtr := GetStackTrace(10)
 		if stackTrace != nil && bufPtr != nil {
-			core.PutBufferToPool(bufPtr)
+			core.PutBuffer(bufPtr)
 		}
 	}
 }
@@ -241,8 +241,8 @@ func BenchmarkGoroutineLocalBufferPool(b *testing.B) {
 			localPool.PutBufferToLocalPool(buf)
 		} else {
 			// Fallback to global pool if local is empty
-			globalBuf := GetBufferFromPool()
-			PutBufferToPool(globalBuf)
+			globalBuf := GetBuffer()
+			PutBuffer(globalBuf)
 		}
 	}
 }
@@ -252,10 +252,10 @@ func BenchmarkMapStringPool(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		m := GetMapStringFromPool()
+		m := GetMapStr()
 		m["key"] = "value"
 		m["key2"] = "value2"
-		PutMapStringToPool(m)
+		PutMapStr(m)
 	}
 }
 

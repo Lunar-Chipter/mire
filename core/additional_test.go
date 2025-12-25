@@ -230,7 +230,7 @@ func TestEntryWithAllFields(t *testing.T) {
 	entry.Level = DEBUG
 	entry.LevelName = []byte("DEBUG")
 	entry.Message = []byte("complete test message")
-	entry.Caller = GetCallerInfoFromPool()
+	entry.Caller = GetCallerFromPool()
 	entry.Caller.File = "test.go"
 	entry.Caller.Line = 100
 	entry.Caller.Function = "CompleteTest"

@@ -11,6 +11,6 @@ type RotationConfig struct {
 	MaxBackups      int
 	LocalTime       bool
 	Compress        bool
-	RotationTime    time.Duration
+	RotateInterval  time.Duration
 	FilenamePattern string
 }

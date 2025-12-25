@@ -8,11 +8,11 @@ import (
 	"github.com/Lunar-Chipter/mire/core"
 )
 
-// TestNewDefaultMetricsCollector tests creating a new DefaultMetricsCollector
-func TestNewDefaultMetricsCollector(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+// TestNewMetrics tests creating a new Metrics
+func TestNewMetrics(t *testing.T) {
+	metricsCollector := NewMetrics()
 	if metricsCollector == nil {
-		t.Fatal("NewDefaultMetricsCollector returned nil")
+		t.Fatal("NewMetrics returned nil")
 	}
 
 	// Check initial state of maps
@@ -40,7 +40,7 @@ func TestNewDefaultMetricsCollector(t *testing.T) {
 
 // TestIncrementCounter tests the IncrementCounter method
 func TestIncrementCounter(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// at
 	levels := []core.Level{core.TRACE, core.DEBUG, core.INFO, core.NOTICE, core.WARN, core.ERROR, core.FATAL, core.PANIC}
@@ -67,7 +67,7 @@ func TestIncrementCounter(t *testing.T) {
 
 // TestRecordHistogram tests the RecordHistogram method
 func TestRecordHistogram(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// Record some histogram values
 	metricName := "response_time"
@@ -104,7 +104,7 @@ func TestRecordHistogram(t *testing.T) {
 
 // TestRecordGauge tests the RecordGauge method
 func TestRecordGauge(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// Record gauge values
 	metricName := "current_connections"
@@ -125,7 +125,7 @@ func TestRecordGauge(t *testing.T) {
 
 // TestGetCounter tests the GetCounter method
 func TestGetCounter(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// Test with non-existent metric
 	count := metricsCollector.GetCounter("nonexistent")
@@ -150,7 +150,7 @@ func TestGetCounter(t *testing.T) {
 
 // TestGetHistogram tests the GetHistogram method
 func TestGetHistogram(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// Test with non-existent metric
 	min, max, avg, p95 := metricsCollector.GetHistogram("nonexistent")
@@ -183,7 +183,7 @@ func TestGetHistogram(t *testing.T) {
 
 // TestGetCounterCaseSensitivity tests case sensitivity of counter names
 func TestGetCounterCaseSensitivity(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// Increment a counter
 	metricsCollector.IncrementCounter(core.INFO, nil)
@@ -203,7 +203,7 @@ func TestGetCounterCaseSensitivity(t *testing.T) {
 
 // TestRecordHistogramMultipleValues tests histogram with multiple values
 func TestRecordHistogramMultipleValues(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	metricName := "response_times"
 
@@ -234,7 +234,7 @@ func TestRecordHistogramMultipleValues(t *testing.T) {
 
 // TestRecordHistogramEmpty tests histogram with no values
 func TestRecordHistogramEmpty(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// Get histogram for non-existent metric (should return zeros)
 	min, max, avg, p95 := metricsCollector.GetHistogram("empty_histogram")
@@ -245,9 +245,9 @@ func TestRecordHistogramEmpty(t *testing.T) {
 	}
 }
 
-// TestMetricsCollectorConcurrent tests the metrics collector in a concurrent context
-func TestMetricsCollectorConcurrent(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+// TestCollectorConcurrent tests the metrics collector in a concurrent context
+func TestCollectorConcurrent(t *testing.T) {
+	metricsCollector := NewMetrics()
 
 	const numGoroutines = 10
 	const operationsPerGoroutine = 100
@@ -304,7 +304,7 @@ func TestMetricsCollectorConcurrent(t *testing.T) {
 
 // at
 func TestRecordHistogramWithTags(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// Record histogram values with tags
 	// The current implementation doesn't use tags, so we just ensure it doesn't crash
@@ -325,7 +325,7 @@ func TestRecordHistogramWithTags(t *testing.T) {
 
 // TestIncrementCounterWithTags tests counter incrementing with tags
 func TestIncrementCounterWithTags(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+	metricsCollector := NewMetrics()
 
 	// Increment with tags (tags are currently not used in counter implementation)
 	tags := map[string]string{
@@ -343,9 +343,9 @@ func TestIncrementCounterWithTags(t *testing.T) {
 	}
 }
 
-// TestMetricsCollectorWithVariousDataTypes tests various numeric types
-func TestMetricsCollectorWithVariousDataTypes(t *testing.T) {
-	metricsCollector := NewDefaultMetricsCollector()
+// TestCollectorWithVariousDataTypes tests various numeric types
+func TestCollectorWithVariousDataTypes(t *testing.T) {
+	metricsCollector := NewMetrics()
 
 	// Test histogram with various float values
 	testValues := []float64{

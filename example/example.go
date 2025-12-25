@@ -16,13 +16,13 @@ import (
 // ZeroAllocExample demonstrates high-performance, zero-allocation logging
 func ZeroAllocExample() {
 	// Create logger with zero-allocation formatter
-	log := logger.New(logger.LoggerConfig{
+	log := logger.New(logger.Config{
 		Level:  core.INFO,
 		Output: os.Stdout,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  true,
-			ShowTimestamp: true,
-			ShowCaller:    true,
+			EnableUseColors:  true,
+			ShowShowTimestamp: true,
+			ShowShowCaller:    true,
 		},
 	})
 	defer log.Close()
@@ -50,14 +50,14 @@ func ZeroAllocExample() {
 	log.Info("User logged in with legacy API")
 }
 
-// ApplicationLogger demonstrates how to create a well-configured logger for an application
-type ApplicationLogger struct {
+// AppLogger demonstrates how to create a well-configured logger for an application
+type AppLogger struct {
 	logger *logger.Logger
 }
 
-// NewApplicationLogger creates a new instance of ApplicationLogger with recommended configuration
-func NewApplicationLogger(output io.Writer, level core.Level, environment string) *ApplicationLogger {
-	config := logger.LoggerConfig{
+// NewAppLogger creates a new instance of AppLogger with recommended configuration
+func NewAppLogger(output io.Writer, level core.Level, environment string) *AppLogger {
+	config := logger.Config{
 		Level:            level,
 		Output:           output,
 		ErrorOutput:      os.Stderr,
@@ -69,7 +69,7 @@ func NewApplicationLogger(output io.Writer, level core.Level, environment string
 		ClockInterval:    10 * time.Millisecond,
 		MaskStringValue:  "[MASKED]",
 		Environment:      environment,
-		Hostname:         os.Getenv("HOSTNAME"),
+		ShowHostname:         os.Getenv("HOSTNAME"),
 		Application:      "mire-example-app",
 		Version:          "1.0.0",
 	}
@@ -77,11 +77,11 @@ func NewApplicationLogger(output io.Writer, level core.Level, environment string
 	// Set formatter based on output type
 	if output == os.Stdout || output == os.Stderr {
 		config.Formatter = &formatter.TextFormatter{
-			EnableColors:      true,
-			ShowTimestamp:     true,
-			ShowCaller:        true,
+			EnableUseColors:      true,
+			ShowShowTimestamp:     true,
+			ShowShowCaller:        true,
 			ShowTraceInfo:     true,
-			ShowPID:           true,
+			ShowShowPID:           true,
 			TimestampFormat:   logger.DEFAULT_TIMESTAMP_FORMAT,
 			SensitiveFields:   []string{"password", "token", "secret"},
 			MaskSensitiveData: true,
@@ -90,21 +90,21 @@ func NewApplicationLogger(output io.Writer, level core.Level, environment string
 		config.Formatter = &formatter.JSONFormatter{
 			PrettyPrint:       false,
 			TimestampFormat:   logger.DEFAULT_TIMESTAMP_FORMAT,
-			ShowCaller:        true,
+			ShowShowCaller:        true,
 			ShowTraceInfo:     true,
-			EnableStackTrace:  true,
+			EnableStackShowTrace:  true,
 			SensitiveFields:   []string{"password", "token", "secret"},
 			MaskSensitiveData: true,
 		}
 	}
 
-	return &ApplicationLogger{
+	return &AppLogger{
 		logger: logger.New(config),
 	}
 }
 
 // Close closes the application logger
-func (al *ApplicationLogger) Close() error {
+func (al *AppLogger) Close() error {
 	if al.logger != nil {
 		al.logger.Close()
 	}
@@ -112,7 +112,7 @@ func (al *ApplicationLogger) Close() error {
 }
 
 // LogRequest logs request-related information with context
-func (al *ApplicationLogger) LogRequest(ctx context.Context, method, path string, duration time.Duration) {
+func (al *AppLogger) LogRequest(ctx context.Context, method, path string, duration time.Duration) {
 	al.logger.WithFields(map[string]interface{}{
 		"method":   method,
 		"path":     path,
@@ -121,7 +121,7 @@ func (al *ApplicationLogger) LogRequest(ctx context.Context, method, path string
 }
 
 // LogError logs error with context and stack trace
-func (al *ApplicationLogger) LogError(ctx context.Context, operation string, err error) {
+func (al *AppLogger) LogError(ctx context.Context, operation string, err error) {
 	al.logger.WithFields(map[string]interface{}{
 		"operation": operation,
 		"error":     err.Error(),
@@ -129,7 +129,7 @@ func (al *ApplicationLogger) LogError(ctx context.Context, operation string, err
 }
 
 // LogUserAction logs user-specific actions with user context
-func (al *ApplicationLogger) LogUserAction(ctx context.Context, action string, userID string) {
+func (al *AppLogger) LogUserAction(ctx context.Context, action string, userID string) {
 	ctx = util.WithUserID(ctx, userID)
 	al.logger.WithFields(map[string]interface{}{
 		"action":  action,
@@ -138,7 +138,7 @@ func (al *ApplicationLogger) LogUserAction(ctx context.Context, action string, u
 }
 
 // LogTransaction logs financial or business transaction
-func (al *ApplicationLogger) LogTransaction(ctx context.Context, transactionID string, amount float64, currency string) {
+func (al *AppLogger) LogTransaction(ctx context.Context, transactionID string, amount float64, currency string) {
 	al.logger.WithFields(map[string]interface{}{
 		"transaction_id": transactionID,
 		"amount":         amount,
@@ -147,7 +147,7 @@ func (al *ApplicationLogger) LogTransaction(ctx context.Context, transactionID s
 }
 
 // LogSecurityEvent logs security-related events
-func (al *ApplicationLogger) LogSecurityEvent(ctx context.Context, eventType, description string, userID string) {
+func (al *AppLogger) LogSecurityEvent(ctx context.Context, eventType, description string, userID string) {
 	ctx = util.WithUserID(ctx, userID)
 	al.logger.WithFields(map[string]interface{}{
 		"event_type":  eventType,
@@ -157,10 +157,10 @@ func (al *ApplicationLogger) LogSecurityEvent(ctx context.Context, eventType, de
 	}).WarnC(ctx, "Security event detected")
 }
 
-// Example usage of the ApplicationLogger
+// Example usage of the AppLogger
 func ExampleUsage() {
 	// Create application logger
-	appLogger := NewApplicationLogger(os.Stdout, core.INFO, "production")
+	appLogger := NewAppLogger(os.Stdout, core.INFO, "production")
 	defer func() { appLogger.Close() }()
 
 	// Simulate context with trace ID
@@ -181,25 +181,20 @@ func ExampleUsage() {
 	appLogger.LogSecurityEvent(ctx, "failed_login_attempt", "Multiple failed attempts from same IP", "user-456")
 }
 
-// HighPerformanceLogger demonstrates configuration for high-volume logging
-type HighPerformanceLogger struct {
-	logger *logger.Logger
-}
-
-// NewHighPerformanceLogger creates a logger optimized for high throughput
-func NewHighPerformanceLogger() *HighPerformanceLogger {
-	config := logger.LoggerConfig{
-		Level:                       core.INFO,
-		Output:                      os.Stdout,
-		AsyncLogging:                true,
-		AsyncWorkerCount:            8,
-		AsyncLogChannelBufferSize:   10000,
-		LogProcessTimeout:           5 * time.Second,
-		DisablePerLogContextTimeout: true,
-		BufferSize:                  8192,
-		FlushInterval:               100 * time.Millisecond,
-		DisableLocking:              true,
-		EnableStackTrace:            false, // Disable for performance
+// NewFastLogger creates a logger optimized for high throughput
+func NewFastLogger() *logger.Logger {
+	config := logger.Config{
+		Level:             core.INFO,
+		Output:            os.Stdout,
+		Async:             true,
+		Workers:           8,
+		ChanBufSize:       10000,
+		LogProcessTimeout:  5 * time.Second,
+		NoLogTimeout:      true,
+		BufferSize:        8192,
+		FlushInterval:     100 * time.Millisecond,
+		NoLock:            true,
+		StackShowTrace:        false,
 		Formatter: &formatter.CSVFormatter{
 			IncludeHeader:     false,
 			SensitiveFields:   []string{"password", "token"},
@@ -207,28 +202,5 @@ func NewHighPerformanceLogger() *HighPerformanceLogger {
 		},
 	}
 
-	return &HighPerformanceLogger{
-		logger: logger.New(config),
-	}
-}
-
-// LogEvent logs an event using the high-performance logger
-func (hpl *HighPerformanceLogger) LogEvent(eventType, message string, fields map[string]interface{}) {
-	allFields := map[string]interface{}{
-		"event_type": eventType,
-		"message":    message,
-	}
-	for k, v := range fields {
-		allFields[k] = v
-	}
-
-	hpl.logger.WithFields(allFields).Info()
-}
-
-// Close closes the high-performance logger
-func (hpl *HighPerformanceLogger) Close() error {
-	if hpl.logger != nil {
-		hpl.logger.Close()
-	}
-	return nil
+	return logger.New(config)
 }

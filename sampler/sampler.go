@@ -6,9 +6,40 @@ import (
 	"sync/atomic"
 )
 
-// LogSampler defines the interface for a logger that can be sampled.
-type LogSampler interface {
+// Sampler defines the interface for a logger that can be sampled.
+type Sampler interface {
 	Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte)
+}
+
+// LogSampler provides log sampling to reduce volume
+type LogSampler struct {
+	processor Sampler
+	rate      int
+	counter   int64
+}
+
+// NewSampler creates a new LogSampler
+func NewSampler(processor Sampler, rate int) *LogSampler {
+	return &LogSampler{
+		processor: processor,
+		rate:      rate,
+	}
+}
+
+// ShouldLog determines if a log should be recorded based on sampling rate
+func (ls *LogSampler) ShouldLog() bool {
+	if ls.rate <=1 {
+		return true
+	}
+	counter := atomic.AddInt64(&ls.counter, 1)
+	return counter%int64(ls.rate) == 0
+}
+
+// Log logs a message if it passes sampling rate.
+func (ls *LogSampler) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+	if ls.ShouldLog() {
+		ls.processor.Log(ctx, level, msg, fields)
+	}
 }
 
 // SamplingLogger provides log sampling to reduce volume
@@ -19,7 +50,7 @@ type SamplingLogger struct {
 }
 
 // NewSamplingLogger creates a new SamplingLogger
-func NewSamplingLogger(processor LogSampler, rate int) *SamplingLogger {
+func NewSampler(processor LogSampler, rate int) *LogSampler {
 	return &SamplingLogger{
 		processor: processor,
 		rate:      rate,
@@ -27,7 +58,7 @@ func NewSamplingLogger(processor LogSampler, rate int) *SamplingLogger {
 }
 
 // ShouldLog determines if a log should be recorded based on sampling rate
-func (sl *SamplingLogger) ShouldLog() bool {
+func (sl *LogSampler) ShouldLog() bool {
 	if sl.rate <= 1 {
 		return true
 	}
@@ -36,7 +67,7 @@ func (sl *SamplingLogger) ShouldLog() bool {
 }
 
 // Log logs a message if it passes the sampling rate.
-func (sl *SamplingLogger) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
+func (sl *LogSampler) Log(ctx context.Context, level core.Level, msg []byte, fields map[string][]byte) {
 	if sl.ShouldLog() {
 		sl.processor.Log(ctx, level, msg, fields)
 	}

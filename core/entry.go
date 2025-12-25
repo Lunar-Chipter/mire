@@ -14,7 +14,7 @@ type LogEntry struct {
 	Level            Level                                    `json:"level"`                    // Log severity level
 	LevelName        []byte                                   `json:"level_name"`               // Byte representation of level for zero-allocation formatting
 	Message          []byte                                   `json:"message"`                  // Log message
-	Caller           *CallerInfo                              `json:"caller,omitempty"`         // Caller information
+	Caller           *Caller                              `json:"caller,omitempty"`         // Caller information
 	Fields           map[string][]byte                        `json:"fields,omitempty"`         // Additional fields as []byte for zero allocation
 	PID              int                                      `json:"pid"`                      // Process ID
 	GoroutineID      []byte                                   `json:"goroutine_id,omitempty"`   // Goroutine ID as byte slice
@@ -65,28 +65,28 @@ func (e *LogEntry) Reset() {
 	e.StackTraceBufPtr = nil
 }
 
-// CallerInfo contains information about the code location where the log was created
-type CallerInfo struct {
+// Caller contains information about the code location where the log was created
+type Caller struct {
 	File     string `json:"file"`     // Source file name
 	Line     int    `json:"line"`     // Line number
 	Function string `json:"function"` // Function name
 	Package  string `json:"package"`  // Package name
 }
 
-// Object pool for reusing CallerInfo objects
+// Object pool for reusing Caller objects
 var callerInfoPool = sync.Pool{
 	New: func() interface{} {
-		return &CallerInfo{}
+		return &Caller{}
 	},
 }
 
-// GetCallerInfoFromPool gets a CallerInfo from the pool
-func GetCallerInfoFromPool() *CallerInfo {
-	return callerInfoPool.Get().(*CallerInfo)
+// GetCallerFromPool gets a Caller from the pool
+func GetCallerFromPool() *Caller {
+	return callerInfoPool.Get().(*Caller)
 }
 
-// PutCallerInfoToPool returns a CallerInfo to the pool
-func PutCallerInfoToPool(ci *CallerInfo) {
+// PutCallerToPool returns a Caller to the pool
+func PutCallerToPool(ci *Caller) {
 	// Reset fields to avoid data leakage
 	ci.File = ""
 	ci.Line = 0
@@ -153,15 +153,15 @@ var bufferPool = sync.Pool{
 	},
 }
 
-// GetBufferFromPool gets a byte buffer from the pool
-func GetBufferFromPool() *[]byte {
+// GetBuffer gets a byte buffer from the pool
+func GetBuffer() *[]byte {
 	buf := bufferPool.Get().(*[]byte)
 	*buf = (*buf)[:0] // Reset length but keep capacity
 	return buf
 }
 
-// PutBufferToPool returns a byte buffer to the pool
-func PutBufferToPool(buf *[]byte) {
+// PutBuffer returns a byte buffer to the pool
+func PutBuffer(buf *[]byte) {
 	bufferPool.Put(buf)
 }
 
@@ -261,11 +261,11 @@ const (
 func GetEntryFromPool() *LogEntry {
 	// Fallback: Use regular goroutine-local pool
 	localPool := GetGoroutineLocalEntryPool()
-	return localPool.GetEntryFromLocalPool()
+	return localPool.GetLocalEntry()
 }
 
-// GetEntryFromGlobalPool gets a LogEntry directly from the global pool
-func GetEntryFromGlobalPool() *LogEntry {
+// GetGlobalEntry gets a LogEntry directly from the global pool
+func GetGlobalEntry() *LogEntry {
 	entry := entryPool.Get().(*LogEntry)
 
 	// Update metrics
@@ -308,8 +308,8 @@ func GetEntryFromGlobalPool() *LogEntry {
 // goroutineLocalEntryPool stores entry pool per goroutine to avoid lock contention
 var goroutineLocalEntryPool = sync.Map{}
 
-// GoroutineLocalEntryPool represents a per-goroutine entry pool
-type GoroutineLocalEntryPool struct {
+// LocalPool represents a per-goroutine entry pool
+type LocalPool struct {
 	entries chan *LogEntry
 }
 
@@ -321,23 +321,23 @@ func getGoroutineID() uint64 {
 }
 
 // GetGoroutineLocalEntryPool gets entry pool for current goroutine
-func GetGoroutineLocalEntryPool() *GoroutineLocalEntryPool {
+func GetGoroutineLocalEntryPool() *LocalPool {
 	gid := getGoroutineID()
 	if pool, ok := goroutineLocalEntryPool.Load(gid); ok {
-		return pool.(*GoroutineLocalEntryPool)
+		return pool.(*LocalPool)
 	}
 
 	// Create new pool for this goroutine
-	newPool := &GoroutineLocalEntryPool{
-		entries: make(chan *LogEntry, 100), // Buffered channel for 100 entries
+	newPool := &LocalPool{
+		entries: make(chan *LogEntry, 100),
 	}
 	goroutineLocalEntryPool.Store(gid, newPool)
 
 	return newPool
 }
 
-// GetEntryFromLocalPool gets entry from local goroutine pool
-func (g *GoroutineLocalEntryPool) GetEntryFromLocalPool() *LogEntry {
+// GetLocalEntry gets entry from local goroutine pool
+func (g *LocalPool) GetLocalEntry() *LogEntry {
 	select {
 	case entry := <-g.entries:
 		// Reset fields to avoid data leakage
@@ -369,8 +369,8 @@ func (g *GoroutineLocalEntryPool) GetEntryFromLocalPool() *LogEntry {
 		return entry
 	default:
 		// Pool empty, create new entry from global pool
-		entry := GetEntryFromGlobalPool()
-		// globalEntryMetrics.poolMissCount.Add(1) // GetEntryFromGlobalPool already increments this
+		entry := GetGlobalEntry()
+		// globalEntryMetrics.poolMissCount.Add(1) // GetGlobalEntry already increments this
 		return entry
 	}
 }
@@ -378,23 +378,23 @@ func (g *GoroutineLocalEntryPool) GetEntryFromLocalPool() *LogEntry {
 // PutEntryToPool returns a LogEntry to the pool
 func PutEntryToPool(entry *LogEntry) {
 	if entry.Caller != nil {
-		PutCallerInfoToPool(entry.Caller)
+		PutCallerToPool(entry.Caller)
 		entry.Caller = nil
 	}
 	// Return stack trace buffer to pool if it was used
 	if entry.StackTraceBufPtr != nil {
-		PutBufferToPool(entry.StackTraceBufPtr)
+		PutBuffer(entry.StackTraceBufPtr)
 		entry.StackTraceBufPtr = nil
 	}
 	// Use goroutine-local pool if available
 	localPool := GetGoroutineLocalEntryPool()
-	localPool.PutEntryToLocalPool(entry)
+	localPool.PutLocalEntry(entry)
 }
 
 // ZeroAllocJSONSerialize serializes LogEntry to JSON without allocation
 func (le *LogEntry) ZeroAllocJSONSerialize() []byte {
 	// Get buffer from pool for zero allocation
-	bufPtr := GetBufferFromPool()
+	bufPtr := GetBuffer()
 	buf := *bufPtr
 
 	// Start with opening brace
@@ -430,7 +430,7 @@ func (le *LogEntry) ZeroAllocJSONSerialize() []byte {
 
 	// Reset buffer and return to pool
 	*bufPtr = (*bufPtr)[:0]
-	PutBufferToPool(bufPtr)
+	PutBuffer(bufPtr)
 
 	return result
 }
@@ -498,9 +498,9 @@ func (le *LogEntry) serializeIntField(buf []byte, key string, value int) []byte 
 	return append(buf, temp[i:]...)
 }
 
-// ErrorAppender is an optional interface that errors can implement to write
+// ErrAppend is an optional interface that errors can implement to write
 // their error message directly to a bytes.Buffer, avoiding intermediate string allocations.
-type ErrorAppender interface {
+type ErrAppend interface {
 	AppendError(buf *bytes.Buffer)
 }
 
@@ -639,10 +639,10 @@ func (le *LogEntry) floatToBytes(buf []byte, value float64) []byte {
 	return append(buf, floatBytes...)
 }
 
-// PutEntryToLocalPool returns entry to local goroutine pool
-func (g *GoroutineLocalEntryPool) PutEntryToLocalPool(entry *LogEntry) {
+// PutLocalEntry returns entry to local goroutine pool
+func (g *LocalPool) PutLocalEntry(entry *LogEntry) {
 	if entry.Caller != nil {
-		PutCallerInfoToPool(entry.Caller)
+		PutCallerToPool(entry.Caller)
 		entry.Caller = nil
 	}
 

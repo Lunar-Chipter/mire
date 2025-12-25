@@ -5,38 +5,38 @@ import (
 	"testing"
 )
 
-// TestInvalidLogLevelErrorCreation tests the creation and pooling of InvalidLogLevelError
-func TestInvalidLogLevelErrorCreation(t *testing.T) {
-	err := NewInvalidLogLevelError("invalid_level")
+// TestInvalidLevelCreation tests the creation and pooling of InvalidLevel
+func TestInvalidLevelCreation(t *testing.T) {
+	err := NewInvalidLevel("invalid_level")
 	if err == nil {
-		t.Fatal("NewInvalidLogLevelError returned nil")
+		t.Fatal("NewInvalidLevel returned nil")
 	}
 
 	if err.level != "invalid_level" {
-		t.Errorf("InvalidLogLevelError.level = %s, want invalid_level", err.level)
+		t.Errorf("InvalidLevel.level = %s, want invalid_level", err.level)
 	}
 
 	// Test that the buffer is empty initially
 	if err.buf.Len() != 0 {
-		t.Error("InvalidLogLevelError.buf should be empty initially")
+		t.Error("InvalidLevel.buf should be empty initially")
 	}
 
 	// Return to pool
-	PutInvalidLogLevelError(err)
+	PutInvalidLevel(err)
 
 	// Get another error from pool to test reuse
-	err2 := NewInvalidLogLevelError("another_invalid")
+	err2 := NewInvalidLevel("another_invalid")
 	if err2 == nil {
-		t.Fatal("NewInvalidLogLevelError after pool return returned nil")
+		t.Fatal("NewInvalidLevel after pool return returned nil")
 	}
 
-	PutInvalidLogLevelError(err2)
+	PutInvalidLevel(err2)
 }
 
-// TestInvalidLogLevelErrorAppendError tests the AppendError method
-func TestInvalidLogLevelErrorAppendError(t *testing.T) {
-	err := NewInvalidLogLevelError("bad_level")
-	defer PutInvalidLogLevelError(err)
+// TestInvalidLevelAppendError tests the AppendError method
+func TestInvalidLevelAppendError(t *testing.T) {
+	err := NewInvalidLevel("bad_level")
+	defer PutInvalidLevel(err)
 
 	buf := new(bytes.Buffer)
 	err.AppendError(buf)
@@ -48,10 +48,10 @@ func TestInvalidLogLevelErrorAppendError(t *testing.T) {
 	}
 }
 
-// TestInvalidLogLevelErrorError tests the Error method
-func TestInvalidLogLevelErrorError(t *testing.T) {
-	err := NewInvalidLogLevelError("bad_level")
-	defer PutInvalidLogLevelError(err)
+// TestInvalidLevelError tests the Error method
+func TestInvalidLevelError(t *testing.T) {
+	err := NewInvalidLevel("bad_level")
+	defer PutInvalidLevel(err)
 
 	errorStr := err.Error()
 	expected := "invalid log level: bad_level"
@@ -80,15 +80,15 @@ func TestErrAsyncBufferFull(t *testing.T) {
 	}
 }
 
-// TestInvalidLogLevelErrorConcurrent tests the InvalidLogLevelError in a concurrent context
-func TestInvalidLogLevelErrorConcurrent(t *testing.T) {
+// TestInvalidLevelConcurrent tests the InvalidLevel in a concurrent context
+func TestInvalidLevelConcurrent(t *testing.T) {
 	done := make(chan bool, 10)
 
 	for i := 0; i < 10; i++ {
 		go func() {
-			err := NewInvalidLogLevelError("concurrent_test")
+			err := NewInvalidLevel("concurrent_test")
 			if err == nil {
-				t.Error("NewInvalidLogLevelError returned nil in concurrent test")
+				t.Error("NewInvalidLevel returned nil in concurrent test")
 			}
 
 			buf := new(bytes.Buffer)
@@ -98,7 +98,7 @@ func TestInvalidLogLevelErrorConcurrent(t *testing.T) {
 				t.Errorf("Concurrent AppendError returned %s, want 'invalid log level: concurrent_test'", result)
 			}
 
-			PutInvalidLogLevelError(err)
+			PutInvalidLevel(err)
 			done <- true
 		}()
 	}
@@ -109,19 +109,19 @@ func TestInvalidLogLevelErrorConcurrent(t *testing.T) {
 	}
 }
 
-// TestInvalidLogLevelErrorPoolReuse tests that the pool properly reuses objects
-func TestInvalidLogLevelErrorPoolReuse(t *testing.T) {
+// TestInvalidLevelPoolReuse tests that the pool properly reuses objects
+func TestInvalidLevelPoolReuse(t *testing.T) {
 	// Get an error from the pool
-	err1 := NewInvalidLogLevelError("first")
+	err1 := NewInvalidLevel("first")
 	if err1.level != "first" {
 		t.Errorf("First error should have level 'first', got %s", err1.level)
 	}
 
 	// Return it to the pool
-	PutInvalidLogLevelError(err1)
+	PutInvalidLevel(err1)
 
 	// Get another error from the pool
-	err2 := NewInvalidLogLevelError("second")
+	err2 := NewInvalidLevel("second")
 	if err2.level != "second" {
 		t.Errorf("Second error should have level 'second', got %s", err2.level)
 	}
@@ -131,30 +131,30 @@ func TestInvalidLogLevelErrorPoolReuse(t *testing.T) {
 		t.Error("Buffer should have been reset when error was returned to pool")
 	}
 
-	PutInvalidLogLevelError(err2)
+	PutInvalidLevel(err2)
 }
 
-// TestInvalidLogLevelErrorImplementsErrorAppender tests that InvalidLogLevelError implements ErrorAppender
-func TestInvalidLogLevelErrorImplementsErrorAppender(t *testing.T) {
-	err := NewInvalidLogLevelError("test")
-	defer PutInvalidLogLevelError(err)
+// TestInvalidLevelImplementsErrorAppender tests that InvalidLevel implements ErrorAppender
+func TestInvalidLevelImplementsErrorAppender(t *testing.T) {
+	err := NewInvalidLevel("test")
+	defer PutInvalidLevel(err)
 
 	// This should compile without error if the interface is implemented
 	var appender interface{} = err
 	_, ok := appender.(interface{ AppendError(*bytes.Buffer) })
 	if !ok {
-		t.Error("InvalidLogLevelError does not implement AppendError method")
+		t.Error("InvalidLevel does not implement AppendError method")
 	}
 }
 
-// TestInvalidLogLevelErrorErrorInterface tests that InvalidLogLevelError implements the standard error interface
-func TestInvalidLogLevelErrorErrorInterface(t *testing.T) {
-	err := NewInvalidLogLevelError("test")
-	defer PutInvalidLogLevelError(err)
+// TestInvalidLevelErrorInterface tests that InvalidLevel implements the standard error interface
+func TestInvalidLevelErrorInterface(t *testing.T) {
+	err := NewInvalidLevel("test")
+	defer PutInvalidLevel(err)
 
 	// This should compile without error if the error interface is implemented
 	var stdErr error = err
 	if stdErr.Error() == "" {
-		t.Error("InvalidLogLevelError does not properly implement the error interface")
+		t.Error("InvalidLevel does not properly implement the error interface")
 	}
 }

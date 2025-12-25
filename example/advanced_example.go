@@ -44,13 +44,13 @@ func contextAwareExample() {
 	ctx = util.WithRequestID(ctx, "req-456-def")
 
 	// Create logger with context-aware capabilities
-	log := logger.New(logger.LoggerConfig{
+	log := logger.New(logger.Config{
 		Level:  core.DEBUG,
 		Output: os.Stdout,
 		Formatter: &formatter.JSONFormatter{
 			TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
 			ShowTraceInfo:    true,
-			EnableStackTrace: true,
+			EnableStackShowTrace: true,
 		},
 	})
 	defer func() { log.Close() }()
@@ -70,7 +70,7 @@ func customFormatterExample() {
 	// Create a formatter with custom field transformers
 	jsonFormatter := &formatter.JSONFormatter{
 		TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
-		ShowCaller:      true,
+		ShowShowCaller:      true,
 		FieldTransformers: map[string]func(interface{}) interface{}{
 			"credit_card": func(v interface{}) interface{} {
 				if cc, ok := v.(string); ok && len(cc) > 4 {
@@ -89,7 +89,7 @@ func customFormatterExample() {
 		MaskSensitiveData: true,
 	}
 
-	log := logger.New(logger.LoggerConfig{
+	log := logger.New(logger.Config{
 		Level:     core.INFO,
 		Output:    os.Stdout,
 		Formatter: jsonFormatter,
@@ -114,7 +114,7 @@ func hookExample() {
 		endpoint: "https://logs.example.com/api/logs",
 	}
 
-	log := logger.New(logger.LoggerConfig{
+	log := logger.New(logger.Config{
 		Level:  core.WARN,
 		Output: os.Stdout,
 		Formatter: &formatter.JSONFormatter{
@@ -138,7 +138,7 @@ func performanceExample() {
 	fmt.Println("\n--- Performance Optimization Example ---")
 
 	// High-performance async logger configuration
-	perfLog := logger.New(logger.LoggerConfig{
+	perfLog := logger.New(logger.Config{
 		Level:                       core.INFO,
 		Output:                      os.Stdout,
 		AsyncLogging:                true,
@@ -148,7 +148,7 @@ func performanceExample() {
 		BufferSize:                  4096,
 		FlushInterval:               50 * time.Millisecond,
 		DisableLocking:              true,
-		EnableStackTrace:            false, // Disable for performance
+		EnableStackShowTrace:            false, // Disable for performance
 		Formatter: &formatter.CSVFormatter{
 			IncludeHeader: false,
 		},

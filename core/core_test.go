@@ -77,12 +77,12 @@ func TestLogEntryZeroAllocSerialization(t *testing.T) {
 	}
 }
 
-// TestCallerInfoPoolOperations tests the CallerInfo pool operations
-func TestCallerInfoPoolOperations(t *testing.T) {
+// TestCallerPoolOperations tests the Caller pool operations
+func TestCallerPoolOperations(t *testing.T) {
 	// Get from pool
-	ci := GetCallerInfoFromPool()
+	ci := GetCallerFromPool()
 	if ci == nil {
-		t.Fatal("GetCallerInfoFromPool returned nil")
+		t.Fatal("GetCallerFromPool returned nil")
 	}
 
 	// Verify initial state
@@ -106,11 +106,11 @@ func TestCallerInfoPoolOperations(t *testing.T) {
 	ci.Package = "main"
 
 	// Put back to pool
-	PutCallerInfoToPool(ci)
+	PutCallerToPool(ci)
 
 	// Get another and verify reset
-	ci2 := GetCallerInfoFromPool()
-	defer PutCallerInfoToPool(ci2)
+	ci2 := GetCallerFromPool()
+	defer PutCallerToPool(ci2)
 
 	if ci2.File != "" {
 		t.Error("Caller info file should be reset")
@@ -180,9 +180,9 @@ func TestMapPools(t *testing.T) {
 // TestBufferPoolOperations tests the buffer pool operations
 func TestBufferPoolOperations(t *testing.T) {
 	// Get from pool
-	buf := GetBufferFromPool()
+	buf := GetBuffer()
 	if buf == nil {
-		t.Fatal("GetBufferFromPool returned nil")
+		t.Fatal("GetBuffer returned nil")
 	}
 
 	if len(*buf) != 0 {
@@ -196,11 +196,11 @@ func TestBufferPoolOperations(t *testing.T) {
 	}
 
 	// Put back to pool
-	PutBufferToPool(buf)
+	PutBuffer(buf)
 
 	// to
-	buf2 := GetBufferFromPool()
-	defer PutBufferToPool(buf2)
+	buf2 := GetBuffer()
+	defer PutBuffer(buf2)
 
 	if len(*buf2) != 0 {
 		t.Error("Buffer should be reset to length 0 after pool return")

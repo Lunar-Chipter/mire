@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-func TestGetBufferFromPool(t *testing.T) {
-	buf1 := GetBufferFromPool()
+func TestGetBuffer(t *testing.T) {
+	buf1 := GetBuffer()
 	if buf1 == nil {
-		t.Fatal("GetBufferFromPool returned nil")
+		t.Fatal("GetBuffer returned nil")
 	}
 
 	if buf1.Len() != 0 {
@@ -21,12 +21,12 @@ func TestGetBufferFromPool(t *testing.T) {
 		t.Fatalf("Failed to write to buffer: %v", err)
 	}
 
-	PutBufferToPool(buf1)
+	PutBuffer(buf1)
 
 	// Buffer might be the same one we just returned
-	buf2 := GetBufferFromPool()
+	buf2 := GetBuffer()
 	if buf2 == nil {
-		t.Fatal("GetBufferFromPool returned nil after return")
+		t.Fatal("GetBuffer returned nil after return")
 	}
 
 	// Buffer should be reset to empty state
@@ -34,11 +34,11 @@ func TestGetBufferFromPool(t *testing.T) {
 		t.Errorf("Returned buffer from pool should have length 0, got %d", buf2.Len())
 	}
 
-	PutBufferToPool(buf2)
+	PutBuffer(buf2)
 }
 
-func TestPutBufferToPool(t *testing.T) {
-	buf := GetBufferFromPool()
+func TestPutBuffer(t *testing.T) {
+	buf := GetBuffer()
 
 	buf.WriteString("some data")
 
@@ -47,20 +47,20 @@ func TestPutBufferToPool(t *testing.T) {
 	}
 
 	// This should reset it
-	PutBufferToPool(buf)
+	PutBuffer(buf)
 
-	buf2 := GetBufferFromPool()
-	defer PutBufferToPool(buf2)
+	buf2 := GetBuffer()
+	defer PutBuffer(buf2)
 
 	if buf2.Len() != 0 {
 		t.Errorf("Returned buffer should be empty, got length %d", buf2.Len())
 	}
 }
 
-func TestGetSmallByteSliceFromPool(t *testing.T) {
-	slice1 := GetSmallByteSliceFromPool()
+func TestGetSmallBuf(t *testing.T) {
+	slice1 := GetSmallBuf()
 	if slice1 == nil {
-		t.Fatal("GetSmallByteSliceFromPool returned nil")
+		t.Fatal("GetSmallBuf returned nil")
 	}
 
 	// Initially, slice should have 0 length but some capacity
@@ -76,10 +76,10 @@ func TestGetSmallByteSliceFromPool(t *testing.T) {
 		t.Errorf("Slice should have length 4 after appending 'test', got %d", len(slice1))
 	}
 
-	PutSmallByteSliceToPool(slice1)
+	PutSmallBuf(slice1)
 
-	slice2 := GetSmallByteSliceFromPool()
-	defer PutSmallByteSliceToPool(slice2)
+	slice2 := GetSmallBuf()
+	defer PutSmallBuf(slice2)
 
 	// Should be reset to 0 length
 	if len(slice2) != 0 {
@@ -87,30 +87,30 @@ func TestGetSmallByteSliceFromPool(t *testing.T) {
 	}
 }
 
-// TestPutSmallByteSliceToPool tests the PutSmallByteSliceToPool function
-func TestPutSmallByteSliceToPool(t *testing.T) {
-	slice := GetSmallByteSliceFromPool()
+// TestPutSmallBuf tests the PutSmallBuf function
+func TestPutSmallBuf(t *testing.T) {
+	slice := GetSmallBuf()
 
 	// Add some data
 	slice = append(slice, []byte("data")...)
 
 	// Put it back
-	PutSmallByteSliceToPool(slice)
+	PutSmallBuf(slice)
 
 	// Get it again to check if it's properly reset
-	slice2 := GetSmallByteSliceFromPool()
-	defer PutSmallByteSliceToPool(slice2)
+	slice2 := GetSmallBuf()
+	defer PutSmallBuf(slice2)
 
 	if len(slice2) != 0 {
 		t.Errorf("Returned slice should be empty, got length %d", len(slice2))
 	}
 }
 
-// TestGetMapStringFromPool tests the GetMapStringFromPool function
-func TestGetMapStringFromPool(t *testing.T) {
-	map1 := GetMapStringFromPool()
+// TestGetMapStr tests the GetMapStr function
+func TestGetMapStr(t *testing.T) {
+	map1 := GetMapStr()
 	if map1 == nil {
-		t.Fatal("GetMapStringFromPool returned nil")
+		t.Fatal("GetMapStr returned nil")
 	}
 
 	// Initially, the map should be empty
@@ -126,11 +126,11 @@ func TestGetMapStringFromPool(t *testing.T) {
 	}
 
 	// Return to pool
-	PutMapStringToPool(map1)
+	PutMapStr(map1)
 
 	// Get another map
-	map2 := GetMapStringFromPool()
-	defer PutMapStringToPool(map2)
+	map2 := GetMapStr()
+	defer PutMapStr(map2)
 
 	// It should be reset to empty
 	if len(map2) != 0 {
@@ -138,19 +138,19 @@ func TestGetMapStringFromPool(t *testing.T) {
 	}
 }
 
-// TestPutMapStringToPool tests the PutMapStringToPool function
-func TestPutMapStringToPool(t *testing.T) {
-	m := GetMapStringFromPool()
+// TestPutMapStr tests the PutMapStr function
+func TestPutMapStr(t *testing.T) {
+	m := GetMapStr()
 
 	// Add some data
 	m["test"] = "value"
 
 	// Put it back to pool
-	PutMapStringToPool(m)
+	PutMapStr(m)
 
 	// Get it again to check if it's properly reset
-	m2 := GetMapStringFromPool()
-	defer PutMapStringToPool(m2)
+	m2 := GetMapStr()
+	defer PutMapStr(m2)
 
 	if len(m2) != 0 {
 		t.Errorf("Returned map should be empty, got length %d", len(m2))
@@ -219,14 +219,14 @@ func TestPoolMetrics(t *testing.T) {
 	initialMapPutCount := metrics.MapPutCount()
 
 	// Perform some pool operations
-	buf := GetBufferFromPool()
-	PutBufferToPool(buf)
+	buf := GetBuffer()
+	PutBuffer(buf)
 
-	slice := GetSmallByteSliceFromPool()
-	PutSmallByteSliceToPool(slice)
+	slice := GetSmallBuf()
+	PutSmallBuf(slice)
 
-	m := GetMapStringFromPool()
-	PutMapStringToPool(m)
+	m := GetMapStr()
+	PutMapStr(m)
 
 	s := GetStringSliceFromPool()
 	PutStringSliceToPool(s)
@@ -274,8 +274,8 @@ func TestPoolMetricsConcurrent(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < operationsPerGoroutine; j++ {
-				buf := GetBufferFromPool()
-				PutBufferToPool(buf)
+				buf := GetBuffer()
+				PutBuffer(buf)
 			}
 		}()
 	}
@@ -384,11 +384,11 @@ func TestLogBufferFull(t *testing.T) {
 // TestSmallByteSlicePool tests the behavior of small byte slice pool with size limits
 func TestSmallByteSlicePool(t *testing.T) {
 	// to
-	// This should cause it to not be returned to the pool in PutSmallByteSliceToPool
+	// This should cause it to not be returned to the pool in PutSmallBuf
 	largeSlice := make([]byte, MaxSmallSlicePoolSize+10) // Larger than the limit
 
 	// at
-	PutSmallByteSliceToPool(largeSlice)
+	PutSmallBuf(largeSlice)
 
 	// at
 	// at

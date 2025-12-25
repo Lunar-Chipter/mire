@@ -18,12 +18,12 @@ import (
 // TestLoggerBasicOperations tests basic logger operations
 func TestLoggerBasicOperations(t *testing.T) {
 	var buf bytes.Buffer
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
 	})
@@ -56,12 +56,12 @@ func TestLoggerBasicOperations(t *testing.T) {
 // TestLoggerWithFields tests logger with fields
 func TestLoggerWithFields(t *testing.T) {
 	var buf bytes.Buffer
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
 	})
@@ -92,12 +92,12 @@ func TestLoggerWithFields(t *testing.T) {
 // TestLoggerContextAware tests context-aware logging
 func TestLoggerContextAware(t *testing.T) {
 	var buf bytes.Buffer
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
 	})
@@ -121,12 +121,12 @@ func TestLoggerContextAware(t *testing.T) {
 // TestLoggerConcurrentOperations tests logger in concurrent environment
 func TestLoggerConcurrentOperations(t *testing.T) {
 	var buf bytes.Buffer
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
 	})
@@ -162,15 +162,15 @@ func TestLoggerConcurrentOperations(t *testing.T) {
 // TestLoggerSampling tests sampling functionality
 func TestLoggerSampling(t *testing.T) {
 	var buf bytes.Buffer
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
-		EnableSampling: true,
+		Sampling: true,
 		SamplingRate:   2, // Log every 2nd message
 	})
 	defer logger.Close()
@@ -192,19 +192,19 @@ func TestLoggerSampling(t *testing.T) {
 func TestLoggerAsyncLogging(t *testing.T) {
 	t.Skip("Skipping async logging test due to implementation issues")
 	var buf bytes.Buffer
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
-		AsyncLogging:                true,
-		AsyncWorkerCount:            2,
-		AsyncLogChannelBufferSize:   100,
-		LogProcessTimeout:           time.Second,
-		DisablePerLogContextTimeout: true,
+		Async:                true,
+		Workers:            2,
+		ChanBufSize:   100,
+		ProcTimeout:           time.Second,
+		NoLogTimeout: true,
 	})
 	defer logger.Close()
 
@@ -233,12 +233,12 @@ func TestLoggerAsyncLogging(t *testing.T) {
 // TestLoggerCloneAndFields tests logger cloning functionality
 func TestLoggerCloneAndFields(t *testing.T) {
 	var buf bytes.Buffer
-	baseLogger := New(LoggerConfig{
+	baseLogger := New(Config{
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
 	})
@@ -274,13 +274,13 @@ func TestLoggerErrorHandling(t *testing.T) {
 	// Create a writer that will cause errors
 	errWriter := &errorWriter{}
 
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:       core.INFO,
 		Output:      errWriter,
 		ErrorOutput: io.Discard, // Discard error output for test
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
 	})
@@ -293,12 +293,12 @@ func TestLoggerErrorHandling(t *testing.T) {
 // TestLoggerClose tests logger closing functionality
 func TestLoggerClose(t *testing.T) {
 	var buf bytes.Buffer
-	logger := New(LoggerConfig{
+	logger := New(Config{
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
 	})
@@ -315,12 +315,12 @@ func TestLoggerLevelFiltering(t *testing.T) {
 	// For the test, we'll avoid calling Fatal since it calls os.Exit
 	// Instead we'll just verify that the filtering works for other levels
 	var tempBuf bytes.Buffer
-	tempLogger := New(LoggerConfig{
+	tempLogger := New(Config{
 		Level:  core.WARN,
 		Output: &tempBuf,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  false,
-			ShowTimestamp: false,
+			UseColors:  false,
+			ShowShowTimestamp: false,
 			ShowCaller:    false,
 		},
 		ExitFunc: func(code int) {
@@ -336,7 +336,7 @@ func TestLoggerLevelFiltering(t *testing.T) {
 	// These should be filtered out (below WARN level)
 	tempLogger.Debug("debug message")
 	tempLogger.Info("info message")
-	tempLogger.Trace("trace message")
+	tempLogger.ShowTrace("trace message")
 
 	output := tempBuf.String()
 	if !strings.Contains(output, "warning message") {
@@ -355,7 +355,7 @@ func TestLoggerLevelFiltering(t *testing.T) {
 
 // TestNewDefaultLogger tests the default logger creation
 func TestNewDefaultLogger(t *testing.T) {
-	logger := NewDefaultLogger()
+	logger := New()
 	if logger == nil {
 		t.Fatal("NewDefaultLogger should not return nil")
 	}

@@ -12,15 +12,15 @@ import (
 
 // TestNewCSVFormatter tests creating a new CSVFormatter
 func TestNewCSVFormatter(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 
 	if cf == nil {
 		t.Fatal("NewCSVFormatter returned nil")
 	}
 
 	// Check default values
-	if cf.MaskStringValue != "[MASKED]" {
-		t.Errorf("Default MaskStringValue should be '[MASKED]', got '%s'", cf.MaskStringValue)
+	if cf.MaskStr != "[MASKED]" {
+		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", cf.MaskStr)
 	}
 
 	if cf.FieldTransformers == nil {
@@ -30,7 +30,7 @@ func TestNewCSVFormatter(t *testing.T) {
 
 // TestCSVFormatterFormat tests the Format method of CSVFormatter
 func TestCSVFormatterFormat(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	// Don't include header for simpler testing initially
 	cf.IncludeHeader = false
 
@@ -63,7 +63,7 @@ func TestCSVFormatterFormat(t *testing.T) {
 
 // TestCSVFormatterWithCustomFieldOrder tests CSVFormatter with custom field order
 func TestCSVFormatterWithCustomFieldOrder(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	cf.FieldOrder = []string{"timestamp", "level", "message", "pid"}
 	cf.IncludeHeader = false
 
@@ -94,7 +94,7 @@ func TestCSVFormatterWithCustomFieldOrder(t *testing.T) {
 
 // TestCSVFormatterWithHeader tests CSVFormatter with header
 func TestCSVFormatterWithHeader(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	cf.FieldOrder = []string{"timestamp", "level", "message", "pid"}
 	cf.IncludeHeader = true
 
@@ -126,7 +126,7 @@ func TestCSVFormatterWithHeader(t *testing.T) {
 
 // TestCSVFormatterWriteCSVValue tests the writeCSVValue method
 func TestCSVFormatterWriteCSVValue(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 
 	buf := &bytes.Buffer{}
 
@@ -161,7 +161,7 @@ func TestCSVFormatterWriteCSVValue(t *testing.T) {
 
 // TestCSVFormatterWriteCSVValueBytes tests the writeCSVValueBytes method
 func TestCSVFormatterWriteCSVValueBytes(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 
 	buf := &bytes.Buffer{}
 
@@ -196,7 +196,7 @@ func TestCSVFormatterWriteCSVValueBytes(t *testing.T) {
 
 // TestCSVFormatterFormatCSVField tests the formatCSVField method
 func TestCSVFormatterFormatCSVField(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 
 	buf := &bytes.Buffer{}
 
@@ -212,7 +212,7 @@ func TestCSVFormatterFormatCSVField(t *testing.T) {
 	entry.SpanID = []byte("span456")
 	entry.UserID = []byte("user789")
 	entry.RequestID = []byte("req012")
-	entry.Caller = util.GetCallerInfo(1)
+	entry.Caller = util.GetCaller(1)
 	if entry.Caller != nil {
 		entry.Caller.File = "test.go"
 		entry.Caller.Line = 100
@@ -330,13 +330,13 @@ func TestCSVFormatterFormatCSVField(t *testing.T) {
 
 	// Clean up
 	if entry.Caller != nil {
-		core.PutCallerInfoToPool(entry.Caller)
+		core.PutCallerToPool(entry.Caller)
 	}
 }
 
 // TestCSVFormatterWithFields tests CSVFormatter with custom fields
 func TestCSVFormatterWithFields(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	cf.FieldOrder = []string{"timestamp", "level", "message", "custom_field1", "custom_field2"}
 	cf.IncludeHeader = false
 
@@ -363,12 +363,12 @@ func TestCSVFormatterWithFields(t *testing.T) {
 
 // TestCSVFormatterWithSensitiveFields tests CSVFormatter with sensitive fields masking
 func TestCSVFormatterWithSensitiveFields(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	cf.FieldOrder = []string{"timestamp", "level", "message", "password", "token"}
 	cf.IncludeHeader = false
 	cf.MaskSensitiveData = true
 	cf.SensitiveFields = []string{"password", "token"}
-	cf.MaskStringValue = "***MASKED***"
+	cf.MaskStr = "***MASKED***"
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -405,7 +405,7 @@ func TestCSVFormatterWithSensitiveFields(t *testing.T) {
 
 // TestCSVFormatterWithFieldTransformers tests CSVFormatter with field transformers
 func TestCSVFormatterWithFieldTransformers(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	cf.FieldOrder = []string{"timestamp", "level", "message", "secret_field"}
 	cf.IncludeHeader = false
 
@@ -445,7 +445,7 @@ func TestCSVFormatterWithFieldTransformers(t *testing.T) {
 
 // TestCSVFormatterIsSensitiveField tests the isSensitiveField method
 func TestCSVFormatterIsSensitiveField(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	cf.SensitiveFields = []string{"password", "token", "secret"}
 
 	tests := []struct {
@@ -470,7 +470,7 @@ func TestCSVFormatterIsSensitiveField(t *testing.T) {
 
 // TestCSVFormatterWithEmptyFieldOrder tests CSVFormatter with empty field order
 func TestCSVFormatterWithEmptyFieldOrder(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	cf.FieldOrder = []string{} // Empty field order
 	cf.IncludeHeader = false
 
@@ -500,7 +500,7 @@ func TestCSVFormatterWithEmptyFieldOrder(t *testing.T) {
 
 // TestCSVFormatterWithNonexistentField tests CSVFormatter with a field that doesn't exist in the entry
 func TestCSVFormatterWithNonexistentField(t *testing.T) {
-	cf := NewCSVFormatter()
+	cf := NewCSV()
 	cf.FieldOrder = []string{"nonexistent_field", "timestamp", "level"}
 	cf.IncludeHeader = false
 

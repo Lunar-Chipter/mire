@@ -11,15 +11,15 @@ import (
 
 // TestNewTextFormatter tests creating a new TextFormatter
 func TestNewTextFormatter(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	if tf == nil {
 		t.Fatal("NewTextFormatter returned nil")
 	}
 
 	// Check default values
-	if tf.MaskStringValue != "[MASKED]" {
-		t.Errorf("Default MaskStringValue should be '[MASKED]', got '%s'", tf.MaskStringValue)
+	if tf.MaskStr != "[MASKED]" {
+		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", tf.MaskStr)
 	}
 
 	if tf.FieldTransformers == nil {
@@ -33,7 +33,7 @@ func TestNewTextFormatter(t *testing.T) {
 
 // TestTextFormatterFormat tests the Format method of TextFormatter
 func TestTextFormatterFormat(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	// Create a test log entry
 	entry := core.GetEntryFromPool()
@@ -67,8 +67,8 @@ func TestTextFormatterFormat(t *testing.T) {
 
 // TestTextFormatterWithColors tests TextFormatter with colors enabled
 func TestTextFormatterWithColors(t *testing.T) {
-	tf := NewTextFormatter()
-	tf.EnableColors = true
+	tf := NewText()
+	tf.Colors = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -95,8 +95,8 @@ func TestTextFormatterWithColors(t *testing.T) {
 
 // TestTextFormatterWithoutTimestamp tests TextFormatter without showing timestamp
 func TestTextFormatterWithoutTimestamp(t *testing.T) {
-	tf := NewTextFormatter()
-	tf.ShowTimestamp = false
+	tf := NewText()
+	tf.Timestamp = false
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -119,15 +119,15 @@ func TestTextFormatterWithoutTimestamp(t *testing.T) {
 
 // TestTextFormatterWithCaller tests TextFormatter with caller info
 func TestTextFormatterWithCaller(t *testing.T) {
-	tf := NewTextFormatter()
-	tf.ShowCaller = true
+	tf := NewText()
+	tf.Caller = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
 
 	entry.Level = core.INFO
 	entry.Message = []byte("with caller")
-	entry.Caller = util.GetCallerInfo(1) // Get caller info from one level up
+	entry.Caller = util.GetCaller(1) // Get caller info from one level up
 
 	buf := &bytes.Buffer{}
 	err := tf.Format(buf, entry)
@@ -142,13 +142,13 @@ func TestTextFormatterWithCaller(t *testing.T) {
 
 	// Clean up the caller info
 	if entry.Caller != nil {
-		core.PutCallerInfoToPool(entry.Caller)
+		core.PutCallerToPool(entry.Caller)
 	}
 }
 
 // TestTextFormatterWithFields tests TextFormatter with fields
 func TestTextFormatterWithFields(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -177,8 +177,8 @@ func TestTextFormatterWithFields(t *testing.T) {
 
 // TestTextFormatterWithStackTrace tests TextFormatter with stack trace
 func TestTextFormatterWithStackTrace(t *testing.T) {
-	tf := NewTextFormatter()
-	tf.EnableStackTrace = true
+	tf := NewText()
+	tf.StackTrace = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -206,8 +206,8 @@ func TestTextFormatterWithStackTrace(t *testing.T) {
 
 // TestTextFormatterWithGoroutine tests TextFormatter with goroutine ID
 func TestTextFormatterWithGoroutine(t *testing.T) {
-	tf := NewTextFormatter()
-	tf.ShowGoroutine = true
+	tf := NewText()
+	tf.Goroutine = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -235,8 +235,8 @@ func TestTextFormatterWithGoroutine(t *testing.T) {
 
 // TestTextFormatterWithPID tests TextFormatter with PID
 func TestTextFormatterWithPID(t *testing.T) {
-	tf := NewTextFormatter()
-	tf.ShowPID = true
+	tf := NewText()
+	tf.PID = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -264,8 +264,8 @@ func TestTextFormatterWithPID(t *testing.T) {
 
 // TestTextFormatterWithTraceInfo tests TextFormatter with trace information
 func TestTextFormatterWithTraceInfo(t *testing.T) {
-	tf := NewTextFormatter()
-	tf.ShowTraceInfo = true
+	tf := NewText()
+	tf.Trace = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -290,7 +290,7 @@ func TestTextFormatterWithTraceInfo(t *testing.T) {
 
 // TestTextFormatterWithCustomFieldOrder tests TextFormatter with custom field order
 func TestTextFormatterWithCustomFieldOrder(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 	tf.CustomFieldOrder = []string{"field2", "field1"} // Specify custom order
 
 	entry := core.GetEntryFromPool()
@@ -316,7 +316,7 @@ func TestTextFormatterWithCustomFieldOrder(t *testing.T) {
 
 // TestTextFormatterWithFieldTransformers tests TextFormatter with field transformers
 func TestTextFormatterWithFieldTransformers(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	// Define a transformer
 	tf.FieldTransformers = map[string]func(interface{}) string{
@@ -347,10 +347,10 @@ func TestTextFormatterWithFieldTransformers(t *testing.T) {
 
 // TestTextFormatterWithSensitiveFields tests TextFormatter with sensitive fields masking
 func TestTextFormatterWithSensitiveFields(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 	tf.MaskSensitiveData = true
 	tf.SensitiveFields = []string{"password", "token"}
-	tf.MaskStringValue = "***MASKED***"
+	tf.MaskStr = "***MASKED***"
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -375,7 +375,7 @@ func TestTextFormatterWithSensitiveFields(t *testing.T) {
 
 // TestTextFormatterIsSensitiveField tests the isSensitiveField method
 func TestTextFormatterIsSensitiveField(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 	tf.SensitiveFields = []string{"password", "token", "secret"}
 
 	tests := []struct {
@@ -400,13 +400,13 @@ func TestTextFormatterIsSensitiveField(t *testing.T) {
 
 // TestTextFormatterWriteMeta tests the writeMeta method
 func TestTextFormatterWriteMeta(t *testing.T) {
-	tf := NewTextFormatter()
-	tf.ShowPID = true
-	tf.ShowGoroutine = true
-	tf.ShowTraceInfo = true
-	tf.ShowCaller = true
-	tf.ShowHostname = true
-	tf.ShowApplication = true
+	tf := NewText()
+	tf.PID = true
+	tf.Goroutine = true
+	tf.Trace = true
+	tf.Caller = true
+	tf.Hostname = true
+	tf.App = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -418,7 +418,7 @@ func TestTextFormatterWriteMeta(t *testing.T) {
 	entry.RequestID = []byte("req777")
 	entry.Hostname = []byte("test-host")
 	entry.Application = []byte("test-app")
-	entry.Caller = util.GetCallerInfo(1)
+	entry.Caller = util.GetCaller(1)
 	entry.Duration = 5 * time.Second
 
 	buf := &bytes.Buffer{}
@@ -431,13 +431,13 @@ func TestTextFormatterWriteMeta(t *testing.T) {
 
 	// Clean up
 	if entry.Caller != nil {
-		core.PutCallerInfoToPool(entry.Caller)
+		core.PutCallerToPool(entry.Caller)
 	}
 }
 
 // TestTextFormatterWriteTraceInfo tests the writeTraceInfo method
 func TestTextFormatterWriteTraceInfo(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -525,7 +525,7 @@ func TestShortIDToBytes(t *testing.T) {
 
 // TestTextFormatterFormatFields tests the formatFields method
 func TestTextFormatterFormatFields(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	buf := &bytes.Buffer{}
 
@@ -546,7 +546,7 @@ func TestTextFormatterFormatFields(t *testing.T) {
 
 // TestTextFormatterFormatTags tests the formatTags method
 func TestTextFormatterFormatTags(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	buf := &bytes.Buffer{}
 
@@ -562,7 +562,7 @@ func TestTextFormatterFormatTags(t *testing.T) {
 
 // TestTextFormatterFormatTagsBytes tests the formatTagsBytes method
 func TestTextFormatterFormatTagsBytes(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	buf := &bytes.Buffer{}
 
@@ -578,7 +578,7 @@ func TestTextFormatterFormatTagsBytes(t *testing.T) {
 
 // TestTextFormatterFormatMetrics tests the formatMetrics method
 func TestTextFormatterFormatMetrics(t *testing.T) {
-	tf := NewTextFormatter()
+	tf := NewText()
 
 	buf := &bytes.Buffer{}
 
@@ -614,7 +614,7 @@ func TestTextFormatterContains(t *testing.T) {
 
 // TestTextFormatterManualFormatTimestamp tests the manualFormatTimestamp function
 func TestTextFormatterManualFormatTimestamp(t *testing.T) {
-	_ = NewTextFormatter() // Use blank identifier to avoid unused variable
+	_ = NewText() // Use blank identifier to avoid unused variable
 
 	buf := &bytes.Buffer{}
 	timestamp := time.Now()

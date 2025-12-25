@@ -10,7 +10,7 @@ import (
 	"github.com/Lunar-Chipter/mire/core"
 )
 
-// mockSamplerProcessor implements LogSampler interface for testing
+// mockSamplerProcessor implements Sampler interface for testing
 type mockSamplerProcessor struct {
 	loggedEntries []*sampleEntry
 	logCalls      int

@@ -10,15 +10,15 @@ import (
 
 // TestNewJSONFormatter tests creating a new JSONFormatter
 func TestNewJSONFormatter(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 
 	if jf == nil {
 		t.Fatal("NewJSONFormatter returned nil")
 	}
 
 	// Check default values
-	if jf.MaskStringValue != "[MASKED]" {
-		t.Errorf("Default MaskStringValue should be '[MASKED]', got '%s'", jf.MaskStringValue)
+	if jf.MaskStr != "[MASKED]" {
+		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", jf.MaskStr)
 	}
 
 	if jf.FieldKeyMap == nil {
@@ -36,7 +36,7 @@ func TestNewJSONFormatter(t *testing.T) {
 
 // TestJSONFormatterFormat tests the Format method of JSONFormatter
 func TestJSONFormatterFormat(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 
 	// Create a test log entry
 	entry := core.GetEntryFromPool()
@@ -86,7 +86,7 @@ func TestJSONFormatterFormat(t *testing.T) {
 
 // TestJSONFormatterWithPrettyPrint tests the Format method with PrettyPrint enabled
 func TestJSONFormatterWithPrettyPrint(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 	jf.PrettyPrint = true
 
 	entry := core.GetEntryFromPool()
@@ -116,8 +116,8 @@ func TestJSONFormatterWithPrettyPrint(t *testing.T) {
 
 // TestJSONFormatterWithPID tests JSONFormatter with PID
 func TestJSONFormatterWithPID(t *testing.T) {
-	jf := NewJSONFormatter()
-	jf.ShowPID = true
+	jf := NewJSON()
+	jf.PID = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -148,8 +148,8 @@ func TestJSONFormatterWithPID(t *testing.T) {
 
 // TestJSONFormatterWithCaller tests JSONFormatter with caller info
 func TestJSONFormatterWithCaller(t *testing.T) {
-	jf := NewJSONFormatter()
-	jf.ShowCaller = true
+	jf := NewJSON()
+	jf.Caller = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -157,7 +157,7 @@ func TestJSONFormatterWithCaller(t *testing.T) {
 	entry.Level = core.INFO
 	entry.Message = []byte("with caller")
 	// Set up a mock caller
-	entry.Caller = &core.CallerInfo{
+	entry.Caller = &core.Caller{
 		File:     "test.go",
 		Line:     123,
 		Function: "TestFunction",
@@ -182,7 +182,7 @@ func TestJSONFormatterWithCaller(t *testing.T) {
 
 // TestJSONFormatterWithFields tests JSONFormatter with fields
 func TestJSONFormatterWithFields(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -223,8 +223,8 @@ func TestJSONFormatterWithFields(t *testing.T) {
 
 // TestJSONFormatterWithTraceInfo tests JSONFormatter with trace information
 func TestJSONFormatterWithTraceInfo(t *testing.T) {
-	jf := NewJSONFormatter()
-	jf.ShowTraceInfo = true
+	jf := NewJSON()
+	jf.Trace = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -261,8 +261,8 @@ func TestJSONFormatterWithTraceInfo(t *testing.T) {
 
 // TestJSONFormatterWithStackTrace tests JSONFormatter with stack trace
 func TestJSONFormatterWithStackTrace(t *testing.T) {
-	jf := NewJSONFormatter()
-	jf.EnableStackTrace = true
+	jf := NewJSON()
+	jf.StackTrace = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -283,7 +283,7 @@ func TestJSONFormatterWithStackTrace(t *testing.T) {
 	}
 
 	if !bytes.Contains(buf.Bytes(), []byte("stack_trace")) {
-		t.Error("Output should contain 'stack_trace' field when EnableStackTrace is true")
+		t.Error("Output should contain 'stack_trace' field when IncludeStackTrace is true")
 	}
 
 	if !bytes.Contains(buf.Bytes(), []byte("stack trace details")) {
@@ -293,7 +293,7 @@ func TestJSONFormatterWithStackTrace(t *testing.T) {
 
 // TestJSONFormatterFormatJSONValue tests the formatJSONValue method
 func TestJSONFormatterFormatJSONValue(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 
 	buf := &bytes.Buffer{}
 
@@ -355,7 +355,7 @@ func TestJSONFormatterFormatJSONValue(t *testing.T) {
 
 // TestJSONFormatterIsSensitiveField tests the isSensitiveField method
 func TestJSONFormatterIsSensitiveField(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 	jf.SensitiveFields = []string{"password", "token", "secret"}
 
 	tests := []struct {
@@ -380,7 +380,7 @@ func TestJSONFormatterIsSensitiveField(t *testing.T) {
 
 // TestJSONFormatterIsSensitive tests the isSensitive method
 func TestJSONFormatterIsSensitive(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 	jf.SensitiveFields = []string{"password", "token", "secret"}
 
 	tests := []struct {
@@ -405,7 +405,7 @@ func TestJSONFormatterIsSensitive(t *testing.T) {
 
 // TestJSONFormatterTransformValue tests the transformValue method
 func TestJSONFormatterTransformValue(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 
 	tests := []struct {
 		input    interface{}
@@ -431,7 +431,7 @@ func TestJSONFormatterTransformValue(t *testing.T) {
 
 // TestJSONFormatterCreateSensitiveFieldMap tests the createSensitiveFieldMap method
 func TestJSONFormatterCreateSensitiveFieldMap(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 
 	// With empty sensitive fields
 	result := jf.createSensitiveFieldMap()
@@ -454,7 +454,7 @@ func TestJSONFormatterCreateSensitiveFieldMap(t *testing.T) {
 	}
 
 	// Let's test with 6 fields to definitely trigger map creation
-	jf2 := NewJSONFormatter()
+	jf2 := NewJSON()
 	jf2.SensitiveFields = []string{"field1", "field2", "field3", "field4", "field5", "field6"}
 	result2 := jf2.createSensitiveFieldMap()
 	if result2 == nil {
@@ -474,7 +474,7 @@ func TestJSONFormatterCreateSensitiveFieldMap(t *testing.T) {
 
 // TestJSONFormatterFormatFields tests the formatFields method
 func TestJSONFormatterFormatFields(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 
 	buf := &bytes.Buffer{}
 
@@ -505,7 +505,7 @@ func TestJSONFormatterFormatFields(t *testing.T) {
 
 // TestJSONFormatterFormatFieldsIndented tests the formatFieldsIndented method
 func TestJSONFormatterFormatFieldsIndented(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 
 	buf := &bytes.Buffer{}
 
@@ -525,7 +525,7 @@ func TestJSONFormatterFormatFieldsIndented(t *testing.T) {
 
 // TestJSONFormatterEscapeJSON tests the escapeJSON function
 func TestJSONFormatterEscapeJSON(t *testing.T) {
-	_ = NewJSONFormatter() // Use blank identifier to avoid unused variable
+	_ = NewJSON() // Use blank identifier to avoid unused variable
 
 	buf := &bytes.Buffer{}
 
@@ -586,7 +586,7 @@ func TestJSONFormatterEscapeJSON(t *testing.T) {
 
 // TestJSONFormatterFieldKeyMapping tests the FieldKeyMap functionality
 func TestJSONFormatterFieldKeyMapping(t *testing.T) {
-	jf := NewJSONFormatter()
+	jf := NewJSON()
 	jf.FieldKeyMap = map[string]string{
 		"old_key": "new_key",
 		"user_id": "uid",

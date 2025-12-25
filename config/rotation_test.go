@@ -14,7 +14,7 @@ func TestRotationConfig(t *testing.T) {
 		MaxBackups:      10,
 		LocalTime:       true,
 		Compress:        false,
-		RotationTime:    24 * time.Hour, // 1 day
+		RotateInterval:    24 * time.Hour, // 1 day
 		FilenamePattern: "2006-01-02",   // Go time format
 	}
 
@@ -39,8 +39,8 @@ func TestRotationConfig(t *testing.T) {
 		t.Errorf("Expected Compress false, got %v", rotationConfig.Compress)
 	}
 
-	if rotationConfig.RotationTime != 24*time.Hour {
-		t.Errorf("Expected RotationTime 24 hours, got %v", rotationConfig.RotationTime)
+	if rotationConfig.RotateInterval != 24*time.Hour {
+		t.Errorf("Expected RotateInterval 24 hours, got %v", rotationConfig.RotateInterval)
 	}
 
 	if rotationConfig.FilenamePattern != "2006-01-02" {
@@ -74,8 +74,8 @@ func TestRotationConfigZeroValues(t *testing.T) {
 		t.Errorf("Expected Compress false, got %v", rotationConfig.Compress)
 	}
 
-	if rotationConfig.RotationTime != 0 {
-		t.Errorf("Expected zero RotationTime, got %v", rotationConfig.RotationTime)
+	if rotationConfig.RotateInterval != 0 {
+		t.Errorf("Expected zero RotateInterval, got %v", rotationConfig.RotateInterval)
 	}
 
 	if rotationConfig.FilenamePattern != "" {
@@ -220,11 +220,11 @@ func TestRotationConfigWithTimeDurations(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := &RotationConfig{
-				RotationTime: tc.rotationTime,
+				RotateInterval: tc.rotationTime,
 			}
 
-			if config.RotationTime != tc.rotationTime {
-				t.Errorf("Expected RotationTime %v, got %v", tc.rotationTime, config.RotationTime)
+			if config.RotateInterval != tc.rotationTime {
+				t.Errorf("Expected RotateInterval %v, got %v", tc.rotationTime, config.RotateInterval)
 			}
 		})
 	}
@@ -295,7 +295,7 @@ func TestRotationConfigMemoryLayout(t *testing.T) {
 	config.MaxBackups = 789
 	config.LocalTime = true
 	config.Compress = true
-	config.RotationTime = 10 * time.Hour
+	config.RotateInterval = 10 * time.Hour
 	config.FilenamePattern = "test"
 
 	// Verify the values are still there
@@ -314,8 +314,8 @@ func TestRotationConfigMemoryLayout(t *testing.T) {
 	if config.Compress != true {
 		t.Error("Compress was not set correctly")
 	}
-	if config.RotationTime != 10*time.Hour {
-		t.Error("RotationTime was not set correctly")
+	if config.RotateInterval != 10*time.Hour {
+		t.Error("RotateInterval was not set correctly")
 	}
 	if config.FilenamePattern != "test" {
 		t.Error("FilenamePattern was not set correctly")
@@ -330,7 +330,7 @@ func TestRotationConfigComparison(t *testing.T) {
 		MaxBackups:      5,
 		LocalTime:       true,
 		Compress:        false,
-		RotationTime:    time.Minute,
+		RotateInterval:    time.Minute,
 		FilenamePattern: "test",
 	}
 
@@ -340,7 +340,7 @@ func TestRotationConfigComparison(t *testing.T) {
 		MaxBackups:      5,
 		LocalTime:       true,
 		Compress:        false,
-		RotationTime:    time.Minute,
+		RotateInterval:    time.Minute,
 		FilenamePattern: "test",
 	}
 
@@ -361,8 +361,8 @@ func TestRotationConfigComparison(t *testing.T) {
 	if config1.Compress != config2.Compress {
 		t.Error("Configs should be equal but Compress differs")
 	}
-	if config1.RotationTime != config2.RotationTime {
-		t.Error("Configs should be equal but RotationTime differs")
+	if config1.RotateInterval != config2.RotateInterval {
+		t.Error("Configs should be equal but RotateInterval differs")
 	}
 	if config1.FilenamePattern != config2.FilenamePattern {
 		t.Error("Configs should be equal but FilenamePattern differs")

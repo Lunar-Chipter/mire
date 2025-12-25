@@ -9,8 +9,8 @@ import (
 	"github.com/Lunar-Chipter/mire/core"
 )
 
-// MetricsCollector interface defines methods for collecting metrics
-type MetricsCollector interface {
+// Collector interface defines methods for collecting metrics
+type Collector interface {
 	// IncrementCounter increments a counter metric
 	IncrementCounter(level core.Level, tags map[string]string)
 
@@ -21,17 +21,17 @@ type MetricsCollector interface {
 	RecordGauge(metric string, value float64, tags map[string]string)
 }
 
-// DefaultMetricsCollector is a simple in-memory metrics collector
-type DefaultMetricsCollector struct {
+// Metrics is a simple in-memory metrics collector
+type Metrics struct {
 	counters   map[string]int64
 	histograms map[string][]float64
 	gauges     map[string]float64
 	mu         sync.RWMutex
 }
 
-// NewDefaultMetricsCollector creates a new DefaultMetricsCollector
-func NewDefaultMetricsCollector() *DefaultMetricsCollector {
-	return &DefaultMetricsCollector{
+// NewMetrics creates a new Metrics collector
+func NewMetrics() *Metrics {
+	return &Metrics{
 		counters:   make(map[string]int64),
 		histograms: make(map[string][]float64),
 		gauges:     make(map[string]float64),
@@ -39,43 +39,43 @@ func NewDefaultMetricsCollector() *DefaultMetricsCollector {
 }
 
 // IncrementCounter increments a counter metric
-func (d *DefaultMetricsCollector) IncrementCounter(level core.Level, tags map[string]string) {
+func (m *Metrics) IncrementCounter(level core.Level, tags map[string]string) {
 	if level < core.TRACE || level > core.PANIC {
-		return // Invalid level
+		return
 	}
 	key := "log." + strings.ToLower(level.String())
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.counters[key]++
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.counters[key]++
 }
 
 // RecordHistogram records a histogram metric
-func (d *DefaultMetricsCollector) RecordHistogram(metric string, value float64, tags map[string]string) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.histograms[metric] = append(d.histograms[metric], value)
+func (m *Metrics) RecordHistogram(metric string, value float64, tags map[string]string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.histograms[metric] = append(m.histograms[metric], value)
 }
 
 // RecordGauge records a gauge metric
-func (d *DefaultMetricsCollector) RecordGauge(metric string, value float64, tags map[string]string) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.gauges[metric] = value
+func (m *Metrics) RecordGauge(metric string, value float64, tags map[string]string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.gauges[metric] = value
 }
 
 // GetCounter returns the value of a counter metric
-func (d *DefaultMetricsCollector) GetCounter(metric string) int64 {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
-	return d.counters[metric]
+func (m *Metrics) GetCounter(metric string) int64 {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.counters[metric]
 }
 
 // GetHistogram returns statistics for a histogram metric
-func (d *DefaultMetricsCollector) GetHistogram(metric string) (min, max, avg, p95 float64) {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
+func (m *Metrics) GetHistogram(metric string) (min, max, avg, p95 float64) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 
-	values := d.histograms[metric]
+	values := m.histograms[metric]
 	if len(values) == 0 {
 		return 0, 0, 0, 0
 	}

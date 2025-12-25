@@ -33,16 +33,16 @@ func (e *wrappedError) Unwrap() error {
 	return e.cause
 }
 
-// SimpleFileHook is a hook that writes log entries to a file.
-type SimpleFileHook struct {
+// FileHook is a hook that writes log entries to a file.
+type FileHook struct {
 	mu        sync.Mutex
 	writer    io.Writer
 	formatter formatter.Formatter
 	file      *os.File // Keep reference to the file to close it
 }
 
-// NewFileHook creates a new SimpleFileHook that writes to the specified file.
-func NewFileHook(filePath string) (*SimpleFileHook, error) {
+// NewFileHook creates a new FileHook that writes to the specified file.
+func NewFileHook(filePath string) (*FileHook, error) {
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, &wrappedError{
@@ -57,7 +57,7 @@ func NewFileHook(filePath string) (*SimpleFileHook, error) {
 		EnableStackTrace: true,
 	}
 
-	return &SimpleFileHook{
+	return &FileHook{
 		writer:    file,
 		formatter: jsonFormatter,
 		file:      file,
@@ -65,7 +65,7 @@ func NewFileHook(filePath string) (*SimpleFileHook, error) {
 }
 
 // Fire writes the log entry to the file.
-func (h *SimpleFileHook) Fire(entry *core.LogEntry) error {
+func (h *FileHook) Fire(entry *core.LogEntry) error {
 	if entry.Level < core.ERROR { // Only log ERROR level and above to the error file
 		return nil
 	}
@@ -93,7 +93,7 @@ func (h *SimpleFileHook) Fire(entry *core.LogEntry) error {
 }
 
 // Close closes the underlying file writer.
-func (h *SimpleFileHook) Close() error {
+func (h *FileHook) Close() error {
 	if h.file != nil {
 		return h.file.Close()
 	}

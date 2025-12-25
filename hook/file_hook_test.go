@@ -10,8 +10,8 @@ import (
 	"github.com/Lunar-Chipter/mire/formatter"
 )
 
-// TestSimpleFileHookCreation tests creating a new SimpleFileHook
-func TestSimpleFileHookCreation(t *testing.T) {
+// TestFileHookCreation tests creating a new FileHook
+func TestFileHookCreation(t *testing.T) {
 	tempFile := "test_hook.log"
 	hook, err := NewFileHook(tempFile)
 
@@ -26,7 +26,7 @@ func TestSimpleFileHookCreation(t *testing.T) {
 	// Check that the correct formatter is used
 	_, ok := hook.formatter.(*formatter.JSONFormatter)
 	if !ok {
-		t.Error("SimpleFileHook should use JSONFormatter")
+		t.Error("FileHook should use JSONFormatter")
 	}
 
 	// Clean up
@@ -34,8 +34,8 @@ func TestSimpleFileHookCreation(t *testing.T) {
 	os.Remove(tempFile)
 }
 
-// TestSimpleFileHookCreationError tests error case when file can't be created
-func TestSimpleFileHookCreationError(t *testing.T) {
+// TestFileHookCreationError tests error case when file can't be created
+func TestFileHookCreationError(t *testing.T) {
 	// Try to create a hook with an invalid path
 	hook, err := NewFileHook("/invalid/path/that/does/not/exist/file.log")
 
@@ -55,7 +55,7 @@ func TestSimpleFileHookCreationError(t *testing.T) {
 }
 
 // at
-func TestSimpleFileHookFire(t *testing.T) {
+func TestFileHookFire(t *testing.T) {
 	tempFile := "test_fire_hook.log"
 	hook, err := NewFileHook(tempFile)
 	if err != nil {
@@ -93,8 +93,8 @@ func TestSimpleFileHookFire(t *testing.T) {
 	}
 }
 
-// TestSimpleFileHookFireError tests error handling when formatter fails
-func TestSimpleFileHookFireError(t *testing.T) {
+// TestFileHookFireError tests error handling when formatter fails
+func TestFileHookFireError(t *testing.T) {
 	// Create a mock formatter that always fails
 	failingFormatter := &failingTestFormatter{}
 
@@ -105,7 +105,7 @@ func TestSimpleFileHookFireError(t *testing.T) {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
-	hook := &SimpleFileHook{
+	hook := &FileHook{
 		writer:    file,
 		formatter: failingFormatter,
 		file:      file,
@@ -138,12 +138,12 @@ func TestSimpleFileHookFireError(t *testing.T) {
 	os.Remove(tempFile)
 }
 
-// TestSimpleFileHookFireWriteError tests error handling when writer fails
-func TestSimpleFileHookFireWriteError(t *testing.T) {
+// TestFileHookFireWriteError tests error handling when writer fails
+func TestFileHookFireWriteError(t *testing.T) {
 	// Create a mock writer that always fails
 	failingWriter := &failingTestWriter{}
 
-	hook := &SimpleFileHook{
+	hook := &FileHook{
 		writer:    failingWriter,
 		formatter: &formatter.JSONFormatter{},
 	}
@@ -172,8 +172,8 @@ func TestSimpleFileHookFireWriteError(t *testing.T) {
 	}
 }
 
-// TestSimpleFileHookClose tests closing the hook
-func TestSimpleFileHookClose(t *testing.T) {
+// TestFileHookClose tests closing the hook
+func TestFileHookClose(t *testing.T) {
 	tempFile := "test_close_hook.log"
 	hook, err := NewFileHook(tempFile)
 	if err != nil {
@@ -194,9 +194,9 @@ func TestSimpleFileHookClose(t *testing.T) {
 	os.Remove(tempFile)
 }
 
-// TestSimpleFileHookCloseNilFile tests closing a hook with nil file
-func TestSimpleFileHookCloseNilFile(t *testing.T) {
-	hook := &SimpleFileHook{
+// TestFileHookCloseNilFile tests closing a hook with nil file
+func TestFileHookCloseNilFile(t *testing.T) {
+	hook := &FileHook{
 		file: nil,
 	}
 
@@ -254,7 +254,7 @@ func (w *failingTestWriter) Write(p []byte) (n int, err error) {
 	return 0, errors.New("write failed")
 }
 
-// TestHookInterfaceImplementation tests that SimpleFileHook implements the Hook interface
+// TestHookInterfaceImplementation tests that FileHook implements the Hook interface
 func TestHookInterfaceImplementation(t *testing.T) {
 	// Create a temporary file for the test
 	tempFile := "test_interface_hook.log"
@@ -291,7 +291,7 @@ func TestHookInterfaceImplementation(t *testing.T) {
 }
 
 // at
-func TestSimpleFileHookWithDifferentFormatters(t *testing.T) {
+func TestFileHookWithDifferentFormatters(t *testing.T) {
 	tempFile := "test_formatter_hook.log"
 
 	// Test with JSON formatter (default)

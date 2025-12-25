@@ -39,14 +39,14 @@ func GetCallerInfo(skip int) *core.CallerInfo {
 
 // GetStackTrace returns a stack trace as a []byte slice from a pooled buffer,
 // and the pointer to the pooled buffer. The caller is responsible for returning
-// the buffer to the pool using core.PutBufferToPool (via the returned pointer).
+// the buffer to the pool using core.PutBuffer (via the returned pointer).
 func GetStackTrace(depth int) ([]byte, *[]byte) {
-	bufPtr := core.GetBufferFromPool() // Get a pooled buffer
+	bufPtr := core.GetBuffer() // Get a pooled buffer
 	tempBuf := *bufPtr                 // Dereference to get the actual []byte slice
 
 	n := runtime.Stack(tempBuf, false)
 	if n == 0 {
-		core.PutBufferToPool(bufPtr) // Return empty buffer if no stack trace
+		core.PutBuffer(bufPtr) // Return empty buffer if no stack trace
 		return nil, nil
 	}
 

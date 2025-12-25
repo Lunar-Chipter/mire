@@ -29,13 +29,13 @@ func ExternalServiceExample() {
 
 	// Create a logger with the external hook
 	// This logger will send all ERROR level and above logs to the external service
-	log := logger.New(logger.LoggerConfig{
+	log := logger.New(logger.Config{
 		Level:  core.INFO,
 		Output: os.Stdout,
 		Formatter: &formatter.TextFormatter{
-			EnableColors:  true,
-			ShowTimestamp: true,
-			ShowCaller:    true,
+			EnableUseColors:  true,
+			ShowShowTimestamp: true,
+			ShowShowCaller:    true,
 		},
 		// In real usage, uncomment the next lines:
 		// Hooks: []hook.Hook{externalHook},

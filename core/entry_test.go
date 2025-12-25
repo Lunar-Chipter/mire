@@ -211,11 +211,11 @@ func TestPutEntryToPool(t *testing.T) {
 	PutEntryToPool(newEntry)
 }
 
-// TestCallerInfoPool tests the CallerInfo object pool
-func TestCallerInfoPool(t *testing.T) {
-	ci1 := GetCallerInfoFromPool()
+// TestCallerPool tests the Caller object pool
+func TestCallerPool(t *testing.T) {
+	ci1 := GetCallerFromPool()
 	if ci1 == nil {
-		t.Fatal("GetCallerInfoFromPool returned nil")
+		t.Fatal("GetCallerFromPool returned nil")
 	}
 
 	// Set some values
@@ -224,15 +224,15 @@ func TestCallerInfoPool(t *testing.T) {
 	ci1.Function = "TestFunction"
 	ci1.Package = "test"
 
-	PutCallerInfoToPool(ci1)
+	PutCallerToPool(ci1)
 
-	// Get a new CallerInfo and check if it's properly reset
-	ci2 := GetCallerInfoFromPool()
+	// Get a new Caller and check if it's properly reset
+	ci2 := GetCallerFromPool()
 	if ci2.File != "" || ci2.Line != 0 || ci2.Function != "" || ci2.Package != "" {
-		t.Errorf("PutCallerInfoToPool did not reset CallerInfo, got %+v", ci2)
+		t.Errorf("PutCallerToPool did not reset Caller, got %+v", ci2)
 	}
 
-	PutCallerInfoToPool(ci2)
+	PutCallerToPool(ci2)
 }
 
 // TestMapFloatPool tests the map[string]float64 object pool
@@ -279,23 +279,23 @@ func TestMapInterfacePool(t *testing.T) {
 
 // TestBufferPool tests the byte buffer object pool
 func TestBufferPool(t *testing.T) {
-	buf1 := GetBufferFromPool()
+	buf1 := GetBuffer()
 	if buf1 == nil {
-		t.Fatal("GetBufferFromPool returned nil")
+		t.Fatal("GetBuffer returned nil")
 	}
 
 	// Add some data
 	*buf1 = append(*buf1, []byte("test")...)
 
-	PutBufferToPool(buf1)
+	PutBuffer(buf1)
 
 	// Get a new buffer and check if it's properly reset
-	buf2 := GetBufferFromPool()
+	buf2 := GetBuffer()
 	if len(*buf2) != 0 {
-		t.Errorf("PutBufferToPool did not reset buffer, got length %d", len(*buf2))
+		t.Errorf("PutBuffer did not reset buffer, got length %d", len(*buf2))
 	}
 
-	PutBufferToPool(buf2)
+	PutBuffer(buf2)
 }
 
 // TestStringSlicePool tests the string slice object pool

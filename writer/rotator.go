@@ -7,36 +7,61 @@ import (
 	"github.com/Lunar-Chipter/mire/config" // Updated import
 )
 
-// RotatingFileWriter provides a file writer that rotates logs.
-// The implementation details for rotation (e.g., based on size, time) would go here.
-// at
-type RotatingFileWriter struct {
+// Rotator provides a file writer that rotates logs.
+type Rotator struct {
 	file   *os.File
 	closed bool
 	mu     sync.Mutex
-	// Add other fields needed for rotation logic, e.g:
-	// filename string
-	// maxSize int64
-	// maxBackups int
-	// currentSize int64
 }
 
-// NewRotatingFileWriter creates a new rotating file writer.
+// NewRotator creates a new rotating file writer.
+func NewRotator(filename string, conf *config.RotationConfig) (*Rotator, error) {
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+	return &Rotator{
+		file:   f,
+		closed: false,
+	}, nil
+}
+
+// Write writes data to file, handling rotation if necessary.
+func (w *Rotator) Write(p []byte) (n int, err error) {
+	n, err = w.file.Write(p)
+	return n, err
+}
+
+// Close closes the underlying file.
+func (w *Rotator) Close() error {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	if w.closed {
+		return nil
+	}
+
+	err := w.file.Close()
+	w.closed = true
+	return err
+}
+
+// NewRotator creates a new rotating file writer.
 // This function would set up the initial file and the rotation schedule/logic.
-func NewRotatingFileWriter(filename string, conf *config.RotationConfig) (*RotatingFileWriter, error) { // Updated type
+func NewRotator(filename string, conf *config.RotationConfig) (*Rotator, error) { // Updated type
 	// For now, just open the file. The actual rotation logic is not implemented.
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, err
 	}
-	return &RotatingFileWriter{
+	return &Rotator{
 		file:   f,
 		closed: false,
 	}, nil
 }
 
 // Write writes data to the file, handling rotation if necessary.
-func (w *RotatingFileWriter) Write(p []byte) (n int, err error) {
+func (w *Rotator) Write(p []byte) (n int, err error) {
 	// Here you would check if rotation is needed before writing.
 	// For example:
 	// if w.currentSize + int64(len(p)) > w.maxSize {
@@ -50,7 +75,7 @@ func (w *RotatingFileWriter) Write(p []byte) (n int, err error) {
 }
 
 // Close closes the underlying file.
-func (w *RotatingFileWriter) Close() error {
+func (w *Rotator) Close() error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 

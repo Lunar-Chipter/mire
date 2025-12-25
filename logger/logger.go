@@ -32,60 +32,60 @@ const (
 	LargeBufferSize  = 8192
 )
 
-// LoggerConfig holds configuration for the logger
-type LoggerConfig struct {
-	Level                       core.Level                              // Minimum level to log
-	EnableColors                bool                                    // Enable ANSI colors in output
-	Output                      io.Writer                               // Output writer for logs
-	ErrorOutput                 io.Writer                               // Output writer for internal logger errors
-	Formatter                   formatter.Formatter                     // Formatter to use for log entries
-	ShowCaller                  bool                                    // Show caller information (file, line)
-	CallerDepth                 int                                     // Depth to look for caller info
-	ShowGoroutine               bool                                    // Show goroutine ID
-	ShowPID                     bool                                    // Show process ID
-	ShowTraceInfo               bool                                    // Show trace information (trace_id, span_id, etc.)
-	ShowHostname                bool                                    // Show hostname
-	ShowApplication             bool                                    // Show application name
-	TimestampFormat             string                                  // Format for timestamps
-	ExitFunc                    func(int)                               // Function to call on fatal/panic (defaults to os.Exit)
-	EnableStackTrace            bool                                    // Enable stack trace for errors
-	StackTraceDepth             int                                     // Maximum depth for stack trace
-	EnableSampling              bool                                    // Enable log sampling
-	SamplingRate                int                                     // Sampling rate (log every Nth message)
-	BufferSize                  int                                     // Size of buffer for buffered writer
-	FlushInterval               time.Duration                           // Interval to flush buffered logs
-	EnableRotation              bool                                    // Enable log rotation
-	RotationConfig              *config.RotationConfig                  // Configuration for log rotation
-	ContextExtractor            func(context.Context) map[string][]byte // Function to extract fields from context as []byte for zero allocation
-	Hostname                    string                                  // Hostname to include in logs
-	Application                 string                                  // Application name to include in logs
-	Version                     string                                  // Application version to include in logs
-	Environment                 string                                  // Environment (dev, prod, etc.)
-	MaxFieldSize                int                                     // Maximum size for field values
-	EnableMetrics               bool                                    // Enable metrics collection
-	MetricsCollector            metric.MetricsCollector                 // Metrics collector to use
-	ErrorHandler                func(error)                             // Function to handle internal logger errors
-	OnFatal                     func(*core.LogEntry)                    // Function to call when a fatal log occurs
-	OnPanic                     func(*core.LogEntry)                    // Function to call when a panic log occurs
-	Hooks                       []hook.Hook                             // Hooks to execute for each log entry
-	EnableErrorFileHook         bool                                    // Enable built-in error file hook for ERROR+ levels
-	BatchSize                   int                                     // Size of batch for batched writes
-	BatchTimeout                time.Duration                           // Timeout for batched writes
-	DisableLocking              bool                                    // Disable internal locking (for performance, use with caution)
-	PreAllocateFields           int                                     // Pre-allocate map capacity for fields
-	PreAllocateTags             int                                     // Pre-allocate slice capacity for tags
-	MaxMessageSize              int                                     // Maximum size for log messages
-	AsyncLogging                bool                                    // Enable asynchronous logging
-	LogProcessTimeout           time.Duration                           // Timeout for processing log in async worker
-	AsyncLogChannelBufferSize   int                                     // Buffer size for async log channel
-	AsyncWorkerCount            int                                     // Number of async worker goroutines
-	DisablePerLogContextTimeout bool                                    // Disable context timeout per log in async mode
-	ClockInterval               time.Duration                           // Interval for clock (for timestamp optimization)
-	MaskStringValue             string                                  // String value to use for masking sensitive data
+// Config holds configuration for the logger
+type Config struct {
+	Level                   core.Level                              // Minimum level to log
+	UseColors               bool                                    // Use ANSI colors in output
+	Output                  io.Writer                               // Output writer for logs
+	ErrorOutput             io.Writer                               // Output writer for internal logger errors
+	Formatter               formatter.Formatter                     // Formatter to use for log entries
+	ShowCaller              bool                                    // Show caller information (file, line)
+	CallerDepth             int                                     // Depth to look for caller info
+	ShowGoroutine          bool                                    // Show goroutine ID
+	ShowPID                 bool                                    // Show process ID
+	ShowTrace               bool                                    // Show trace information (trace_id, span_id, etc.)
+	ShowHostname            bool                                    // Show hostname
+	ShowApp                 bool                                    // Show application name
+	TimestampFormat         string                                  // Format for timestamps
+	ExitFunc                func(int)                               // Function to call on fatal/panic (defaults to os.Exit)
+	IncludeStackTrace       bool                                    // Include stack trace for errors
+	StackTraceDepth         int                                     // Maximum depth for stack trace
+	EnableSampling         bool                                    // Enable log sampling
+	SamplingRate            int                                     // Sampling rate (log every Nth message)
+	BufferSize              int                                     // Size of buffer for buffered writer
+	FlushInterval           time.Duration                           // Interval to flush buffered logs
+	EnableRotation         bool                                    // Enable log rotation
+	RotationConfig               *config.RotationConfig                  // Configuration for log rotation
+	ExtractContext          func(context.Context) map[string][]byte // Function to extract fields from context as []byte for zero allocation
+	Hostname                string                                  // Hostname to include in logs
+	Application             string                                  // Application name to include in logs
+	Version                 string                                  // Application version to include in logs
+	Environment             string                                  // Environment (dev, prod, etc.)
+	MaxFieldSize            int                                     // Maximum size for field values
+	EnableMetrics          bool                                    // Enable metrics collection
+	Collector               metric.Collector                 // Metrics collector to use
+	ErrorHandler            func(error)                             // Function to handle internal logger errors
+	OnFatal                 func(*core.LogEntry)                    // Function to call when a fatal log occurs
+	OnPanic                 func(*core.LogEntry)                    // Function to call when a panic log occurs
+	Hooks                   []hook.Hook                             // Hooks to execute for each log entry
+	LogErrors               bool                                    // Log errors to error file (ERROR+ levels)
+	BatchSize               int                                     // Size of batch for batched writes
+	BatchTimeout            time.Duration                           // Timeout for batched writes
+	NoLocking               bool                                    // Disable internal locking (for performance, use with caution)
+	FieldCapacity           int                                     // Pre-allocate map capacity for fields
+	TagCapacity             int                                     // Pre-allocate slice capacity for tags
+	MaxMessageSize          int                                     // Maximum size for log messages
+	AsyncMode               bool                                    // Enable asynchronous logging
+	ProcessTimeout         time.Duration                           // Timeout for processing log in async worker
+	ChannelSize             int                                     // Buffer size for async log channel
+	WorkerCount             int                                     // Number of async worker goroutines
+	NoTimeout              bool                                    // Disable context timeout per log in async mode
+	ClockInterval           time.Duration                           // Interval for clock (for timestamp optimization)
+	MaskValue               string                                  // String value to use for masking sensitive data
 }
 
 // validate ensures the logger configuration has sane defaults
-func validate(c *LoggerConfig) {
+func validate(c *Config) {
 	if c.Output == nil {
 		c.Output = os.Stdout
 	}
@@ -94,44 +94,44 @@ func validate(c *LoggerConfig) {
 	}
 	if c.Formatter == nil {
 		// Use default mask string for the default formatter
-		defaultFormatter := &formatter.TextFormatter{TimestampFormat: DEFAULT_TIMESTAMP_FORMAT}
-		if c.MaskStringValue == "" {
-			defaultFormatter.MaskStringBytes = []byte("[MASKED]") // Default mask
+		defaultFormatter := &formatter.TextFormatter{TimeFmt: DEFAULT_TIMESTAMP_FORMAT}
+		if c.MaskValue == "" {
+			defaultFormatter.MaskBytes = []byte("[MASKED]") // Default mask
 		} else {
-			defaultFormatter.MaskStringBytes = []byte(c.MaskStringValue)
+			defaultFormatter.MaskBytes = []byte(c.MaskValue)
 		}
 		c.Formatter = defaultFormatter
 	} else {
 		// If a formatter is provided, check its type and set MaskStringBytes
 		if tf, ok := c.Formatter.(*formatter.TextFormatter); ok {
-			if c.MaskStringValue == "" {
-				tf.MaskStringBytes = []byte("[MASKED]") // Default mask
+			if c.MaskValue == "" {
+				tf.MaskBytes = []byte("[MASKED]") // Default mask
 			} else {
-				tf.MaskStringBytes = []byte(c.MaskStringValue)
+				tf.MaskBytes = []byte(c.MaskValue)
 			}
 		} else if jf, ok := c.Formatter.(*formatter.JSONFormatter); ok {
-			if c.MaskStringValue == "" {
-				jf.MaskStringBytes = []byte("[MASKED]") // Default mask
+			if c.MaskValue == "" {
+				jf.MaskBytes = []byte("[MASKED]") // Default mask
 			} else {
-				jf.MaskStringBytes = []byte(c.MaskStringValue)
+				jf.MaskBytes = []byte(c.MaskValue)
 			}
 		}
 	}
 
-	if c.CallerDepth <= 0 {
-		c.CallerDepth = DEFAULT_CALLER_DEPTH
+	if c.ShowCallerDepth <= 0 {
+		c.ShowCallerDepth = DEFAULT_CALLER_DEPTH
 	}
-	if c.FlushInterval <= 0 {
-		c.FlushInterval = DEFAULT_FLUSH_INTERVAL
+	if c.Flush <= 0 {
+		c.Flush = DEFAULT_FLUSH_INTERVAL
 	}
-	if c.TimestampFormat == "" {
-		c.TimestampFormat = DEFAULT_TIMESTAMP_FORMAT
+	if c.TimeFmt == "" {
+		c.TimeFmt = DEFAULT_TIMESTAMP_FORMAT
 	}
 }
 
 // Logger is the main logging structure
 type Logger struct {
-	Config           LoggerConfig                            // Configuration for the logger
+	Config           Config                            // Configuration for the logger
 	formatter        formatter.Formatter                     // Formatter to use for log entries
 	out              io.Writer                               // Output writer for logs
 	errOut           io.Writer                               // Output writer for internal logger errors
@@ -140,16 +140,16 @@ type Logger struct {
 	hooks            []hook.Hook                             // Hooks to execute for each log entry
 	exitFunc         func(int)                               // Function to call on fatal/panic
 	fields           map[string][]byte                       // Default fields to include in all logs as []byte for zero allocation
-	sampler          *sampler.SamplingLogger                 // Sampler for log sampling
-	buffer           *writer.BufferedWriter                  // Buffered writer for performance
-	rotation         *writer.RotatingFileWriter              // Rotating file writer for log rotation
+	sampler          *sampler.EnableSamplingLogger                 // Sampler for log sampling
+	buffer           *writer.Buffered                  // Buffered writer for performance
+	rotation         *writer.Rotator              // Rotating file writer for log rotation
 	contextExtractor func(context.Context) map[string][]byte // Function to extract fields from context
-	metrics          metric.MetricsCollector                 // Metrics collector
+	metrics          metric.Collector                 // Metrics collector
 	onFatal          func(*core.LogEntry)                    // Function to call when a fatal log occurs
 	onPanic          func(*core.LogEntry)                    // Function to call when a panic log occurs
 	stats            *LoggerStats                            // Statistics for the logger
-	asyncLogger      *writer.AsyncLogger                     // Async logger for non-blocking logging
-	errorFileHook    *hook.SimpleFileHook                    // Built-in error file hook for ERROR+ levels
+	asyncLogger      *writer.AsyncModeLogger                     // Async logger for non-blocking logging
+	errorFileHook    *hook.FileHook                    // Built-in error file hook for ERROR+ levels
 	closed           *atomic.Bool                            // Flag to indicate if logger is closed
 	pid              int                                     // Process ID
 	clock            *util.Clock                             // Clock for timestamp optimization
@@ -202,23 +202,23 @@ func (ls *LoggerStats) GetStats() map[string]interface{} {
 
 // NewDefaultLogger creates a logger with default configuration
 // This logger is configured with standard settings suitable for most applications
-func NewDefaultLogger() *Logger {
-	cfg := LoggerConfig{
-		Level:            core.INFO,
-		Output:           os.Stdout,
-		ErrorOutput:      os.Stderr,
-		CallerDepth:      DEFAULT_CALLER_DEPTH,
-		TimestampFormat:  DEFAULT_TIMESTAMP_FORMAT,
-		BufferSize:       DEFAULT_BUFFER_SIZE,
-		FlushInterval:    DEFAULT_FLUSH_INTERVAL,
-		AsyncWorkerCount: 4,
-		ClockInterval:    10 * time.Millisecond,
-		MaskStringValue:  "[MASKED]", // Set default mask string value here
+func NewDefault() *Logger {
+	cfg := Config{
+		Level:           core.INFO,
+		Output:          os.Stdout,
+		ErrorOutput:     os.Stderr,
+		CallerDepth:     DEFAULT_CALLER_DEPTH,
+		TimeFmt: DEFAULT_TIMESTAMP_FORMAT,
+		BufSize:      DEFAULT_BUFFER_SIZE,
+		Flush:   DEFAULT_FLUSH_INTERVAL,
+		Workers:         4,
+		Clock:    10 * time.Millisecond,
+		MaskStr: "[MASKED]",
 		Formatter: &formatter.TextFormatter{
-			EnableColors:    true,
-			ShowTimestamp:   true,
-			ShowCaller:      true,
-			TimestampFormat: DEFAULT_TIMESTAMP_FORMAT,
+			UseColors:        true,
+			ShowShowTimestamp: true,
+			ShowCaller:    true,
+			TimeFmt: DEFAULT_TIMESTAMP_FORMAT,
 		},
 	}
 	return New(cfg)
@@ -226,7 +226,7 @@ func NewDefaultLogger() *Logger {
 
 // New creates a new logger with the given configuration
 // Optimized for 1M+ logs/second with early filtering
-func New(config LoggerConfig) *Logger {
+func New(config Config) *Logger {
 	validate(&config)
 
 	l := &Logger{
@@ -239,8 +239,8 @@ func New(config LoggerConfig) *Logger {
 		exitFunc:         config.ExitFunc,
 		fields:           make(map[string][]byte),
 		hooks:            config.Hooks, // Initialize hooks from config
-		contextExtractor: config.ContextExtractor,
-		metrics:          config.MetricsCollector,
+		contextExtractor: config.CtxExtract,
+		metrics:          config.Collector,
 		onFatal:          config.OnFatal,
 		onPanic:          config.OnPanic,
 		stats:            NewLoggerStats(),
@@ -253,8 +253,8 @@ func New(config LoggerConfig) *Logger {
 		},
 	}
 
-	if config.EnableErrorFileHook {
-		errorHook, err := hook.NewFileHook("errors.log") // Use NewFileHook from hook package
+	if config.LogErrors {
+		errorHook, err := hook.NewFileHook("errors.log")
 		if err != nil {
 			l.handleError(newErrorf("failed to create error file hook: %v", err))
 		} else {
@@ -263,8 +263,8 @@ func New(config LoggerConfig) *Logger {
 		}
 	}
 
-	if config.ClockInterval > 0 {
-		l.clock = util.NewClock(config.ClockInterval)
+	if config.Clock > 0 {
+		l.clock = util.NewClock(config.Clock)
 	} else {
 		l.clock = util.NewClock(10 * time.Millisecond) // Default clock interval
 	}
@@ -275,14 +275,17 @@ func New(config LoggerConfig) *Logger {
 
 	l.setupWriters()
 
-	if config.EnableSampling && config.SamplingRate > 1 {
-		// Create a wrapper that implements the old interface for sampler
+	if config.EnableSampling && config.EnableSamplingRate > 1 {
 		samplerWrapper := &samplerLoggerWrapper{logger: l}
-		l.sampler = sampler.NewSamplingLogger(samplerWrapper, config.SamplingRate)
+		l.sampler = sampler.NewSamplingLogger(samplerWrapper, config.EnableSamplingRate)
 	}
 
-	if config.AsyncLogging {
-		l.asyncLogger = writer.NewAsyncLogger(l, config.AsyncWorkerCount, config.AsyncLogChannelBufferSize, config.LogProcessTimeout, config.DisablePerLogContextTimeout)
+	if config.AsyncMode {
+		l.asyncLogger = writer.NewAsyncLogger(l, config.WorkerCount, config.ChannelSize, config.ProcessTimeout, config.NoTimeout)
+	}
+
+	if config.AsyncMode {
+		l.asyncLogger = writer.NewAsyncLogger(l, config.WorkerCount, config.ChannelSize, config.ProcessTimeout, config.NoTimeout)
 	}
 
 	return l
@@ -303,7 +306,7 @@ func (l *Logger) setupWriters() {
 	if l.Config.EnableRotation && l.Config.RotationConfig != nil {
 		if file, ok := currentWriter.(*os.File); ok {
 			var err error
-			l.rotation, err = writer.NewRotatingFileWriter(file.Name(), l.Config.RotationConfig)
+			l.rotation, err = writer.NewRotator(file.Name(), l.Config.RotationConfig)
 			if err == nil {
 				currentWriter = l.rotation
 			} else {
@@ -312,8 +315,8 @@ func (l *Logger) setupWriters() {
 		}
 	}
 
-	if l.Config.BufferSize > 0 {
-		l.buffer = writer.NewBufferedWriter(currentWriter, l.Config.BufferSize, l.Config.FlushInterval, l.handleError, l.Config.BatchSize, l.Config.BatchTimeout)
+	if l.Config.BufSize > 0 {
+		l.buffer = writer.NewBuffered(currentWriter, l.Config.BufSize, l.Config.Flush, l.handleError, l.Config.Batch, l.Config.BatchTime)
 		currentWriter = l.buffer
 	}
 
@@ -418,8 +421,8 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 	entry := l.buildEntry(ctx, level, message, fields)
 
 	// Use efficient buffer for zero-allocation
-	buf := util.GetBufferFromPool()
-	defer util.PutBufferToPool(buf)
+	buf := util.GetBuffer()
+	defer util.PutBuffer(buf)
 
 	if err := l.formatter.Format(buf, entry); err != nil {
 		l.handleError(err)
@@ -430,7 +433,7 @@ func (l *Logger) write(ctx context.Context, level core.Level, message []byte, fi
 	bytesToWrite := buf.Bytes()
 
 	// Optimized write with minimal locking - only lock when actually writing
-	if l.Config.DisableLocking {
+	if l.Config.NoLocking {
 		// Direct path: no locking at all
 		if n, err := l.out.Write(bytesToWrite); err != nil {
 			l.handleError(err)
@@ -475,11 +478,11 @@ func (l *Logger) writeZero(ctx context.Context, level core.Level, message []byte
 	}
 
 	if l.Config.ShowCaller {
-		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
+		entry.ShowCaller = util.GetCaller(l.Config.ShowCallerDepth)
 	}
 
-	buf := util.GetBufferFromPool()
-	defer util.PutBufferToPool(buf)
+	buf := util.GetBuffer()
+	defer util.PutBuffer(buf)
 	
 	l.Config.Formatter.Format(buf, entry)
 	l.mu.Lock()
@@ -492,8 +495,8 @@ func (l *Logger) writeByte(ctx context.Context, level core.Level, message []byte
 	entry := l.buildEntryByte(ctx, level, message, fields)
 
 	// Use efficient buffer for zero-allocation
-	buf := util.GetBufferFromPool()
-	defer util.PutBufferToPool(buf)
+	buf := util.GetBuffer()
+	defer util.PutBuffer(buf)
 
 	if err := l.formatter.Format(buf, entry); err != nil {
 		l.handleError(err)
@@ -504,7 +507,7 @@ func (l *Logger) writeByte(ctx context.Context, level core.Level, message []byte
 	bytesToWrite := buf.Bytes()
 
 	// Optimized write with minimal locking - only lock when actually writing
-	if l.Config.DisableLocking {
+	if l.Config.NoLocking {
 		// Direct path: no locking at all
 		if n, err := l.out.Write(bytesToWrite); err != nil {
 			l.handleError(err)
@@ -578,20 +581,20 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 		case []byte:
 			buf = append(buf, v...)
 		case int:
-			tempBuf := util.GetSmallByteSliceFromPool()
-			result := strconv.AppendInt(tempBuf[:0], int64(v), 10)
+			tempBuf := util.GetSmallBuf()
+			result := strconv.ShowAppendInt(tempBuf[:0], int64(v), 10)
 			buf = append(buf, result...)
-			util.PutSmallByteSliceToPool(tempBuf)
+			util.PutSmallBuf(tempBuf)
 		case int64:
-			tempBuf := util.GetSmallByteSliceFromPool()
-			result := strconv.AppendInt(tempBuf[:0], v, 10)
+			tempBuf := util.GetSmallBuf()
+			result := strconv.ShowAppendInt(tempBuf[:0], v, 10)
 			buf = append(buf, result...)
-			util.PutSmallByteSliceToPool(tempBuf)
+			util.PutSmallBuf(tempBuf)
 		case float64:
-			tempBuf := util.GetSmallByteSliceFromPool()
-			result := strconv.AppendFloat(tempBuf[:0], v, 'g', -1, 64)
+			tempBuf := util.GetSmallBuf()
+			result := strconv.ShowAppendFloat(tempBuf[:0], v, 'g', -1, 64)
 			buf = append(buf, result...)
-			util.PutSmallByteSliceToPool(tempBuf)
+			util.PutSmallBuf(tempBuf)
 		case bool:
 			if v {
 				buf = append(buf, "true"...)
@@ -601,10 +604,10 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 		default:
 			// For other types, we fallback to manual conversion to avoid fmt
 			// Use a temporary buffer to avoid multiple allocations
-			tempBuf := util.GetBufferFromPool()
+			tempBuf := util.GetBuffer()
 			manualFormatValue(tempBuf, v)
 			buf = append(buf, tempBuf.Bytes()...)
-			util.PutBufferToPool(tempBuf)
+			util.PutBuffer(tempBuf)
 		}
 	}
 
@@ -615,8 +618,8 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 // This implementation aims for at most 1 allocation per call.
 func (l *Logger) formatfArgsToBytes(format string, args ...interface{}) []byte {
 	// We only allow one allocation per call: the final byte slice
-	buf := util.GetBufferFromPool()
-	defer util.PutBufferToPool(buf)
+	buf := util.GetBuffer()
+	defer util.PutBuffer(buf)
 
 	// Use manual formatting to avoid fmt dependency
 	manualFormatWithArgs(buf, format, args...)
@@ -643,7 +646,7 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 	entry.Level = level
 	entry.LevelName = level.ToBytes()
 	entry.Message = message
-	entry.PID = l.pid
+	entry.ShowPID = l.pid
 
 	// Copy fields with minimal allocations - l.fields is now []byte
 	for k, v := range l.fields {
@@ -672,7 +675,7 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 		for k, v := range contextData {
 			switch k {
 			case "trace_id":
-				entry.TraceID = core.StringToBytes(v)
+				entry.ShowTraceID = core.StringToBytes(v)
 			case "span_id":
 				entry.SpanID = core.StringToBytes(v)
 			case "user_id":
@@ -683,19 +686,19 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 				entry.RequestID = core.StringToBytes(v)
 			}
 		}
-		util.PutMapStringToPool(contextData)
+		util.PutMapStr(contextData)
 	}
 
 	// Caller info only if required to avoid overhead
 	if l.Config.ShowCaller {
-		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
+		entry.ShowCaller = util.GetCaller(l.Config.ShowCallerDepth)
 	}
 
 	// Stack trace only for ERROR level and above
-	if l.Config.EnableStackTrace && level >= core.ERROR {
-		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
-		entry.StackTrace = stackTraceBytes
-		entry.StackTraceBufPtr = stackTraceBufPtr
+	if l.Config.IncludeStackTrace && level >= core.ERROR {
+		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackDepth)
+		entry.IncludeStackTrace = stackTraceBytes
+		entry.IncludeStackTraceBufPtr = stackTraceBufPtr
 	}
 
 	return entry
@@ -715,7 +718,7 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 	entry.Level = level
 	entry.LevelName = level.ToBytes()
 	entry.Message = message
-	entry.PID = l.pid
+	entry.ShowPID = l.pid
 
 	// Copy fields with minimal allocations - these are already []byte
 	for k, v := range l.fields {
@@ -736,7 +739,7 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 		for k, v := range contextData {
 			switch k {
 			case "trace_id":
-				entry.TraceID = core.StringToBytes(v)
+				entry.ShowTraceID = core.StringToBytes(v)
 			case "span_id":
 				entry.SpanID = core.StringToBytes(v)
 			case "user_id":
@@ -747,19 +750,19 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 				entry.RequestID = core.StringToBytes(v)
 			}
 		}
-		util.PutMapStringToPool(contextData)
+		util.PutMapStr(contextData)
 	}
 
 	// Caller info only if required to avoid overhead
 	if l.Config.ShowCaller {
-		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
+		entry.ShowCaller = util.GetCaller(l.Config.ShowCallerDepth)
 	}
 
 	// Stack trace only for ERROR level and above
-	if l.Config.EnableStackTrace && level >= core.ERROR {
-		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
-		entry.StackTrace = stackTraceBytes
-		entry.StackTraceBufPtr = stackTraceBufPtr
+	if l.Config.IncludeStackTrace && level >= core.ERROR {
+		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackDepth)
+		entry.IncludeStackTrace = stackTraceBytes
+		entry.IncludeStackTraceBufPtr = stackTraceBufPtr
 	}
 
 	return entry
@@ -827,8 +830,8 @@ func (l *Logger) handleError(err error) {
 		defer l.errOutMu.Unlock()
 
 		// Use manual formatting with zero-allocation approach
-		buf := util.GetBufferFromPool()
-		defer util.PutBufferToPool(buf)
+		buf := util.GetBuffer()
+		defer util.PutBuffer(buf)
 		buf.Write([]byte("logger error: "))
 		buf.Write(core.StringToBytes(err.Error())) // Use zero-allocation string to byte conversion
 		buf.Write([]byte("\n"))

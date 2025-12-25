@@ -5,44 +5,42 @@ import (
 	"sync"
 )
 
-// InvalidLogLevelError is a custom error type for invalid log levels
-type InvalidLogLevelError struct {
+// InvalidLevel is a custom error type for invalid log levels
+type InvalidLevel struct {
 	level string
-	buf   *bytes.Buffer // Pooled buffer for error message
+	buf   *bytes.Buffer
 }
 
-// invalidLogLevelErrorPool pools InvalidLogLevelError objects
-var invalidLogLevelErrorPool = sync.Pool{
+// invalidLevelPool pools InvalidLevel objects
+var invalidLevelPool = sync.Pool{
 	New: func() interface{} {
-		return &InvalidLogLevelError{
+		return &InvalidLevel{
 			buf: new(bytes.Buffer),
 		}
 	},
 }
 
-// NewInvalidLogLevelError gets a pooled InvalidLogLevelError
-func NewInvalidLogLevelError(level string) *InvalidLogLevelError {
-	err := invalidLogLevelErrorPool.Get().(*InvalidLogLevelError)
+// NewInvalidLevel gets a pooled InvalidLevel
+func NewInvalidLevel(level string) *InvalidLevel {
+	err := invalidLevelPool.Get().(*InvalidLevel)
 	err.level = level
-	err.buf.Reset() // Reset the buffer
+	err.buf.Reset()
 	return err
 }
 
-// PutInvalidLogLevelError returns the InvalidLogLevelError to the pool
-func PutInvalidLogLevelError(err *InvalidLogLevelError) {
-	invalidLogLevelErrorPool.Put(err)
+// PutInvalidLevel returns InvalidLevel to pool
+func PutInvalidLevel(err *InvalidLevel) {
+	invalidLevelPool.Put(err)
 }
 
-// AppendError implements the ErrorAppender interface for InvalidLogLevelError.
-func (e *InvalidLogLevelError) AppendError(buf *bytes.Buffer) {
+// AppendError implements the ErrAppend interface for InvalidLevel.
+func (e *InvalidLevel) AppendError(buf *bytes.Buffer) {
 	buf.WriteString("invalid log level: ")
 	buf.WriteString(e.level)
 }
 
-// Error returns the error message (for standard error interface compatibility)
-func (e *InvalidLogLevelError) Error() string {
-	// Re-use internal buffer to build string, but this still allocates a string.
-	// This method is primarily for compatibility with the standard error interface.
+// Error returns error message
+func (e *InvalidLevel) Error() string {
 	e.buf.Reset()
 	e.AppendError(e.buf)
 	return e.buf.String()
