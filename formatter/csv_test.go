@@ -19,8 +19,8 @@ func TestNewCSVFormatter(t *testing.T) {
 	}
 
 	// Check default values
-	if cf.MaskStr != "[MASKED]" {
-		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", cf.MaskStr)
+	if cf.MaskValue != "[MASKED]" {
+		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", cf.MaskValue)
 	}
 
 	if cf.FieldTransformers == nil {
@@ -368,7 +368,7 @@ func TestCSVFormatterWithSensitiveFields(t *testing.T) {
 	cf.IncludeHeader = false
 	cf.MaskSensitiveData = true
 	cf.SensitiveFields = []string{"password", "token"}
-	cf.MaskStr = "***MASKED***"
+	cf.MaskValue = "***MASKED***"
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
