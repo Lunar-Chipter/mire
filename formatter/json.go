@@ -49,6 +49,7 @@ type JSONFormatter struct {
 func NewJSON() *JSONFormatter {
 	return &JSONFormatter{
 		MaskValue:   "[MASKED]",
+		MaskStringBytes: []byte("[MASKED]"),
 		FieldKeyMap:       make(map[string]string),
 		FieldTransformers: make(map[string]func(interface{}) interface{}),
 		SensitiveFields:   make([]string, 0),
@@ -307,7 +308,7 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 	}
 
 	// Add caller info if needed
-	if f.Caller && entry.Caller != nil {
+	if f.ShowCaller && entry.Caller != nil {
 		buf.WriteString(",\n  ")
 		indent(1)
 		buf.WriteString("\"caller\": \"")
@@ -327,7 +328,7 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 	}
 
 	// Add trace info if needed
-	if f.Trace {
+	if f.ShowTrace {
 		if entry.TraceID != nil {
 			buf.WriteString(",\n  ")
 			indent(1)
@@ -351,7 +352,7 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 		}
 	}
 
-	if f.StackTrace && len(entry.StackTrace) > 0 {
+	if f.IncludeStackTrace && len(entry.StackTrace) > 0 {
 		buf.WriteString(",\n  ")
 		indent(1)
 		buf.WriteString("\"stack_trace\": \"")
@@ -561,7 +562,7 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 
 		buf.WriteByte('"')
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
-			buf.Write(f.MaskValue)
+			buf.Write(core.StringToBytes(f.MaskValue))
 		} else {
 			escapeJSON(buf, v)
 		}
@@ -623,7 +624,7 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 
 		buf.WriteByte('"')
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
-			buf.Write(f.MaskBytes)
+			buf.Write(f.MaskStringBytes)
 		} else {
 			escapeJSON(buf, v)
 		}
