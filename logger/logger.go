@@ -94,38 +94,38 @@ func validate(c *Config) {
 	}
 	if c.Formatter == nil {
 		// Use default mask string for the default formatter
-		defaultFormatter := &formatter.TextFormatter{TimeFmt: DEFAULT_TIMESTAMP_FORMAT}
+		defaultFormatter := &formatter.TextFormatter{TimestampFormat: DEFAULT_TIMESTAMP_FORMAT}
 		if c.MaskValue == "" {
-			defaultFormatter.MaskBytes = []byte("[MASKED]") // Default mask
+			defaultFormatter.MaskStringBytes = []byte("[MASKED]") // Default mask
 		} else {
-			defaultFormatter.MaskBytes = []byte(c.MaskValue)
+			defaultFormatter.MaskStringBytes = []byte(c.MaskValue)
 		}
 		c.Formatter = defaultFormatter
 	} else {
 		// If a formatter is provided, check its type and set MaskStringBytes
 		if tf, ok := c.Formatter.(*formatter.TextFormatter); ok {
 			if c.MaskValue == "" {
-				tf.MaskBytes = []byte("[MASKED]") // Default mask
+				tf.MaskStringBytes = []byte("[MASKED]") // Default mask
 			} else {
-				tf.MaskBytes = []byte(c.MaskValue)
+				tf.MaskStringBytes = []byte(c.MaskValue)
 			}
 		} else if jf, ok := c.Formatter.(*formatter.JSONFormatter); ok {
 			if c.MaskValue == "" {
-				jf.MaskBytes = []byte("[MASKED]") // Default mask
+				jf.MaskStringBytes = []byte("[MASKED]") // Default mask
 			} else {
-				jf.MaskBytes = []byte(c.MaskValue)
+				jf.MaskStringBytes = []byte(c.MaskValue)
 			}
 		}
 	}
 
-	if c.ShowCallerDepth <= 0 {
-		c.ShowCallerDepth = DEFAULT_CALLER_DEPTH
+	if c.CallerDepth <= 0 {
+		c.CallerDepth = DEFAULT_CALLER_DEPTH
 	}
-	if c.Flush <= 0 {
-		c.Flush = DEFAULT_FLUSH_INTERVAL
+	if c.FlushInterval <= 0 {
+		c.FlushInterval = DEFAULT_FLUSH_INTERVAL
 	}
-	if c.TimeFmt == "" {
-		c.TimeFmt = DEFAULT_TIMESTAMP_FORMAT
+	if c.TimestampFormat == "" {
+		c.TimestampFormat = DEFAULT_TIMESTAMP_FORMAT
 	}
 }
 
