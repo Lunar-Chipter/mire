@@ -20,10 +20,9 @@ type CSVFormatter struct {
 }
 
 // NewCSVFormatter creates a new CSVFormatter
-// NewCSVFormatter creates a new CSVFormatter
 func NewCSV() *CSVFormatter {
 	return &CSVFormatter{
-		MaskStr:   "[MASKED]",
+		MaskValue:       "[MASKED]",
 		FieldTransformers: make(map[string]func(interface{}) string),
 	}
 }
@@ -131,10 +130,80 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 	switch field {
 	case "timestamp":
 		timestamp := util.GetBuffer()
-		// Use default format if none is specified
-		format := f.TimeFmt
+		format := f.TimestampFormat
 		if format == "" {
 			format = "2006-01-02 15:04:05.000" // Default timestamp format
+		}
+		util.FormatTimestamp(timestamp, entry.Timestamp, format)
+		f.writeCSVValueBytes(buf, timestamp.Bytes())
+		util.PutBuffer(timestamp)
+	case "level":
+		f.writeCSVValueBytes(buf, entry.Level.Bytes())
+	case "message":
+		f.writeCSVValueBytes(buf, entry.Message)
+	case "pid":
+		buf.WriteByte('"')
+		util.WriteInt(buf, int64(entry.PID))
+		buf.WriteByte('"')
+	case "goroutine_id":
+		f.writeCSVValueBytes(buf, entry.GoroutineID)
+	case "trace_id":
+		f.writeCSVValueBytes(buf, entry.TraceID)
+	case "span_id":
+		f.writeCSVValueBytes(buf, entry.SpanID)
+	case "user_id":
+		f.writeCSVValueBytes(buf, entry.UserID)
+	case "request_id":
+		f.writeCSVValueBytes(buf, entry.RequestID)
+	case "file":
+		if entry.Caller != nil {
+			f.writeCSVValue(buf, entry.Caller.File)
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
+	case "line":
+		if entry.Caller != nil {
+			buf.WriteByte('"')
+			util.WriteInt(buf, int64(entry.Caller.Line))
+			buf.WriteByte('"')
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
+	case "error":
+		if entry.Error != nil {
+			if appender, ok := entry.Error.(core.ErrAppend); ok {
+				buf.WriteByte('"')
+				appender.AppendError(buf)
+				buf.WriteByte('"')
+			} else {
+				f.writeCSVValue(buf, entry.Error.Error())
+			}
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
+		}
+	default:
+		if val, exists := entry.Fields[field]; exists {
+			if f.MaskSensitiveData && f.isSensitiveField(field) {
+				f.writeCSVValue(buf, f.MaskValue)
+				return nil
+			}
+
+			if transformer, exists := f.FieldTransformers[field]; exists {
+				transformed := transformer(val)
+				buf.WriteByte('"')
+				util.FormatValue(buf, transformed, 0)
+				buf.WriteByte('"')
+			} else {
+				buf.WriteByte('"')
+				util.FormatValue(buf, val, 0)
+				buf.WriteByte('"')
+			}
+		} else {
+			buf.WriteByte('"')
+			buf.WriteByte('"')
 		}
 		util.FormatTimestamp(timestamp, entry.Timestamp, format)
 		f.writeCSVValueBytes(buf, timestamp.Bytes())

@@ -70,7 +70,7 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 
 	// Add timestamp - manually format to avoid allocation
 	buf.Write(jsonTimestampKey)
-	util.FormatTimestamp(buf, entry.Timestamp, f.TimeFmt)
+	util.FormatTimestamp(buf, entry.Timestamp, f.TimestampFormat)
 	buf.Write(jsonQuote)
 	buf.Write(jsonComma)
 
@@ -183,7 +183,7 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 	// Add timestamp
 	newline(1)
 	buf.WriteString("\"timestamp\": \"")
-	util.FormatTimestamp(buf, entry.Timestamp, f.TimeFmt)
+	util.FormatTimestamp(buf, entry.Timestamp, f.TimestampFormat)
 	buf.WriteString("\"")
 
 	// Add level
