@@ -208,17 +208,16 @@ func NewDefault() *Logger {
 		Output:          os.Stdout,
 		ErrorOutput:     os.Stderr,
 		CallerDepth:     DEFAULT_CALLER_DEPTH,
-		TimeFmt: DEFAULT_TIMESTAMP_FORMAT,
-		BufSize:      DEFAULT_BUFFER_SIZE,
-		Flush:   DEFAULT_FLUSH_INTERVAL,
-		Workers:         4,
-		Clock:    10 * time.Millisecond,
-		MaskStr: "[MASKED]",
+		TimestampFormat: DEFAULT_TIMESTAMP_FORMAT,
+		BufferSize:      DEFAULT_BUFFER_SIZE,
+		FlushInterval:   DEFAULT_FLUSH_INTERVAL,
+		ClockInterval:   10 * time.Millisecond,
+		MaskValue:       "[MASKED]",
 		Formatter: &formatter.TextFormatter{
 			UseColors:        true,
-			ShowShowTimestamp: true,
-			ShowCaller:    true,
-			TimeFmt: DEFAULT_TIMESTAMP_FORMAT,
+			ShowTimestamp:    true,
+			ShowCaller:       true,
+			TimestampFormat:  DEFAULT_TIMESTAMP_FORMAT,
 		},
 	}
 	return New(cfg)
@@ -239,7 +238,7 @@ func New(config Config) *Logger {
 		exitFunc:         config.ExitFunc,
 		fields:           make(map[string][]byte),
 		hooks:            config.Hooks, // Initialize hooks from config
-		contextExtractor: config.CtxExtract,
+		contextExtractor: config.ExtractContext,
 		metrics:          config.Collector,
 		onFatal:          config.OnFatal,
 		onPanic:          config.OnPanic,
@@ -263,8 +262,8 @@ func New(config Config) *Logger {
 		}
 	}
 
-	if config.Clock > 0 {
-		l.clock = util.NewClock(config.Clock)
+	if config.ClockInterval > 0 {
+		l.clock = util.NewClock(config.ClockInterval)
 	} else {
 		l.clock = util.NewClock(10 * time.Millisecond) // Default clock interval
 	}
