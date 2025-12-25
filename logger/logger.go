@@ -140,16 +140,16 @@ type Logger struct {
 	hooks            []hook.Hook                             // Hooks to execute for each log entry
 	exitFunc         func(int)                               // Function to call on fatal/panic
 	fields           map[string][]byte                       // Default fields to include in all logs as []byte for zero allocation
-	sampler          *sampler.EnableSamplingLogger                 // Sampler for log sampling
-	buffer           *writer.Buffered                  // Buffered writer for performance
-	rotation         *writer.Rotator              // Rotating file writer for log rotation
+	sampler          *sampler.LogSampler                    // Sampler for log sampling
+	buffer           *writer.Buffered                       // Buffered writer for performance
+	rotation         *writer.Rotator                         // Rotating file writer for log rotation
 	contextExtractor func(context.Context) map[string][]byte // Function to extract fields from context
-	metrics          metric.Collector                 // Metrics collector
+	metrics          metric.Collector                        // Metrics collector to use
 	onFatal          func(*core.LogEntry)                    // Function to call when a fatal log occurs
 	onPanic          func(*core.LogEntry)                    // Function to call when a panic log occurs
-	stats            *LoggerStats                            // Statistics for the logger
-	asyncLogger      *writer.AsyncModeLogger                     // Async logger for non-blocking logging
-	errorFileHook    *hook.FileHook                    // Built-in error file hook for ERROR+ levels
+	stats            *LoggerStats                            // Statistics for logger
+	asyncLogger      *writer.AsyncLogger                      // Async logger for non-blocking logging
+	errorFileHook    *hook.FileHook                          // Built-in error file hook for ERROR+ levels
 	closed           *atomic.Bool                            // Flag to indicate if logger is closed
 	pid              int                                     // Process ID
 	clock            *util.Clock                             // Clock for timestamp optimization

@@ -37,13 +37,13 @@ func (m *mockSamplerProcessor) Log(ctx context.Context, level core.Level, msg []
 	m.logCalls++
 }
 
-// TestNewSamplingLogger tests creating a new SamplingLogger
-func TestNewSamplingLogger(t *testing.T) {
+// TestNewSampler tests creating a new SamplingLogger
+func TestNewSampler(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
-	samplingLogger := NewSamplingLogger(processor, 5)
+	samplingLogger := NewSampler(processor, 5)
 	if samplingLogger == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	if samplingLogger.processor != processor {
@@ -56,9 +56,9 @@ func TestNewSamplingLogger(t *testing.T) {
 }
 
 // at
-func TestSamplingLoggerShouldLog(t *testing.T) {
+func TestSamplerShouldLog(t *testing.T) {
 	// Test with rate 1 (should always log)
-	sampler1 := NewSamplingLogger(&mockSamplerProcessor{}, 1)
+	sampler1 := NewSampler(&mockSamplerProcessor{}, 1)
 
 	for i := 0; i < 10; i++ {
 		if !sampler1.ShouldLog() {
@@ -67,7 +67,7 @@ func TestSamplingLoggerShouldLog(t *testing.T) {
 	}
 
 	// Test with rate 2 (should log every 2nd call)
-	sampler2 := NewSamplingLogger(&mockSamplerProcessor{}, 2)
+	sampler2 := NewSampler(&mockSamplerProcessor{}, 2)
 	logCount := 0
 	for i := 0; i < 10; i++ {
 		if sampler2.ShouldLog() {
@@ -84,7 +84,7 @@ func TestSamplingLoggerShouldLog(t *testing.T) {
 	}
 
 	// Test with rate 3 (should log every 3rd call)
-	sampler3 := NewSamplingLogger(&mockSamplerProcessor{}, 3)
+	sampler3 := NewSampler(&mockSamplerProcessor{}, 3)
 	logCount = 0
 	for i := 0; i < 12; i++ {
 		if sampler3.ShouldLog() {
@@ -97,7 +97,7 @@ func TestSamplingLoggerShouldLog(t *testing.T) {
 	}
 
 	// to
-	sampler0 := NewSamplingLogger(&mockSamplerProcessor{}, 0)
+	sampler0 := NewSampler(&mockSamplerProcessor{}, 0)
 	// to
 	result := sampler0.ShouldLog()
 	if !result {
@@ -105,14 +105,14 @@ func TestSamplingLoggerShouldLog(t *testing.T) {
 	}
 }
 
-// TestSamplingLoggerLog tests the Log method with sampling
-func TestSamplingLoggerLog(t *testing.T) {
+// TestSamplerLog tests the Log method with sampling
+func TestSamplerLog(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
 	// Create a sampler with rate 2 to log every 2nd entry
-	sampler := NewSamplingLogger(processor, 2)
+	sampler := NewSampler(processor, 2)
 	if sampler == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	ctx := context.Background()
@@ -160,13 +160,13 @@ func TestSamplingLoggerLog(t *testing.T) {
 	}
 }
 
-// TestSamplingLoggerWithRate1 tests sampling with rate 1 (should log everything)
-func TestSamplingLoggerWithRate1(t *testing.T) {
+// TestSamplerWithRate1 tests sampling with rate 1 (should log everything)
+func TestSamplerWithRate1(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
-	sampler := NewSamplingLogger(processor, 1)
+	sampler := NewSampler(processor, 1)
 	if sampler == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	ctx := context.Background()
@@ -185,13 +185,13 @@ func TestSamplingLoggerWithRate1(t *testing.T) {
 	}
 }
 
-// TestSamplingLoggerWithRate0 tests sampling with rate 0 (should log everything)
-func TestSamplingLoggerWithRate0(t *testing.T) {
+// TestSamplerWithRate0 tests sampling with rate 0 (should log everything)
+func TestSamplerWithRate0(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
-	sampler := NewSamplingLogger(processor, 0)
+	sampler := NewSampler(processor, 0)
 	if sampler == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	ctx := context.Background()
@@ -210,14 +210,14 @@ func TestSamplingLoggerWithRate0(t *testing.T) {
 	}
 }
 
-// TestSamplingLoggerConcurrent tests the SamplingLogger in a concurrent context
-func TestSamplingLoggerConcurrent(t *testing.T) {
+// TestSamplerConcurrent tests the SamplingLogger in a concurrent context
+func TestSamplerConcurrent(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
 	// Use rate 3 for this test
-	sampler := NewSamplingLogger(processor, 3)
+	sampler := NewSampler(processor, 3)
 	if sampler == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	// Run multiple goroutines that log concurrently
@@ -275,12 +275,12 @@ func TestSamplingLoggerConcurrent(t *testing.T) {
 }
 
 // at
-func TestSamplingLoggerWithDifferentLevels(t *testing.T) {
+func TestSamplerWithDifferentLevels(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
-	sampler := NewSamplingLogger(processor, 2) // Rate 2
+	sampler := NewSampler(processor, 2) // Rate 2
 	if sampler == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	ctx := context.Background()
@@ -314,13 +314,13 @@ func TestSamplingLoggerWithDifferentLevels(t *testing.T) {
 	}
 }
 
-// TestSamplingLoggerWithFields tests sampling with fields
-func TestSamplingLoggerWithFields(t *testing.T) {
+// TestSamplerWithFields tests sampling with fields
+func TestSamplerWithFields(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
-	sampler := NewSamplingLogger(processor, 1) // Rate 1, so all should be logged for testing fields
+	sampler := NewSampler(processor, 1) // Rate 1, so all should be logged for testing fields
 	if sampler == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	ctx := context.Background()
@@ -354,12 +354,12 @@ func TestSamplingLoggerWithFields(t *testing.T) {
 }
 
 // at
-func TestSamplingLoggerCounterRace(t *testing.T) {
+func TestSamplerCounterRace(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
-	sampler := NewSamplingLogger(processor, 2)
+	sampler := NewSampler(processor, 2)
 	if sampler == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	// Create multiple goroutines that only call ShouldLog (this tests the counter)
@@ -383,14 +383,14 @@ func TestSamplingLoggerCounterRace(t *testing.T) {
 	// The final counter value should be numGoroutines * callsPerGoroutine
 }
 
-// TestSamplingLoggerWithHighRate tests sampling with a high rate
-func TestSamplingLoggerWithHighRate(t *testing.T) {
+// TestSamplerWithHighRate tests sampling with a high rate
+func TestSamplerWithHighRate(t *testing.T) {
 	processor := &mockSamplerProcessor{}
 
 	// Use a high rate - should log rarely
-	sampler := NewSamplingLogger(processor, 100)
+	sampler := NewSampler(processor, 100)
 	if sampler == nil {
-		t.Fatal("NewSamplingLogger returned nil")
+		t.Fatal("NewSampler returned nil")
 	}
 
 	ctx := context.Background()
