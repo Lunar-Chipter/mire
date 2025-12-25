@@ -13,13 +13,14 @@ func GetCallerInfo(skip int) *core.Caller {
 		return nil
 	}
 
-	ci := core.GetCaller()
+	ci := core.GetCallerFromPool()
 	ci.File = filepath.Base(file)
 	ci.Line = line
 
 	fn := runtime.FuncForPC(pc)
+	var fullName string
 	if fn != nil {
-		fullName := fn.Name()
+		fullName = fn.Name()
 		lastSlash := strings.LastIndex(fullName, "/")
 		if lastSlash > 0 {
 			pkgNameEnd := strings.Index(fullName[lastSlash+1:], ".")
@@ -32,8 +33,6 @@ func GetCallerInfo(skip int) *core.Caller {
 		} else {
 			ci.Function = fullName
 		}
-	} else {
-		ci.Function = fullName
 	}
 
 	return ci
