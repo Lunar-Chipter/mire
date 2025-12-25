@@ -33,7 +33,7 @@ type JSONFormatter struct {
 	ShowCaller        bool                                     // Show caller information
 	ShowGoroutine     bool                                     // Show goroutine ID
 	ShowPID           bool                                     // Show process ID
-	ShowTraceInfo     bool                                     // Show trace information
+	ShowTrace     bool                                     // Show trace information
 	IncludeStackTrace  bool                                     // Enable stack trace for errors
 	ShowDuration    bool                                     // Show operation duration
 	FieldKeyMap       map[string]string                        // Map for renaming fields
@@ -48,7 +48,7 @@ type JSONFormatter struct {
 // NewJSONFormatter creates a new JSONFormatter
 func NewJSON() *JSONFormatter {
 	return &JSONFormatter{
-		MaskStr:   "[MASKED]",
+		MaskValue:   "[MASKED]",
 		FieldKeyMap:       make(map[string]string),
 		FieldTransformers: make(map[string]func(interface{}) interface{}),
 		SensitiveFields:   make([]string, 0),
@@ -87,13 +87,13 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 	buf.Write(jsonQuote)
 
 	// at
-	if f.PID {
+	if f.ShowPID {
 		buf.Write(jsonPidKey)
 		util.WriteInt(buf, int64(entry.PID))
 	}
 
 	// Add caller info if needed
-	if f.Caller && entry.Caller != nil {
+	if f.ShowCaller && entry.Caller != nil {
 		buf.Write(jsonCallerKey)
 		buf.Write(core.StringToBytes(entry.Caller.File))
 		buf.Write(jsonColon)
@@ -108,7 +108,7 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 	}
 
 	// Add trace info if needed - organize in a way that reduces branching
-	if f.Trace {
+	if f.ShowTrace {
 		if entry.TraceID != nil {
 			buf.Write(jsonTraceKey)
 			buf.Write(entry.TraceID)
@@ -126,7 +126,7 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 		}
 	}
 
-	if f.StackTrace && len(entry.StackTrace) > 0 {
+	if f.IncludeStackTrace && len(entry.StackTrace) > 0 {
 		buf.Write(jsonStackKey)
 		escapeJSON(buf, entry.StackTrace)
 		buf.WriteByte('"')
@@ -202,11 +202,108 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 	buf.WriteString("\"")
 
 	// Add PID if needed
-	if f.PID && entry.PID != 0 {
+	if f.ShowPID && entry.PID != 0 {
 		buf.WriteString(",\n  ")
 		indent(1)
 		buf.WriteString("\"pid\": ")
 		util.WriteInt(buf, int64(entry.PID))
+	}
+
+	// Add caller info if needed
+	if f.ShowCaller && entry.Caller != nil {
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"caller\": \"")
+		buf.Write(core.StringToBytes(entry.Caller.File))
+		buf.WriteByte(':')
+		util.WriteInt(buf, int64(entry.Caller.Line))
+		buf.WriteByte('"')
+	}
+
+	// Add fields if present
+	if len(entry.Fields) > 0 {
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"fields\": ")
+		// For indented fields, we need to format them manually with indentation
+		f.formatFieldsIndented(buf, entry.Fields, 2)
+	}
+
+	// Add trace info if needed
+	if f.ShowTrace {
+		if entry.TraceID != nil {
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"trace_id\": \"")
+			buf.Write(entry.TraceID)
+			buf.WriteByte('"')
+		}
+		if entry.SpanID != nil {
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"span_id\": \"")
+			buf.Write(entry.SpanID)
+			buf.WriteByte('"')
+		}
+		if entry.UserID != nil {
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"user_id\": \"")
+			buf.Write(entry.UserID)
+			buf.WriteByte('"')
+		}
+	}
+
+	if f.IncludeStackTrace && len(entry.StackTrace) > 0 {
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"stack_trace\": \"")
+		escapeJSON(buf, entry.StackTrace)
+		buf.WriteByte('"')
+	}
+
+	// Add caller info if needed
+	if f.ShowCaller && entry.Caller != nil {
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"caller\": \"")
+		buf.Write(core.StringToBytes(entry.Caller.File))
+		buf.WriteByte(':')
+		util.WriteInt(buf, int64(entry.Caller.Line))
+		buf.WriteByte('"')
+	}
+
+	// Add trace info if needed - organize in a way that reduces branching
+	if f.ShowTrace {
+		if entry.TraceID != nil {
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"trace_id\": \"")
+			buf.Write(entry.TraceID)
+			buf.WriteByte('"')
+		}
+		if entry.SpanID != nil {
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"span_id\": \"")
+			buf.Write(entry.SpanID)
+			buf.WriteByte('"')
+		}
+		if entry.UserID != nil {
+			buf.WriteString(",\n  ")
+			indent(1)
+			buf.WriteString("\"user_id\": \"")
+			buf.Write(entry.UserID)
+			buf.WriteByte('"')
+		}
+	}
+
+	if f.IncludeStackTrace && len(entry.StackTrace) > 0 {
+		buf.WriteString(",\n  ")
+		indent(1)
+		buf.WriteString("\"stack_trace\": \"")
+		escapeJSON(buf, entry.StackTrace)
+		buf.WriteByte('"')
 	}
 
 	// Add caller info if needed
@@ -464,7 +561,7 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 
 		buf.WriteByte('"')
 		if f.MaskSensitiveData && f.isSensitiveField(k) {
-			buf.Write(f.MaskBytes)
+			buf.Write(f.MaskValue)
 		} else {
 			escapeJSON(buf, v)
 		}
