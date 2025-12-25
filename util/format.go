@@ -47,12 +47,12 @@ func FormatValue(buf *bytes.Buffer, value interface{}, maxWidth int) {
 		content = strconv.AppendFloat(tempBuf[:0], v, 'f', 2, 64) // 'f' format, 2 decimal places, 64-bit float
 	case bool:
 		content = strconv.AppendBool(tempBuf[:0], v) // at
-	case error: // at
-		if appender, ok := v.(core.ErrorAppender); ok { // Changed to core.ErrorAppender
+	case error:
+		if appender, ok := v.(core.ErrAppend); ok {
 			appender.AppendError(buf)
 			return
 		}
-		content = StringToBytes(v.Error()) // Fallback, still allocates a string internally for v.Error()
+		content = StringToBytes(v.Error())
 	default:
 		// Fallback for complex types - manual string conversion to avoid fmt
 		tempStr := convertValueToString(v)

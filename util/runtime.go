@@ -7,11 +7,37 @@ import (
 	"strings"
 )
 
-func GetCallerInfo(skip int) *core.CallerInfo {
+func GetCallerInfo(skip int) *core.Caller {
 	pc, file, line, ok := runtime.Caller(skip)
 	if !ok {
 		return nil
 	}
+
+	ci := core.GetCaller()
+	ci.File = filepath.Base(file)
+	ci.Line = line
+
+	fn := runtime.FuncForPC(pc)
+	if fn != nil {
+		fullName := fn.Name()
+		lastSlash := strings.LastIndex(fullName, "/")
+		if lastSlash > 0 {
+			pkgNameEnd := strings.Index(fullName[lastSlash+1:], ".")
+			if pkgNameEnd > 0 {
+				ci.Package = fullName[lastSlash+1 : lastSlash+1+pkgNameEnd]
+				ci.Function = fullName[lastSlash+1+pkgNameEnd+1:]
+			} else {
+				ci.Function = fullName
+			}
+		} else {
+			ci.Function = fullName
+		}
+	} else {
+		ci.Function = fullName
+	}
+
+	return ci
+}
 
 	ci := core.GetCallerInfoFromPool()
 	ci.File = filepath.Base(file)
