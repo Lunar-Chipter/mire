@@ -4,7 +4,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/Lunar-Chipter/mire/config" // Updated import
+	"github.com/Lunar-Chipter/mire/config"
 )
 
 // Rotator provides a file writer that rotates logs.
@@ -39,80 +39,6 @@ func (w *Rotator) Close() error {
 
 	if w.closed {
 		return nil
-	}
-
-	err := w.file.Close()
-	w.closed = true
-	return err
-}
-
-// NewRotator creates a new rotating file writer.
-func NewRotator(filename string, conf *config.RotationConfig) (*Rotator, error) {
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, err
-	}
-	return &Rotator{
-		file:   f,
-		closed: false,
-	}, nil
-}
-
-// Write writes data to file, handling rotation if necessary.
-func (w *Rotator) Write(p []byte) (n int, err error) {
-	n, err = w.file.Write(p)
-	return n, err
-}
-
-// Close closes the underlying file.
-func (w *Rotator) Close() error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	if w.closed {
-		return nil
-	}
-
-	err := w.file.Close()
-	w.closed = true
-	return err
-}
-
-// NewRotator creates a new rotating file writer.
-// This function would set up the initial file and the rotation schedule/logic.
-func NewRotator(filename string, conf *config.RotationConfig) (*Rotator, error) { // Updated type
-	// For now, just open the file. The actual rotation logic is not implemented.
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, err
-	}
-	return &Rotator{
-		file:   f,
-		closed: false,
-	}, nil
-}
-
-// Write writes data to the file, handling rotation if necessary.
-func (w *Rotator) Write(p []byte) (n int, err error) {
-	// Here you would check if rotation is needed before writing.
-	// For example:
-	// if w.currentSize + int64(len(p)) > w.maxSize {
-	//     if err := w.rotate(); err != nil {
-	//         return 0, err
-	//     }
-	// }
-	n, err = w.file.Write(p)
-	// w.currentSize += int64(n)
-	return n, err
-}
-
-// Close closes the underlying file.
-func (w *Rotator) Close() error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	if w.closed {
-		return nil // Already closed
 	}
 
 	err := w.file.Close()
