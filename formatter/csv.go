@@ -8,7 +8,6 @@ import (
 )
 
 // CSVFormatter formats log entries in CSV format
-// CSVFormatter formats log entries in CSV format
 type CSVFormatter struct {
 	IncludeHeader     bool                                // Include header row in output
 	FieldOrder        []string                            // Order of fields in CSV
@@ -28,13 +27,11 @@ func NewCSV() *CSVFormatter {
 }
 
 // Format formats a log entry into CSV byte slice with zero allocations
-// Format formats log entry into CSV byte slice without allocation
 func (f *CSVFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
-	// Pre-allocate buffer space if possible
-	estimatedSize := 256 // Base size for common fields
+	estimatedSize := 256
 	estimatedSize += len(entry.Message)
 	if len(entry.Fields) > 0 {
-		estimatedSize += len(entry.Fields) * 32 // Estimate for fields
+		estimatedSize += len(entry.Fields) * 32
 	}
 
 	currentCap := buf.Cap()
@@ -42,22 +39,19 @@ func (f *CSVFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 		buf.Grow(estimatedSize - currentCap)
 	}
 
-	// Write header if needed
 	if f.IncludeHeader {
-		headerWritten := buf.Len() == 0 // Only write header if buffer is empty
+		headerWritten := buf.Len() == 0
 		if headerWritten {
 			for i, field := range f.FieldOrder {
 				if i > 0 {
 					buf.WriteByte(',')
 				}
-				// Escape field name if needed
 				f.writeCSVValue(buf, field)
 			}
 			buf.WriteByte('\n')
 		}
 	}
 
-	// Write CSV values
 	for i, field := range f.FieldOrder {
 		if i > 0 {
 			buf.WriteByte(',')
@@ -71,10 +65,7 @@ func (f *CSVFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 	return nil
 }
 
-// writeCSVValue writes a value to CSV format, escaping if necessary
-// at
 func (f *CSVFormatter) writeCSVValue(buf *bytes.Buffer, value string) {
-	// Check if value needs escaping by scanning for special characters
 	needsEscaping := false
 	for i := 0; i < len(value); i++ {
 		b := value[i]
@@ -89,7 +80,7 @@ func (f *CSVFormatter) writeCSVValue(buf *bytes.Buffer, value string) {
 		for i := 0; i < len(value); i++ {
 			b := value[i]
 			if b == '"' {
-				buf.WriteString(`""`) // Double quotes to escape
+				buf.WriteString(`""`)
 			} else {
 				buf.WriteByte(b)
 			}
@@ -100,9 +91,7 @@ func (f *CSVFormatter) writeCSVValue(buf *bytes.Buffer, value string) {
 	}
 }
 
-// writeCSVValueBytes writes a byte slice to CSV format, escaping if necessary
 func (f *CSVFormatter) writeCSVValueBytes(buf *bytes.Buffer, value []byte) {
-	// at
 	needsEscaping := false
 	for _, b := range value {
 		if b == '"' || b == ',' || b == '\n' || b == '\r' {
@@ -115,7 +104,7 @@ func (f *CSVFormatter) writeCSVValueBytes(buf *bytes.Buffer, value []byte) {
 		buf.WriteByte('"')
 		for _, b := range value {
 			if b == '"' {
-				buf.WriteString(`""`) // Double quotes to escape
+				buf.WriteString(`""`)
 			} else {
 				buf.WriteByte(b)
 			}
@@ -132,7 +121,7 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 		timestamp := util.GetBuffer()
 		format := f.TimestampFormat
 		if format == "" {
-			format = "2006-01-02 15:04:05.000" // Default timestamp format
+			format = "2006-01-02 15:04:05.000"
 		}
 		util.FormatTimestamp(timestamp, entry.Timestamp, format)
 		f.writeCSVValueBytes(buf, timestamp.Bytes())
@@ -209,195 +198,6 @@ func (f *CSVFormatter) formatCSVField(buf *bytes.Buffer, field string, entry *co
 	return nil
 }
 
-// isSensitiveField checks if a field is in the sensitive fields list
-func (f *CSVFormatter) isSensitiveField(field string) bool {
-	for _, sensitiveField := range f.SensitiveFields {
-		if field == sensitiveField {
-			return true
-		}
-	}
-	return false
-}
-	case "line":
-		if entry.Caller != nil {
-			buf.WriteByte('"')
-			util.WriteInt(buf, int64(entry.Caller.Line))
-			buf.WriteByte('"')
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	case "error":
-		if entry.Error != nil {
-			if appender, ok := entry.Error.(core.ErrAppend); ok {
-				buf.WriteByte('"')
-				appender.AppendError(buf)
-				buf.WriteByte('"')
-			} else {
-				f.writeCSVValue(buf, entry.Error.Error())
-			}
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	default:
-		if val, exists := entry.Fields[field]; exists {
-			if f.MaskSensitiveData && f.isSensitiveField(field) {
-				f.writeCSVValue(buf, f.MaskValue)
-				return nil
-			}
-
-			if transformer, exists := f.FieldTransformers[field]; exists {
-				transformed := transformer(val)
-				buf.WriteByte('"')
-				util.FormatValue(buf, transformed, 0)
-				buf.WriteByte('"')
-			} else {
-				buf.WriteByte('"')
-				util.FormatValue(buf, val, 0)
-				buf.WriteByte('"')
-			}
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	}
-	return nil
-}
-
-// isSensitiveField checks if a field is in the sensitive fields list
-func (f *CSVFormatter) isSensitiveField(field string) bool {
-	for _, sensitiveField := range f.SensitiveFields {
-		if field == sensitiveField {
-			return true
-		}
-	}
-	return false
-}
-	case "line":
-		if entry.Caller != nil {
-			buf.WriteByte('"')
-			util.WriteInt(buf, int64(entry.Caller.Line))
-			buf.WriteByte('"')
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	case "error":
-		if entry.Error != nil {
-			if appender, ok := entry.Error.(core.ErrAppend); ok {
-				buf.WriteByte('"')
-				appender.AppendError(buf)
-				buf.WriteByte('"')
-			} else {
-				f.writeCSVValue(buf, entry.Error.Error())
-			}
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	default:
-		if val, exists := entry.Fields[field]; exists {
-			if f.MaskSensitiveData && f.isSensitiveField(field) {
-				f.writeCSVValue(buf, f.MaskValue)
-				return nil
-			}
-
-			if transformer, exists := f.FieldTransformers[field]; exists {
-				transformed := transformer(val)
-				buf.WriteByte('"')
-				util.FormatValue(buf, transformed, 0)
-				buf.WriteByte('"')
-			} else {
-				buf.WriteByte('"')
-				util.FormatValue(buf, val, 0)
-				buf.WriteByte('"')
-			}
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-		util.FormatTimestamp(timestamp, entry.Timestamp, format)
-		f.writeCSVValueBytes(buf, timestamp.Bytes())
-		util.PutBuffer(timestamp)
-	case "level":
-		f.writeCSVValueBytes(buf, entry.Level.Bytes())
-	case "message":
-		f.writeCSVValueBytes(buf, entry.Message)
-	case "pid":
-		// at
-		buf.WriteByte('"')
-		util.WriteInt(buf, int64(entry.PID))
-		buf.WriteByte('"')
-	case "goroutine_id":
-		f.writeCSVValueBytes(buf, entry.GoroutineID)
-	case "trace_id":
-		f.writeCSVValueBytes(buf, entry.TraceID)
-	case "span_id":
-		f.writeCSVValueBytes(buf, entry.SpanID)
-	case "user_id":
-		f.writeCSVValueBytes(buf, entry.UserID)
-	case "request_id":
-		f.writeCSVValueBytes(buf, entry.RequestID)
-	case "file":
-		if entry.Caller != nil {
-			f.writeCSVValue(buf, entry.Caller.File)
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	case "line":
-		if entry.Caller != nil {
-			// at
-			buf.WriteByte('"')
-			util.WriteInt(buf, int64(entry.Caller.Line))
-			buf.WriteByte('"')
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	case "error":
-		if entry.Error != nil {
-			// Check if the error implements ErrAppend for zero-allocation
-			if appender, ok := entry.Error.(core.ErrAppend); ok {
-				// at
-				buf.WriteByte('"')
-				appender.AppendError(buf)
-				buf.WriteByte('"')
-			} else {
-				f.writeCSVValue(buf, entry.Error.Error()) // Fallback to standard Error()
-			}
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	default:
-		if val, exists := entry.Fields[field]; exists {
-			// Check for sensitive fields that need masking
-			if f.MaskSensitiveData && f.isSensitiveField(field) {
-				f.writeCSVValue(buf, f.MaskStr)
-				return nil
-			}
-
-			// Apply field transformer if available
-			if transformer, exists := f.FieldTransformers[field]; exists {
-				transformed := transformer(val)
-				f.writeCSVValue(buf, transformed)
-			} else {
-				// Use a temporary buffer for formatting the value
-				buf.WriteByte('"')
-				util.FormatValue(buf, val, 0)
-				buf.WriteByte('"')
-			}
-		} else {
-			buf.WriteByte('"')
-			buf.WriteByte('"')
-		}
-	}
-	return nil
-}
-
-// isSensitiveField checks if a field is in the sensitive fields list
 func (f *CSVFormatter) isSensitiveField(field string) bool {
 	for _, sensitiveField := range f.SensitiveFields {
 		if field == sensitiveField {
