@@ -477,7 +477,7 @@ func (l *Logger) writeZero(ctx context.Context, level core.Level, message []byte
 	}
 
 	if l.Config.ShowCaller {
-		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
+		entry.Caller = util.GetCallerInfoInfo(l.Config.CallerDepth)
 	}
 
 	buf := util.GetBuffer()
@@ -581,7 +581,7 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 			buf = append(buf, v...)
 		case int:
 			tempBuf := util.GetSmallBuf()
-			result := strconv.ShowAppendInt(tempBuf[:0], int64(v), 10)
+			result := strconv.AppendInt(tempBuf[:0], int64(v), 10)
 			buf = append(buf, result...)
 			util.PutSmallBuf(tempBuf)
 		case int64:
@@ -591,7 +591,7 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 			util.PutSmallBuf(tempBuf)
 		case float64:
 			tempBuf := util.GetSmallBuf()
-			result := strconv.ShowAppendFloat(tempBuf[:0], v, 'g', -1, 64)
+			result := strconv.AppendFloat(tempBuf[:0], v, 'g', -1, 64)
 			buf = append(buf, result...)
 			util.PutSmallBuf(tempBuf)
 		case bool:
@@ -645,7 +645,7 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 	entry.Level = level
 	entry.LevelName = level.ToBytes()
 	entry.Message = message
-	entry.ShowPID = l.pid
+	entry.PID = l.pid
 
 	// Copy fields with minimal allocations - l.fields is now []byte
 	for k, v := range l.fields {
@@ -674,7 +674,7 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 		for k, v := range contextData {
 			switch k {
 			case "trace_id":
-				entry.ShowTraceID = core.StringToBytes(v)
+				entry.TraceID = core.StringToBytes(v)
 			case "span_id":
 				entry.SpanID = core.StringToBytes(v)
 			case "user_id":
@@ -690,14 +690,14 @@ func (l *Logger) buildEntry(ctx context.Context, level core.Level, message []byt
 
 	// Caller info only if required to avoid overhead
 	if l.Config.ShowCaller {
-		entry.ShowCaller = util.GetCaller(l.Config.ShowCallerDepth)
+		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
 	}
 
 	// Stack trace only for ERROR level and above
 	if l.Config.IncludeStackTrace && level >= core.ERROR {
-		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackDepth)
-		entry.IncludeStackTrace = stackTraceBytes
-		entry.IncludeStackTraceBufPtr = stackTraceBufPtr
+		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
+		entry.StackTrace = stackTraceBytes
+		entry.StackTraceBufPtr = stackTraceBufPtr
 	}
 
 	return entry
@@ -738,7 +738,7 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 		for k, v := range contextData {
 			switch k {
 			case "trace_id":
-				entry.ShowTraceID = core.StringToBytes(v)
+				entry.TraceID = core.StringToBytes(v)
 			case "span_id":
 				entry.SpanID = core.StringToBytes(v)
 			case "user_id":
@@ -754,14 +754,14 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 
 	// Caller info only if required to avoid overhead
 	if l.Config.ShowCaller {
-		entry.ShowCaller = util.GetCaller(l.Config.ShowCallerDepth)
+		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
 	}
 
 	// Stack trace only for ERROR level and above
 	if l.Config.IncludeStackTrace && level >= core.ERROR {
-		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackDepth)
-		entry.IncludeStackTrace = stackTraceBytes
-		entry.IncludeStackTraceBufPtr = stackTraceBufPtr
+		stackTraceBytes, stackTraceBufPtr := util.GetStackTrace(l.Config.StackTraceDepth)
+		entry.StackTrace = stackTraceBytes
+		entry.StackTraceBufPtr = stackTraceBufPtr
 	}
 
 	return entry
