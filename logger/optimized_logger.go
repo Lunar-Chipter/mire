@@ -25,7 +25,7 @@ type OptimizedLogger struct {
 }
 
 // NewOptimizedLogger creates an efficient logger instance
-func NewOptimizedLogger(config Config) *OptimizedLogger {
+func NewOptimizedLogger(config LoggerConfig) *OptimizedLogger {
 	if config.Output == nil {
 		config.Output = io.Discard
 	}

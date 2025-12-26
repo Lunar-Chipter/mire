@@ -68,7 +68,7 @@ func TestTextFormatterFormat(t *testing.T) {
 // TestTextFormatterWithColors tests TextFormatter with colors enabled
 func TestTextFormatterWithColors(t *testing.T) {
 	tf := NewText()
-	tf.UseColors = true
+	tf.EnableColors = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)

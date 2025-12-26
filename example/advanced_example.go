@@ -44,7 +44,7 @@ func contextAwareExample() {
 	ctx = util.WithRequestID(ctx, "req-456-def")
 
 	// Create logger with context-aware capabilities
-	log := logger.New(logger.Config{
+	log := logger.New(logger.LoggerConfig{
 		Level:  core.DEBUG,
 		Output: os.Stdout,
 		Formatter: &formatter.JSONFormatter{
@@ -89,7 +89,7 @@ func customFormatterExample() {
 		MaskSensitiveData: true,
 	}
 
-	log := logger.New(logger.Config{
+	log := logger.New(logger.LoggerConfig{
 		Level:     core.INFO,
 		Output:    os.Stdout,
 		Formatter: jsonFormatter,
@@ -114,7 +114,7 @@ func hookExample() {
 		endpoint: "https://logs.example.com/api/logs",
 	}
 
-	log := logger.New(logger.Config{
+	log := logger.New(logger.LoggerConfig{
 		Level:  core.WARN,
 		Output: os.Stdout,
 		Formatter: &formatter.JSONFormatter{
@@ -138,7 +138,7 @@ func performanceExample() {
 	fmt.Println("\n--- Performance Optimization Example ---")
 
 	// High-performance async logger configuration
-	perfLog := logger.New(logger.Config{
+	perfLog := logger.New(logger.LoggerConfig{
 		Level:                       core.INFO,
 		Output:                      os.Stdout,
 		AsyncMode:                true,

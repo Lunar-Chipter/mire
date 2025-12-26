@@ -16,11 +16,11 @@ import (
 // ZeroAllocExample demonstrates high-performance, zero-allocation logging
 func ZeroAllocExample() {
 	// Create logger with zero-allocation formatter
-	log := logger.New(logger.Config{
+	log := logger.New(logger.LoggerConfig{
 		Level:  core.INFO,
 		Output: os.Stdout,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  true,
+			EnableColors:  true,
 			ShowTimestamp: true,
 			ShowCaller:    true,
 		},
@@ -57,7 +57,7 @@ type AppLogger struct {
 
 // NewAppLogger creates a new instance of AppLogger with recommended configuration
 func NewAppLogger(output io.Writer, level core.Level, environment string) *AppLogger {
-	config := logger.Config{
+	config := logger.LoggerConfig{
 		Level:            level,
 		Output:           output,
 		ErrorOutput:      os.Stderr,
@@ -76,7 +76,7 @@ func NewAppLogger(output io.Writer, level core.Level, environment string) *AppLo
 	// Set formatter based on output type
 	if output == os.Stdout || output == os.Stderr {
 		config.Formatter = &formatter.TextFormatter{
-			UseColors:      true,
+			EnableColors:      true,
 			ShowTimestamp:     true,
 			ShowCaller:        true,
 			ShowTraceInfo:     true,
@@ -182,7 +182,7 @@ func ExampleUsage() {
 
 // NewFastLogger creates a logger optimized for high throughput
 func NewFastLogger() *logger.Logger {
-	config := logger.Config{
+	config := logger.LoggerConfig{
 		Level:             core.INFO,
 		Output:            os.Stdout,
 		AsyncMode:             true,

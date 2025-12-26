@@ -33,7 +33,7 @@ const (
 )
 
 // Config holds configuration for the logger
-type Config struct {
+type LoggerConfig struct {
 	Level                   core.Level                              // Minimum level to log
 	UseColors               bool                                    // Use ANSI colors in output
 	Output                  io.Writer                               // Output writer for logs
@@ -85,7 +85,7 @@ type Config struct {
 }
 
 // validate ensures the logger configuration has sane defaults
-func validate(c *Config) {
+func validate(c *LoggerConfig) {
 	if c.Output == nil {
 		c.Output = os.Stdout
 	}
@@ -131,7 +131,7 @@ func validate(c *Config) {
 
 // Logger is the main logging structure
 type Logger struct {
-	Config           Config                            // Configuration for the logger
+	Config           LoggerConfig                            // Configuration for the logger
 	formatter        formatter.Formatter                     // Formatter to use for log entries
 	out              io.Writer                               // Output writer for logs
 	errOut           io.Writer                               // Output writer for internal logger errors
@@ -202,8 +202,8 @@ func (ls *LoggerStats) GetStats() map[string]interface{} {
 
 // NewDefaultLogger creates a logger with default configuration
 // This logger is configured with standard settings suitable for most applications
-func NewDefault() *Logger {
-	cfg := Config{
+func NewDefaultLogger() *Logger {
+	cfg := LoggerConfig{
 		Level:           core.INFO,
 		Output:          os.Stdout,
 		ErrorOutput:     os.Stderr,
@@ -214,7 +214,7 @@ func NewDefault() *Logger {
 		ClockInterval:   10 * time.Millisecond,
 		MaskValue:       "[MASKED]",
 		Formatter: &formatter.TextFormatter{
-			UseColors:        true,
+			EnableColors:        true,
 			ShowTimestamp:    true,
 			ShowCaller:       true,
 			TimestampFormat:  DEFAULT_TIMESTAMP_FORMAT,
@@ -225,7 +225,7 @@ func NewDefault() *Logger {
 
 // New creates a new logger with the given configuration
 // Optimized for 1M+ logs/second with early filtering
-func New(config Config) *Logger {
+func NewLogger(config LoggerConfig) *Logger {
 	validate(&config)
 
 	l := &Logger{
@@ -1197,3 +1197,13 @@ func manualFormatWithArgs(buf *bytes.Buffer, format string, args ...interface{})
 }
 
 
+
+// New is an alias for NewLogger for backward compatibility
+func New(config LoggerConfig) *Logger {
+	return NewLogger(config)
+}
+
+// NewDefault is an alias for NewDefaultLogger for backward compatibility
+func NewDefault() *Logger {
+	return NewDefaultLogger()
+}

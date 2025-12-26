@@ -12,11 +12,11 @@ import (
 
 // BenchmarkBasicLogging benchmarks basic logging operations
 func BenchmarkBasicLogging(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			UseColors:     false,
+			EnableColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
@@ -32,11 +32,11 @@ func BenchmarkBasicLogging(b *testing.B) {
 
 // at
 func BenchmarkLoggingWithFields(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			UseColors:     false,
+			EnableColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
@@ -56,11 +56,11 @@ func BenchmarkLoggingWithFields(b *testing.B) {
 
 // BenchmarkContextAwareLogging benchmarks context-aware logging
 func BenchmarkContextAwareLogging(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			UseColors:     false,
+			EnableColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
@@ -80,11 +80,11 @@ func BenchmarkContextAwareLogging(b *testing.B) {
 
 // BenchmarkAsyncLoggingOps benchmarks asynchronous logging operations
 func BenchmarkAsyncLoggingOps(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			UseColors:     false,
+			EnableColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
@@ -105,11 +105,11 @@ func BenchmarkAsyncLoggingOps(b *testing.B) {
 
 // BenchmarkConcurrentLogging benchmarks concurrent logging operations
 func BenchmarkConcurrentLogging(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			UseColors:     false,
+			EnableColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
@@ -130,11 +130,11 @@ func BenchmarkConcurrentLogging(b *testing.B) {
 
 // BenchmarkSamplingLogging benchmarks logging with sampling
 func BenchmarkSamplingLogging(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			UseColors:     false,
+			EnableColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
@@ -152,11 +152,11 @@ func BenchmarkSamplingLogging(b *testing.B) {
 
 // BenchmarkFormattedLogging benchmarks logging with text formatter
 func BenchmarkFormattedLogging(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			UseColors:       false,
+			EnableColors:       false,
 			ShowTimestamp:   true,
 			ShowCaller:      true,
 			ShowGoroutine:   true,
@@ -181,7 +181,7 @@ func BenchmarkFormattedLogging(b *testing.B) {
 
 // BenchmarkJSONLogging benchmarks logging with JSON formatter
 func BenchmarkJSONLogging(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.JSONFormatter{
@@ -208,7 +208,7 @@ func BenchmarkJSONLogging(b *testing.B) {
 
 // BenchmarkCSVLogging benchmarks logging with CSV formatter
 func BenchmarkCSVLogging(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.CSVFormatter{
@@ -230,11 +230,11 @@ func BenchmarkCSVLogging(b *testing.B) {
 
 // at
 func BenchmarkMultipleLevels(b *testing.B) {
-	logger := New(Config{
+	logger := New(LoggerConfig{
 		Level:  core.INFO,
 		Output: &testWriteSyncer{},
 		Formatter: &formatter.TextFormatter{
-			UseColors:     false,
+			EnableColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},

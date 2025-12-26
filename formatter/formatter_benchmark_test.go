@@ -65,7 +65,7 @@ func BenchmarkTextFormatter(b *testing.B) {
 	formatter := NewText()
 	formatter.ShowTimestamp = true
 	formatter.ShowCaller = true
-	formatter.UseColors = false
+	formatter.EnableColors = false
 
 	entry := createBenchmarkEntry()
 	defer core.PutEntryToPool(entry)
@@ -84,7 +84,7 @@ func BenchmarkTextFormatterWithColors(b *testing.B) {
 	formatter := NewText()
 	formatter.ShowTimestamp = true
 	formatter.ShowCaller = true
-	formatter.UseColors = true
+	formatter.EnableColors = true
 
 	entry := createBenchmarkEntry()
 	defer core.PutEntryToPool(entry)
@@ -125,7 +125,7 @@ func BenchmarkAllFormatters(b *testing.B) {
 		{"JSON", NewJSON()},
 		{"JSON-Pretty", &JSONFormatter{PrettyPrint: true}},
 		{"Text", NewText()},
-		{"Text-With-Colors", &TextFormatter{UseColors: true}},
+		{"Text-With-Colors", &TextFormatter{EnableColors: true}},
 	}
 
 	entry := createBenchmarkEntry()
