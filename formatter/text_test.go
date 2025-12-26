@@ -120,7 +120,7 @@ func TestTextFormatterWithoutTimestamp(t *testing.T) {
 // TestTextFormatterWithCaller tests TextFormatter with caller info
 func TestTextFormatterWithCaller(t *testing.T) {
 	tf := NewText()
-	tf.Caller = true
+	tf.ShowCaller = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -178,7 +178,7 @@ func TestTextFormatterWithFields(t *testing.T) {
 // TestTextFormatterWithStackTrace tests TextFormatter with stack trace
 func TestTextFormatterWithStackTrace(t *testing.T) {
 	tf := NewText()
-	tf.StackTrace = true
+	tf.IncludeStackTrace = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -207,7 +207,7 @@ func TestTextFormatterWithStackTrace(t *testing.T) {
 // TestTextFormatterWithGoroutine tests TextFormatter with goroutine ID
 func TestTextFormatterWithGoroutine(t *testing.T) {
 	tf := NewText()
-	tf.Goroutine = true
+	tf.ShowGoroutine = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -236,7 +236,7 @@ func TestTextFormatterWithGoroutine(t *testing.T) {
 // TestTextFormatterWithPID tests TextFormatter with PID
 func TestTextFormatterWithPID(t *testing.T) {
 	tf := NewText()
-	tf.PID = true
+	tf.ShowPID = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -265,7 +265,7 @@ func TestTextFormatterWithPID(t *testing.T) {
 // TestTextFormatterWithTraceInfo tests TextFormatter with trace information
 func TestTextFormatterWithTraceInfo(t *testing.T) {
 	tf := NewText()
-	tf.Trace = true
+	tf.ShowTraceInfo = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -350,7 +350,7 @@ func TestTextFormatterWithSensitiveFields(t *testing.T) {
 	tf := NewText()
 	tf.MaskSensitiveData = true
 	tf.SensitiveFields = []string{"password", "token"}
-	tf.MaskStr = "***MASKED***"
+	tf.MaskValue = "***MASKED***"
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -401,12 +401,12 @@ func TestTextFormatterIsSensitiveField(t *testing.T) {
 // TestTextFormatterWriteMeta tests the writeMeta method
 func TestTextFormatterWriteMeta(t *testing.T) {
 	tf := NewText()
-	tf.PID = true
-	tf.Goroutine = true
-	tf.Trace = true
-	tf.Caller = true
-	tf.Hostname = true
-	tf.App = true
+	tf.ShowPID = true
+	tf.ShowGoroutine = true
+	tf.ShowTraceInfo = true
+	tf.ShowCaller = true
+	tf.ShowHostname = true
+	tf.ShowApplication = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
