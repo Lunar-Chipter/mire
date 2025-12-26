@@ -20,7 +20,7 @@ func TestAdditionalLoggerFeatures(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:    false,
+			UseColors:       false,
 			ShowTimestamp:   true,
 			ShowCaller:      true,
 			ShowGoroutine:   true,
@@ -29,16 +29,16 @@ func TestAdditionalLoggerFeatures(t *testing.T) {
 			ShowHostname:    true,
 			ShowApplication: true,
 		},
-		ShowGoroutine:   true,
-		ShowPID:         true,
-		ShowTrace:   true,
-		ShowHostname:    true,
-		ShowApplication: true,
-		Hostname:        "test-host",
-		Application:     "test-app",
-		Version:         "1.0.0",
-		Environment:     "test-env",
-		MaxFieldSize:    1000,
+		ShowGoroutine: true,
+		ShowPID:       true,
+		ShowTrace:     true,
+		ShowHostname:  true,
+		ShowApp:       true,
+		Hostname:      "test-host",
+		Application:   "test-app",
+		Version:       "1.0.0",
+		Environment:   "test-env",
+		MaxFieldSize:  1000,
 	})
 	defer logger.Close()
 
@@ -63,7 +63,7 @@ func TestLoggerWithCustomExitFunc(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  false,
+			UseColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
@@ -91,7 +91,7 @@ func TestLoggerWithCustomErrorHandler(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  false,
+			UseColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
@@ -121,10 +121,12 @@ func TestLoggerWithHooks(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  false,
+			UseColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
+		BufferSize:    512,
+		FlushInterval: 10 * time.Millisecond, // Shorter interval for test
 	})
 	defer logger.Close()
 
@@ -142,12 +144,12 @@ func TestLoggerBufferedWriting(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  false,
+			UseColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
-		BufSize:    512,
-		Flush: 10 * time.Millisecond, // Shorter interval for test
+		BufferSize:    512,
+		FlushInterval: 10 * time.Millisecond, // Shorter interval for test
 	})
 	defer logger.Close()
 
@@ -178,11 +180,11 @@ func TestLoggerWithSampling(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  false,
+			UseColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
-		Sampling: true,
+		EnableSampling: true,
 		SamplingRate:   2, // Every 2nd message
 	})
 	defer logger.Close()
@@ -207,11 +209,11 @@ func TestLoggerWithDisableLocking(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  false,
+			UseColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
-		NoLock: true, // This option exists
+		NoLocking: true, // This option exists
 	})
 	defer logger.Close()
 
@@ -230,11 +232,11 @@ func TestLoggerWithMetrics(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  false,
+			UseColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
-		Metrics: true,
+		EnableMetrics: true,
 	})
 	defer logger.Close()
 
@@ -253,12 +255,12 @@ func TestLoggerWithPreAllocateSettings(t *testing.T) {
 		Level:  core.INFO,
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
-			UseColors:  false,
+			UseColors:     false,
 			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
-		FieldCap: 16, // Pre-allocate for fields
-		TagCap:   32, // Pre-allocate for tags
+		FieldCapacity: 16, // Pre-allocate for fields
+		TagCapacity:   32, // Pre-allocate for tags
 	})
 	defer logger.Close()
 
