@@ -49,8 +49,8 @@ func contextAwareExample() {
 		Output: os.Stdout,
 		Formatter: &formatter.JSONFormatter{
 			TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
-			ShowTraceInfo:    true,
-			EnableStackShowTrace: true,
+			ShowTrace:    true,
+			IncludeStackTrace: true,
 		},
 	})
 	defer func() { log.Close() }()
@@ -70,7 +70,7 @@ func customFormatterExample() {
 	// Create a formatter with custom field transformers
 	jsonFormatter := &formatter.JSONFormatter{
 		TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
-		ShowShowCaller:      true,
+		ShowCaller:      true,
 		FieldTransformers: map[string]func(interface{}) interface{}{
 			"credit_card": func(v interface{}) interface{} {
 				if cc, ok := v.(string); ok && len(cc) > 4 {
@@ -141,14 +141,13 @@ func performanceExample() {
 	perfLog := logger.New(logger.Config{
 		Level:                       core.INFO,
 		Output:                      os.Stdout,
-		AsyncLogging:                true,
-		AsyncWorkerCount:            6,
-		AsyncLogChannelBufferSize:   5000,
-		DisablePerLogContextTimeout: true,
+		AsyncMode:                true,
+		ChannelSize:   5000,
+		NoTimeout: true,
 		BufferSize:                  4096,
 		FlushInterval:               50 * time.Millisecond,
-		DisableLocking:              true,
-		EnableStackShowTrace:            false, // Disable for performance
+		NoLocking:              true,
+		IncludeStackTrace:            false, // Disable for performance
 		Formatter: &formatter.CSVFormatter{
 			IncludeHeader: false,
 		},

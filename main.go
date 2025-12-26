@@ -52,11 +52,10 @@ func main() {
 		TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
 		BufferSize:       logger.DEFAULT_BUFFER_SIZE,
 		FlushInterval:    logger.DEFAULT_FLUSH_INTERVAL,
-		Workers: 4,
 		ClockInterval:    10 * time.Millisecond,
 		Formatter: &formatter.TextFormatter{
 			UseColors:    true,
-			ShowShowTimestamp:   true,
+			ShowTimestamp:   true,
 			ShowCaller:      true,
 			TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
 		},
@@ -182,7 +181,7 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 		Formatter: &formatter.JSONFormatter{
 			PrettyPrint:      true,
 			ShowCaller:       true,
-			StackShowTrace: true,
+			IncludeStackTrace: true,
 			TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
 		},
 	}
@@ -196,7 +195,7 @@ func setupCustomTextLogger() *logger.Logger {
 		ErrorOutput: io.Discard, // Discard internal logger error messages
 		Formatter: &formatter.TextFormatter{
 			UseColors:  true,
-			ShowShowTimestamp: false, // Hide timestamp
+			ShowTimestamp: false, // Hide timestamp
 			ShowCaller:    false, // Hide caller info
 			ShowPID:       true,  // Show Process ID
 			ShowGoroutine: true,  // Show Goroutine ID
