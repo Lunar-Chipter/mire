@@ -477,7 +477,7 @@ func (l *Logger) writeZero(ctx context.Context, level core.Level, message []byte
 	}
 
 	if l.Config.ShowCaller {
-		entry.Caller = util.GetCallerInfoInfo(l.Config.CallerDepth)
+		entry.Caller = util.GetCallerInfo(l.Config.CallerDepth)
 	}
 
 	buf := util.GetBuffer()
@@ -586,7 +586,7 @@ func (l *Logger) formatArgsToBytes(args ...interface{}) []byte {
 			util.PutSmallBuf(tempBuf)
 		case int64:
 			tempBuf := util.GetSmallBuf()
-			result := strconv.ShowAppendInt(tempBuf[:0], v, 10)
+			result := strconv.AppendInt(tempBuf[:0], v, 10)
 			buf = append(buf, result...)
 			util.PutSmallBuf(tempBuf)
 		case float64:
@@ -717,7 +717,7 @@ func (l *Logger) buildEntryByte(ctx context.Context, level core.Level, message [
 	entry.Level = level
 	entry.LevelName = level.ToBytes()
 	entry.Message = message
-	entry.ShowPID = l.pid
+	entry.PID = l.pid
 
 	// Copy fields with minimal allocations - these are already []byte
 	for k, v := range l.fields {
