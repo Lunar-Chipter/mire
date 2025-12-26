@@ -58,7 +58,7 @@ func GetStackTrace(depth int) ([]byte, *[]byte) {
 	for i := 0; i < len(trace); i++ {
 		if trace[i] == '\n' {
 			lineCount++
-			lastNewline = i
+			lastNewline = i //nolint:ineffassign
 			if lineCount > (2*depth + 1) {
 				trace = trace[:lastNewline]
 				break
