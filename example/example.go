@@ -20,9 +20,9 @@ func ZeroAllocExample() {
 		Level:  core.INFO,
 		Output: os.Stdout,
 		Formatter: &formatter.TextFormatter{
-			EnableUseColors:  true,
-			ShowShowTimestamp: true,
-			ShowShowCaller:    true,
+			UseColors:  true,
+			ShowTimestamp: true,
+			ShowCaller:    true,
 		},
 	})
 	defer log.Close()
@@ -65,11 +65,10 @@ func NewAppLogger(output io.Writer, level core.Level, environment string) *AppLo
 		TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
 		BufferSize:       logger.DEFAULT_BUFFER_SIZE,
 		FlushInterval:    logger.DEFAULT_FLUSH_INTERVAL,
-		AsyncWorkerCount: 4,
 		ClockInterval:    10 * time.Millisecond,
-		MaskStringValue:  "[MASKED]",
+		MaskValue:  "[MASKED]",
 		Environment:      environment,
-		ShowHostname:         os.Getenv("HOSTNAME"),
+		Hostname:         os.Getenv("HOSTNAME"),
 		Application:      "mire-example-app",
 		Version:          "1.0.0",
 	}
@@ -77,11 +76,11 @@ func NewAppLogger(output io.Writer, level core.Level, environment string) *AppLo
 	// Set formatter based on output type
 	if output == os.Stdout || output == os.Stderr {
 		config.Formatter = &formatter.TextFormatter{
-			EnableUseColors:      true,
-			ShowShowTimestamp:     true,
-			ShowShowCaller:        true,
-			ShowTraceInfo:     true,
-			ShowShowPID:           true,
+			UseColors:      true,
+			ShowTimestamp:     true,
+			ShowCaller:        true,
+			ShowTrace:     true,
+			ShowPID:           true,
 			TimestampFormat:   logger.DEFAULT_TIMESTAMP_FORMAT,
 			SensitiveFields:   []string{"password", "token", "secret"},
 			MaskSensitiveData: true,

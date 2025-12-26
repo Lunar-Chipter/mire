@@ -8,7 +8,7 @@ import (
 
 // Example of unified API usage
 func efficientLoggingExample() {
-	log := logger.NewDefaultLogger()
+	log := logger.NewDefault()
 	defer log.Close()
 
 	// Basic logging
