@@ -33,9 +33,9 @@ func ExternalServiceExample() {
 		Level:  core.INFO,
 		Output: os.Stdout,
 		Formatter: &formatter.TextFormatter{
-			EnableUseColors:  true,
-			ShowShowTimestamp: true,
-			ShowShowCaller:    true,
+			UseColors:  true,
+			ShowTimestamp: true,
+			ShowCaller:    true,
 		},
 		// In real usage, uncomment the next lines:
 		// Hooks: []hook.Hook{externalHook},
