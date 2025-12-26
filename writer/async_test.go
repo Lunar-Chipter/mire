@@ -273,7 +273,6 @@ func TestAsyncLoggerClose(t *testing.T) {
 	// Double close should be safe
 }
 
-// to
 func TestAsyncLoggerWorkerPanicRecovery(t *testing.T) {
 	// Create a processor that will cause a panic when Log is called
 	panicProcessor := &panicLogProcessor{}
@@ -374,7 +373,6 @@ func (p *panicLogProcessor) ErrOutMu() *sync.Mutex {
 	return &sync.Mutex{}
 }
 
-// to
 func TestAsyncLoggerWorker(t *testing.T) {
 	processor := &mockLogProcessor{}
 

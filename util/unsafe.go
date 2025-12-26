@@ -95,6 +95,20 @@ var (
 )
 
 // StringToBytes converts string to []byte without allocation (shares memory)
+//
+// CRITICAL SAFETY WARNING:
+// This function uses unsafe operations to convert string to []byte without copying memory.
+// The returned byte slice SHARES the underlying memory with the original string.
+//
+// IMPORTANT USAGE RULES:
+// 1. DO NOT modify the returned byte slice - this will corrupt the original string
+// 2. DO NOT append to the returned byte slice
+// 3. DO NOT store the returned byte slice longer than the original string
+// 4. For data that needs modification, always create a copy: b := []byte(s)
+// 5. This is safe only for read-only access or when you control the lifetime
+//
+// This is a zero-allocation optimization. Only use this when you fully understand
+// the implications and follow the safety rules above.
 func StringToBytes(s string) (b []byte) {
 	bh := (*[3]int)(unsafe.Pointer(&b))
 	sh := (*[2]int)(unsafe.Pointer(&s))
@@ -105,6 +119,19 @@ func StringToBytes(s string) (b []byte) {
 }
 
 // B2s converts []byte to string without allocation (shares memory)
+//
+// CRITICAL SAFETY WARNING:
+// This function uses unsafe operations to convert []byte to string without copying memory.
+// The returned string SHARES underlying memory with the original []byte.
+//
+// IMPORTANT USAGE RULES:
+// 1. DO NOT modify the original []byte after calling this function
+// 2. DO NOT append to the original []byte after calling this function
+// 3. DO NOT store the returned string longer than the original []byte
+// 4. Only use this when you control the lifetime of both values
+//
+// This is a zero-allocation optimization. Only use when you fully understand
+// implications and follow the safety rules above.
 func B2s(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 	"sync/atomic"
+	"time"
 	"unsafe"
 )
 
@@ -19,6 +20,11 @@ const (
 	MaxSmallSlicePoolSize = 1024
 	StringSliceCapacity   = 10
 	MapInitialCapacity    = 8
+
+	// Pool cleanup constants
+	poolMaxAgeThreshold = 10 * time.Minute
+	poolCleanupInterval = 5 * time.Minute
+	maxGoroutinePools   = 1000
 )
 
 // Error definitions for buffer operations
@@ -247,6 +253,7 @@ func PutStringSliceToPool(s []string) {
 // Goroutine-local pools to reduce lock contention
 var (
 	goroutineBufferPools sync.Map // map[uint64]*localBufferPool
+	bufferPoolLastAccess sync.Map // map[uint64]time.Time
 )
 
 // Local pool structures for goroutine-local storage
@@ -257,7 +264,46 @@ type localBufferPool struct {
 // getGoroutineID returns a pseudo goroutine ID for goroutine-local storage
 func getGoroutineID() uint64 {
 	// Simplified implementation - in production, use a more reliable method
-	return uint64(uintptr(unsafe.Pointer(&globalPoolMetrics)) % 1000000)
+	ptr := unsafe.Pointer(&globalPoolMetrics)
+	return uint64(uintptr(ptr)) % 1000000
+}
+
+// StartBufferPoolCleanup starts periodic cleanup of goroutine-local buffer pools
+func StartBufferPoolCleanup() {
+	go func() {
+		ticker := time.NewTicker(poolCleanupInterval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			cleanupOldBufferPools()
+		}
+	}()
+}
+
+// cleanupOldBufferPools removes buffer pools that haven't been accessed recently
+func cleanupOldBufferPools() {
+	now := time.Now()
+	threshold := now.Add(-poolMaxAgeThreshold)
+
+	bufferPoolLastAccess.Range(func(key, value interface{}) bool {
+		lastAccess := value.(time.Time)
+		if lastAccess.Before(threshold) {
+			goroutineBufferPools.Delete(key)
+			bufferPoolLastAccess.Delete(key)
+		}
+		return true
+	})
+
+	// Limit total number of pools to prevent unbounded growth
+	var poolCount int
+	goroutineBufferPools.Range(func(key, value interface{}) bool {
+		poolCount++
+		if poolCount > maxGoroutinePools {
+			goroutineBufferPools.Delete(key)
+			bufferPoolLastAccess.Delete(key)
+		}
+		return true
+	})
 }
 
 // GetGoroutineLocalBufferPool returns the buffer pool for the current goroutine

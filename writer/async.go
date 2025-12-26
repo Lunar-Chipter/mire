@@ -59,7 +59,6 @@ func NewAsyncLogger(processor LogProcessor, workerCount int, bufferSize int, log
 	return al
 }
 
-// to
 func (al *AsyncLogger) worker() {
 	defer al.wg.Done()
 	defer func() {

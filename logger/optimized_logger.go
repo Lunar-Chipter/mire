@@ -14,7 +14,7 @@ import (
 
 // OptimizedLogger is an efficient logger version for minimal allocations
 type OptimizedLogger struct {
-	config     Config
+	config     LoggerConfig
 	formatter  formatter.Formatter
 	out        io.Writer
 	mu         sync.Mutex

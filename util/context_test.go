@@ -221,7 +221,6 @@ func TestExtractFromContextEmpty(t *testing.T) {
 	}
 }
 
-// to
 func TestContextKeyString(t *testing.T) {
 	// to
 	_ = string(TraceIDKey)

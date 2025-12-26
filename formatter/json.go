@@ -19,7 +19,7 @@ var (
 	jsonSpanKey      = []byte(",\"span_id\":\"")
 	jsonUserKey      = []byte(",\"user_id\":\"")
 	jsonFieldsKey    = []byte(",\"fields\":")
-	jsonStackKey     = []byte(",\"stack_trace\":")
+	jsonStackKey     = []byte(",\"stack_trace\":\"")
 	jsonQuote        = []byte("\"")
 	jsonComma        = []byte(",")
 	jsonColon        = []byte(":")
@@ -33,14 +33,14 @@ type JSONFormatter struct {
 	ShowCaller        bool                                     // Show caller information
 	ShowGoroutine     bool                                     // Show goroutine ID
 	ShowPID           bool                                     // Show process ID
-	ShowTrace     bool                                     // Show trace information
-	IncludeStackTrace  bool                                     // Enable stack trace for errors
-	ShowDuration    bool                                     // Show operation duration
+	ShowTrace         bool                                     // Show trace information
+	IncludeStackTrace bool                                     // Enable stack trace for errors
+	ShowDuration      bool                                     // Show operation duration
 	FieldKeyMap       map[string]string                        // Map for renaming fields
 	DisableHTMLEscape bool                                     // Disable HTML escaping in JSON
 	SensitiveFields   []string                                 // List of sensitive field names
 	MaskSensitiveData bool                                     // Whether to mask sensitive data
-	MaskValue   string                                   // String value to use for masking
+	MaskValue         string                                   // String value to use for masking
 	MaskStringBytes   []byte                                   // Byte slice for masking (zero-allocation)
 	FieldTransformers map[string]func(interface{}) interface{} // Functions to transform field values
 }
@@ -48,8 +48,8 @@ type JSONFormatter struct {
 // NewJSONFormatter creates a new JSONFormatter
 func NewJSON() *JSONFormatter {
 	return &JSONFormatter{
-		MaskValue:   "[MASKED]",
-		MaskStringBytes: []byte("[MASKED]"),
+		MaskValue:         "[MASKED]",
+		MaskStringBytes:   []byte("[MASKED]"),
 		FieldKeyMap:       make(map[string]string),
 		FieldTransformers: make(map[string]func(interface{}) interface{}),
 		SensitiveFields:   make([]string, 0),
@@ -83,11 +83,10 @@ func (f *JSONFormatter) formatManually(buf *bytes.Buffer, entry *core.LogEntry) 
 
 	// Add message
 	buf.Write(jsonMessageKey)
-	// Escape the message to handle special characters
 	escapeJSON(buf, entry.Message)
 	buf.Write(jsonQuote)
 
-	// at
+	// Add PID if needed
 	if f.ShowPID {
 		buf.Write(jsonPidKey)
 		util.WriteInt(buf, int64(entry.PID))
@@ -173,13 +172,13 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 		}
 	}
 
-	// Start JSON object
-	buf.WriteByte('{')
-
 	newline := func(level int) {
 		buf.WriteByte('\n')
 		indent(level)
 	}
+
+	// Start JSON object
+	buf.WriteByte('{')
 
 	// Add timestamp
 	newline(1)
@@ -198,7 +197,6 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 	buf.WriteString(",\n  ")
 	indent(1)
 	buf.WriteString("\"message\": \"")
-	// Escape the message to handle special characters
 	escapeJSON(buf, entry.Message)
 	buf.WriteString("\"")
 
@@ -208,103 +206,6 @@ func (f *JSONFormatter) formatManuallyWithIndent(buf *bytes.Buffer, entry *core.
 		indent(1)
 		buf.WriteString("\"pid\": ")
 		util.WriteInt(buf, int64(entry.PID))
-	}
-
-	// Add caller info if needed
-	if f.ShowCaller && entry.Caller != nil {
-		buf.WriteString(",\n  ")
-		indent(1)
-		buf.WriteString("\"caller\": \"")
-		buf.Write(core.StringToBytes(entry.Caller.File))
-		buf.WriteByte(':')
-		util.WriteInt(buf, int64(entry.Caller.Line))
-		buf.WriteByte('"')
-	}
-
-	// Add fields if present
-	if len(entry.Fields) > 0 {
-		buf.WriteString(",\n  ")
-		indent(1)
-		buf.WriteString("\"fields\": ")
-		// For indented fields, we need to format them manually with indentation
-		f.formatFieldsIndented(buf, entry.Fields, 2)
-	}
-
-	// Add trace info if needed
-	if f.ShowTrace {
-		if entry.TraceID != nil {
-			buf.WriteString(",\n  ")
-			indent(1)
-			buf.WriteString("\"trace_id\": \"")
-			buf.Write(entry.TraceID)
-			buf.WriteByte('"')
-		}
-		if entry.SpanID != nil {
-			buf.WriteString(",\n  ")
-			indent(1)
-			buf.WriteString("\"span_id\": \"")
-			buf.Write(entry.SpanID)
-			buf.WriteByte('"')
-		}
-		if entry.UserID != nil {
-			buf.WriteString(",\n  ")
-			indent(1)
-			buf.WriteString("\"user_id\": \"")
-			buf.Write(entry.UserID)
-			buf.WriteByte('"')
-		}
-	}
-
-	if f.IncludeStackTrace && len(entry.StackTrace) > 0 {
-		buf.WriteString(",\n  ")
-		indent(1)
-		buf.WriteString("\"stack_trace\": \"")
-		escapeJSON(buf, entry.StackTrace)
-		buf.WriteByte('"')
-	}
-
-	// Add caller info if needed
-	if f.ShowCaller && entry.Caller != nil {
-		buf.WriteString(",\n  ")
-		indent(1)
-		buf.WriteString("\"caller\": \"")
-		buf.Write(core.StringToBytes(entry.Caller.File))
-		buf.WriteByte(':')
-		util.WriteInt(buf, int64(entry.Caller.Line))
-		buf.WriteByte('"')
-	}
-
-	// Add trace info if needed - organize in a way that reduces branching
-	if f.ShowTrace {
-		if entry.TraceID != nil {
-			buf.WriteString(",\n  ")
-			indent(1)
-			buf.WriteString("\"trace_id\": \"")
-			buf.Write(entry.TraceID)
-			buf.WriteByte('"')
-		}
-		if entry.SpanID != nil {
-			buf.WriteString(",\n  ")
-			indent(1)
-			buf.WriteString("\"span_id\": \"")
-			buf.Write(entry.SpanID)
-			buf.WriteByte('"')
-		}
-		if entry.UserID != nil {
-			buf.WriteString(",\n  ")
-			indent(1)
-			buf.WriteString("\"user_id\": \"")
-			buf.Write(entry.UserID)
-			buf.WriteByte('"')
-		}
-	}
-
-	if f.IncludeStackTrace && len(entry.StackTrace) > 0 {
-		buf.WriteString(",\n  ")
-		indent(1)
-		buf.WriteString("\"stack_trace\": \"")
-		escapeJSON(buf, entry.StackTrace)
-		buf.WriteByte('"')
 	}
 
 	// Add caller info if needed
@@ -541,7 +442,7 @@ func (f *JSONFormatter) transformValue(val interface{}, defaultVal string) strin
 	}
 }
 
-// formatFields formats the fields map in JSON format
+// formatFields formats fields map in JSON format
 func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte) {
 	if len(fields) == 0 {
 		return
@@ -572,7 +473,7 @@ func (f *JSONFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 	buf.Write([]byte("}"))
 }
 
-// formatFieldsIndented formats the fields map in JSON format with indentation
+// formatFieldsIndented formats a fields map in JSON format with indentation
 func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[string][]byte, indentLevel int) {
 	indentBuf := util.GetBuffer()
 	defer util.PutBuffer(indentBuf)
@@ -599,11 +500,6 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 		newlineAndIndent()
 	}
 
-	fieldNewline := func() {
-		buf.WriteByte('\n')
-		buf.Write(indentBytes)
-	}
-
 	// to
 	orderedKeys := make([]string, 0, len(fields))
 	for k := range fields {
@@ -616,7 +512,9 @@ func (f *JSONFormatter) formatFieldsIndented(buf *bytes.Buffer, fields map[strin
 		if !first {
 			buf.WriteByte(',')
 		}
-		fieldNewline()
+		first = false
+
+		newlineAndIndent()
 
 		buf.WriteByte('"')
 		buf.Write(core.StringToBytes(k))

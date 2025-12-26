@@ -7,7 +7,6 @@ import (
 	"unsafe"
 )
 
-// to
 var clockWorkerPool = sync.Pool{
 	New: func() interface{} {
 		return make(chan time.Time, 16) // Pre-allocated buffered channel

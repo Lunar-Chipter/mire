@@ -2,7 +2,9 @@ package core
 
 import (
 	"bytes"
+	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -14,7 +16,7 @@ type LogEntry struct {
 	Level            Level                                    `json:"level"`                    // Log severity level
 	LevelName        []byte                                   `json:"level_name"`               // Byte representation of level for zero-allocation formatting
 	Message          []byte                                   `json:"message"`                  // Log message
-	Caller           *Caller                              `json:"caller,omitempty"`         // Caller information
+	Caller           *Caller                                  `json:"caller,omitempty"`         // Caller information
 	Fields           map[string][]byte                        `json:"fields,omitempty"`         // Additional fields as []byte for zero allocation
 	PID              int                                      `json:"pid"`                      // Process ID
 	GoroutineID      []byte                                   `json:"goroutine_id,omitempty"`   // Goroutine ID as byte slice
@@ -308,22 +310,101 @@ func GetGlobalEntry() *LogEntry {
 // goroutineLocalEntryPool stores entry pool per goroutine to avoid lock contention
 var goroutineLocalEntryPool = sync.Map{}
 
+// poolLastAccess tracks last access time for each goroutine pool
+var poolLastAccess = sync.Map{}
+
+// Cleanup configuration
+const (
+	poolMaxAgeThreshold = 10 * time.Minute
+	poolCleanupInterval = 5 * time.Minute
+	maxGoroutinePools   = 1000
+)
+
+// StartPoolCleanup starts periodic cleanup of goroutine-local pools
+func StartPoolCleanup() {
+	go func() {
+		ticker := time.NewTicker(poolCleanupInterval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			cleanupOldPools()
+		}
+	}()
+}
+
+// cleanupOldPools removes pools that haven't been accessed recently
+func cleanupOldPools() {
+	now := time.Now()
+	threshold := now.Add(-poolMaxAgeThreshold)
+
+	poolLastAccess.Range(func(key, value interface{}) bool {
+		lastAccess := value.(time.Time)
+		if lastAccess.Before(threshold) {
+			goroutineLocalEntryPool.Delete(key)
+			poolLastAccess.Delete(key)
+		}
+		return true
+	})
+
+	// Limit total number of pools to prevent unbounded growth
+	var poolCount int
+	goroutineLocalEntryPool.Range(func(key, value interface{}) bool {
+		poolCount++
+		if poolCount > maxGoroutinePools {
+			goroutineLocalEntryPool.Delete(key)
+			poolLastAccess.Delete(key)
+		}
+		return true
+	})
+}
+
 // LocalPool represents a per-goroutine entry pool
 type LocalPool struct {
 	entries chan *LogEntry
 }
 
-// getGoroutineID gets the current goroutine ID (simple implementation)
+// getGoroutineID gets the current goroutine ID by parsing runtime.Stack
 func getGoroutineID() uint64 {
-	// In real implementation, we would use a more reliable method
-	// to get goroutine ID
-	return uint64(time.Now().UnixNano() % 1000000)
+	var buf [64]byte
+	n := runtime.Stack(buf[:], false)
+	if n == 0 {
+		return 0
+	}
+
+	// Parse "goroutine 123 [running]:" format
+	str := string(buf[:n])
+
+	// Find "goroutine "
+	idx := strings.Index(str, "goroutine ")
+	if idx == -1 {
+		return 0
+	}
+
+	// Find space after ID
+	idStart := idx + 10 // length of "goroutine "
+	endIdx := strings.Index(str[idStart:], " ")
+	if endIdx == -1 {
+		return 0
+	}
+
+	// Parse ID
+	idStr := str[idStart : idStart+endIdx]
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return id
 }
 
 // GetGoroutineLocalEntryPool gets entry pool for current goroutine
 func GetGoroutineLocalEntryPool() *LocalPool {
 	gid := getGoroutineID()
+	now := time.Now()
+
 	if pool, ok := goroutineLocalEntryPool.Load(gid); ok {
+		// Update last access time
+		poolLastAccess.Store(gid, now)
 		return pool.(*LocalPool)
 	}
 
@@ -332,6 +413,7 @@ func GetGoroutineLocalEntryPool() *LocalPool {
 		entries: make(chan *LogEntry, 100),
 	}
 	goroutineLocalEntryPool.Store(gid, newPool)
+	poolLastAccess.Store(gid, now)
 
 	return newPool
 }

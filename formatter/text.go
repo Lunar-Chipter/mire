@@ -11,29 +11,28 @@ import (
 
 // TextFormatter formats log entries in a human-readable text format
 type TextFormatter struct {
-	UseColors        bool                                // Enable ANSI colors in output
-	ShowTimestamp       bool                                // Show timestamp in output
-	ShowCaller          bool                                // Show caller information
-	ShowGoroutine       bool                                // Show goroutine ID
-	ShowPID             bool                                // Show process ID
-	ShowTraceInfo       bool                                // Show trace information
-	ShowHostname        bool                                // Show hostname
-	ShowApplication     bool                                // Show application name
-	FullTimestamp       bool                                // Show full timestamp with nanoseconds
-	TimestampFormat     string                              // Custom timestamp format
-	IndentFields        bool                                // Indent fields for better readability
-	MaxFieldWidth       int                                 // Maximum width for field values
-	IncludeStackTrace    bool                                // Enable stack trace for errors
-	StackTraceDepth     int                                 // Maximum stack trace depth
+	EnableColors      bool                                // Enable ANSI colors in output
+	ShowTimestamp     bool                                // Show timestamp in output
+	ShowCaller        bool                                // Show caller information
+	ShowGoroutine     bool                                // Show goroutine ID
+	ShowPID           bool                                // Show process ID
+	ShowTraceInfo     bool                                // Show trace information
+	ShowHostname      bool                                // Show hostname
+	ShowApplication   bool                                // Show application name
+	FullTimestamp     bool                                // Show full timestamp with nanoseconds
+	TimestampFormat   string                              // Custom timestamp format
+	IndentFields      bool                                // Indent fields for better readability
+	MaxFieldWidth     int                                 // Maximum width for field values
+	IncludeStackTrace bool                                // Enable stack trace for errors
+	StackTraceDepth   int                                 // Maximum stack trace depth
 	ShowDuration      bool                                // Show operation duration
-	CustomFieldOrder    []string                            // Custom order for fields
-	UseColorsByLevel bool                                // Enable colors based on log level
-	FieldTransformers   map[string]func(interface{}) string // Functions to transform field values
-	SensitiveFields     []string                            // List of sensitive field names
-	MaskSensitiveData   bool                                // Whether to mask sensitive data
-	MaskValue     string                              // String value to use for masking
-	MaskStringBytes     []byte                              // Byte slice for masking (zero-allocation)
-	DisableHTMLEscape   bool                                // Disable HTML escaping in text
+	CustomFieldOrder  []string                            // Custom order for fields
+	FieldTransformers map[string]func(interface{}) string // Functions to transform field values
+	SensitiveFields   []string                            // List of sensitive field names
+	MaskSensitiveData bool                                // Whether to mask sensitive data
+	MaskValue         string                              // String value to use for masking
+	MaskStringBytes   []byte                              // Byte slice for masking (zero-allocation)
+	DisableHTMLEscape bool                                // Disable HTML escaping in text
 }
 
 var ResetColorBytes = []byte("\033[0m")
@@ -52,8 +51,8 @@ var metricsColorBytes = []byte("\033[38;5;85m")        // Green for metrics
 // NewTextFormatter creates a new TextFormatter
 func NewText() *TextFormatter {
 	return &TextFormatter{
-		MaskValue:   "[MASKED]",
-		MaskStringBytes: []byte("[MASKED]"),
+		MaskValue:         "[MASKED]",
+		MaskStringBytes:   []byte("[MASKED]"),
 		FieldTransformers: make(map[string]func(interface{}) string),
 		SensitiveFields:   make([]string, 0),
 	}
@@ -89,7 +88,7 @@ func (f *TextFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 
 	// at
 	levelBytes := entry.Level.Bytes()
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(core.LevelBackgroundBytes[entry.Level])
 		buf.Write(core.LevelColorBytes[entry.Level])
 		buf.WriteByte(' ')
@@ -107,14 +106,14 @@ func (f *TextFormatter) Format(buf *bytes.Buffer, entry *core.LogEntry) error {
 	f.writeMeta(buf, entry)
 
 	// Write message - already using []byte which is efficient
-	if f.UseColors && f.UseColorsByLevel {
+	if f.EnableColors {
 		buf.Write(core.LevelColorBytes[entry.Level])
 		if entry.Level >= core.ERROR {
 			buf.Write([]byte("\033[1m")) // Bold for important messages
 		}
 	}
 	buf.Write(entry.Message) // Message is []byte, efficient
-	if f.UseColors && f.UseColorsByLevel {
+	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
 
@@ -139,12 +138,12 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 		defer util.PutSmallBuf(pidBuf)
 		pidBytes := strconv.AppendInt(pidBuf[:0], int64(entry.PID), 10)
 
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(metaColorBytes)
 		}
 		buf.Write([]byte("ShowPID:"))
 		buf.Write(pidBytes)
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(ResetColorBytes)
 		}
 		buf.WriteByte(' ')
@@ -160,7 +159,7 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 		f.writeTraceInfo(buf, entry)
 	}
 	if f.ShowCaller && entry.Caller != nil {
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(callerColorBytes)
 		}
 		buf.Write(core.StringToBytes(entry.Caller.File))
@@ -172,7 +171,7 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 		lineBytes := strconv.AppendInt(lineBuf[:0], int64(entry.Caller.Line), 10)
 		buf.Write(lineBytes)
 
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(ResetColorBytes)
 		}
 		buf.WriteByte(' ')
@@ -183,13 +182,13 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 		defer util.PutSmallBuf(durationBuf)
 		durationBytes := strconv.AppendInt(durationBuf[:0], entry.Duration.Milliseconds(), 10)
 
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(durationColorBytes)
 		}
 		buf.WriteByte('(')
 		buf.Write(durationBytes)
 		buf.Write([]byte("ms)"))
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(ResetColorBytes)
 		}
 		buf.WriteByte(' ')
@@ -197,11 +196,11 @@ func (f *TextFormatter) writeMeta(buf *bytes.Buffer, entry *core.LogEntry) {
 }
 
 func (f *TextFormatter) writeMetaPartBytes(buf *bytes.Buffer, part []byte) {
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(metaColorBytes)
 	}
 	buf.Write(part) // part is already a byte slice
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
 	buf.WriteByte(' ')
@@ -220,13 +219,13 @@ func (f *TextFormatter) writeTraceInfo(buf *bytes.Buffer, entry *core.LogEntry) 
 }
 
 func (f *TextFormatter) writeTracePartBytes(buf *bytes.Buffer, key []byte, value []byte) {
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(traceColorBytes)
 	}
 	buf.Write(key)
 	buf.WriteByte(':')
 	buf.Write(value) // value is already a byte slice
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
 	buf.WriteByte(' ')
@@ -235,7 +234,7 @@ func (f *TextFormatter) writeTracePartBytes(buf *bytes.Buffer, key []byte, value
 func (f *TextFormatter) writePostMessage(buf *bytes.Buffer, entry *core.LogEntry) {
 	if entry.Error != nil {
 		buf.WriteByte(' ')
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(errorColorBytes)
 		}
 		buf.Write([]byte("error="))
@@ -245,7 +244,7 @@ func (f *TextFormatter) writePostMessage(buf *bytes.Buffer, entry *core.LogEntry
 			buf.WriteString(entry.Error.Error()) // Fallback to standard Error() which allocates
 		}
 		// Removed the '"' as it was inconsistent
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(ResetColorBytes)
 		}
 	}
@@ -268,11 +267,11 @@ func (f *TextFormatter) writePostMessage(buf *bytes.Buffer, entry *core.LogEntry
 	}
 	if f.IncludeStackTrace && len(entry.StackTrace) > 0 { // Check len() for []byte
 		buf.WriteByte('\n')
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(stackTraceColorBytes)
 		}
 		buf.Write(entry.StackTrace) // Now []byte
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(ResetColorBytes)
 		}
 	}
@@ -280,7 +279,7 @@ func (f *TextFormatter) writePostMessage(buf *bytes.Buffer, entry *core.LogEntry
 
 // formatKeyVals formats zero-allocation key-value pairs
 func (f *TextFormatter) formatKeyVals(buf *bytes.Buffer, keyvals [][]byte) {
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(fieldsWrapperColorBytes)
 	}
 	buf.WriteByte('{')
@@ -290,30 +289,30 @@ func (f *TextFormatter) formatKeyVals(buf *bytes.Buffer, keyvals [][]byte) {
 			buf.WriteByte(' ')
 		}
 
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(fieldKeyColorBytes)
 		}
 		buf.Write(keyvals[i]) // key
 		buf.WriteByte('=')
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(fieldValueColorBytes)
 		}
 		if i+1 < len(keyvals) {
 			buf.Write(keyvals[i+1]) // value
 		}
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(ResetColorBytes)
 		}
 	}
 
 	buf.WriteByte('}')
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
 }
 
 func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte) {
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(fieldsWrapperColorBytes)
 	}
 	buf.WriteByte('{')
@@ -330,13 +329,13 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 			buf.WriteByte(' ')
 		}
 
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(fieldKeyColorBytes)
 		}
 		// to
 		buf.Write(core.StringToBytes(k))
 		buf.WriteByte('=')
-		if f.UseColors {
+		if f.EnableColors {
 			buf.Write(fieldValueColorBytes)
 		}
 
@@ -350,17 +349,17 @@ func (f *TextFormatter) formatFields(buf *bytes.Buffer, fields map[string][]byte
 		}
 	}
 
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(fieldsWrapperColorBytes)
 	}
 	buf.WriteByte('}')
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
 }
 
 func (f *TextFormatter) formatTags(buf *bytes.Buffer, tags []string) {
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(tagsColorBytes)
 	}
 	buf.WriteByte('[')
@@ -371,13 +370,13 @@ func (f *TextFormatter) formatTags(buf *bytes.Buffer, tags []string) {
 		buf.Write(core.StringToBytes(tag)) // Use zero-allocation string to byte conversion
 	}
 	buf.WriteByte(']')
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
 }
 
 func (f *TextFormatter) formatTagsBytes(buf *bytes.Buffer, tags [][]byte) {
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(tagsColorBytes)
 	}
 	buf.WriteByte('[')
@@ -388,13 +387,13 @@ func (f *TextFormatter) formatTagsBytes(buf *bytes.Buffer, tags [][]byte) {
 		buf.Write(tag) // tag is already a byte slice
 	}
 	buf.WriteByte(']')
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
 }
 
 func (f *TextFormatter) formatMetrics(buf *bytes.Buffer, metrics map[string]float64) {
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(metricsColorBytes)
 	}
 	buf.WriteByte('<')
@@ -414,7 +413,7 @@ func (f *TextFormatter) formatMetrics(buf *bytes.Buffer, metrics map[string]floa
 		buf.Write(floatBytes)
 	}
 	buf.WriteByte('>')
-	if f.UseColors {
+	if f.EnableColors {
 		buf.Write(ResetColorBytes)
 	}
 }

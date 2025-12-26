@@ -44,23 +44,23 @@ func main() {
 
 	// Example 1: Default Logger
 	printLine("### 1. Default Logger ###")
-	defaultConfig := logger.Config{
-		Level:            core.WARN, // Only show WARN and above in console
-		Output:           os.Stdout,
-		ErrorOutput:      io.Discard, // Discard internal logger error messages
-		CallerDepth:      logger.DEFAULT_CALLER_DEPTH,
-		TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
-		BufferSize:       logger.DEFAULT_BUFFER_SIZE,
-		FlushInterval:    logger.DEFAULT_FLUSH_INTERVAL,
-		ClockInterval:    10 * time.Millisecond,
+	defaultConfig := logger.LoggerConfig{
+		Level:           core.WARN, // Only show WARN and above in console
+		Output:          os.Stdout,
+		ErrorOutput:     io.Discard, // Discard internal logger error messages
+		CallerDepth:     logger.DEFAULT_CALLER_DEPTH,
+		TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
+		BufferSize:      logger.DEFAULT_BUFFER_SIZE,
+		FlushInterval:   logger.DEFAULT_FLUSH_INTERVAL,
+		ClockInterval:   10 * time.Millisecond,
 		Formatter: &formatter.TextFormatter{
-			UseColors:    true,
+			EnableColors:    true,
 			ShowTimestamp:   true,
 			ShowCaller:      true,
 			TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
 		},
 	}
-	logDefault := logger.New(defaultConfig)
+	logDefault := logger.NewLogger(defaultConfig)
 	defer logDefault.Close() // Ensure logger is closed cleanly.
 
 	logDefault.Info("This is an INFORMATION message from the default logger. (Will not appear in console due to WARN level).")
@@ -151,7 +151,7 @@ func main() {
 
 	// Ensure all buffers are flushed before program ends.
 	// Especially important for buffered writers and async loggers.
-	// logger.New().Close() // If NewDefaultLogger is called multiple times, only need to close the used instance.
+	// logger.NewLogger().Close() // If NewDefaultLogger is called multiple times, only need to close the used instance.
 	// jsonFileLogger.Close() // Make sure to close if not deferred
 	// Usually, the main logger will be closed at the end of the application.
 	// For this demo, we don't explicitly close logDefault here,
@@ -173,35 +173,35 @@ func setupJSONFileLogger(filePath string) (*logger.Logger, error) {
 		}
 	}
 
-	jsonConfig := logger.Config{
+	jsonConfig := logger.LoggerConfig{
 		Level:       core.DEBUG,
 		Output:      file,
 		ErrorOutput: io.Discard, // Discard internal logger error messages
 		BufferSize:  1024,       // Enable buffered writer
 		Formatter: &formatter.JSONFormatter{
-			PrettyPrint:      true,
-			ShowCaller:       true,
+			PrettyPrint:       true,
+			ShowCaller:        true,
 			IncludeStackTrace: true,
-			TimestampFormat:  logger.DEFAULT_TIMESTAMP_FORMAT,
+			TimestampFormat:   logger.DEFAULT_TIMESTAMP_FORMAT,
 		},
 	}
-	return logger.New(jsonConfig), nil
+	return logger.NewLogger(jsonConfig), nil
 }
 
 // setupCustomTextLogger creates a logger with simplified text format.
 func setupCustomTextLogger() *logger.Logger {
-	customConfig := logger.Config{
+	customConfig := logger.LoggerConfig{
 		Level:       core.TRACE, // Display all logs, even trace
 		ErrorOutput: io.Discard, // Discard internal logger error messages
 		Formatter: &formatter.TextFormatter{
-			UseColors:  true,
+			EnableColors:     true,
 			ShowTimestamp: false, // Hide timestamp
 			ShowCaller:    false, // Hide caller info
 			ShowPID:       true,  // Show Process ID
 			ShowGoroutine: true,  // Show Goroutine ID
 		},
 	}
-	return logger.New(customConfig)
+	return logger.NewLogger(customConfig)
 }
 
 // demonstrateHooks shows how to configure and use hooks.
@@ -218,7 +218,7 @@ func setupCustomTextLogger() *logger.Logger {
 // 	defer errorFileHook.Close() // Ensure the file hook is closed
 
 // 	// 2. Configure logger to use hook.
-// 	logWithHook := logger.New(logger.Config{
+// 	logWithHook := logger.NewLogger(logger.LoggerConfig{
 // 		Level:       core.INFO, // This logger will display INFO and above to console
 // 		Output:      os.Stdout, // Console output
 // 		ErrorOutput: io.Discard, // Discard internal logger errors
@@ -227,7 +227,7 @@ func setupCustomTextLogger() *logger.Logger {
 // 			errorFileHook, // Add the manual file hook
 // 		},
 // 		Formatter: &formatter.TextFormatter{ // This formatter is for console output
-// 			UseColors:    true,
+// 			EnableColors:    true,
 // 			TimestampFormat: logger.DEFAULT_TIMESTAMP_FORMAT,
 // 			ShowCaller:      true,
 // 		},
