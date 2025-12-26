@@ -63,9 +63,9 @@ func BenchmarkJSONFormatterPretty(b *testing.B) {
 // BenchmarkTextFormatter benchmarks the Text formatter
 func BenchmarkTextFormatter(b *testing.B) {
 	formatter := NewText()
-	formatter.Timestamp = true
-	formatter.Caller = true
-	formatter.Colors = false
+	formatter.ShowTimestamp = true
+	formatter.ShowCaller = true
+	formatter.UseColors = false
 
 	entry := createBenchmarkEntry()
 	defer core.PutEntryToPool(entry)
@@ -82,9 +82,9 @@ func BenchmarkTextFormatter(b *testing.B) {
 // BenchmarkTextFormatterWithColors benchmarks the Text formatter with colors
 func BenchmarkTextFormatterWithColors(b *testing.B) {
 	formatter := NewText()
-	formatter.Timestamp = true
-	formatter.Caller = true
-	formatter.Colors = true
+	formatter.ShowTimestamp = true
+	formatter.ShowCaller = true
+	formatter.UseColors = true
 
 	entry := createBenchmarkEntry()
 	defer core.PutEntryToPool(entry)
@@ -187,17 +187,17 @@ func BenchmarkFormatterWithSensitiveData(b *testing.B) {
 	csvFormatter := NewCSV()
 	csvFormatter.SensitiveFields = []string{"password", "token", "ssn"}
 	csvFormatter.MaskSensitiveData = true
-	csvFormatter.MaskStr = "[MASKED]"
+	csvFormatter.MaskValue = "[MASKED]"
 
 	jsonFormatter := NewJSON()
 	jsonFormatter.SensitiveFields = []string{"password", "token", "ssn"}
 	jsonFormatter.MaskSensitiveData = true
-	jsonFormatter.MaskStr = "[MASKED]"
+	jsonFormatter.MaskValue = "[MASKED]"
 
 	textFormatter := NewText()
 	textFormatter.SensitiveFields = []string{"password", "token", "ssn"}
 	textFormatter.MaskSensitiveData = true
-	textFormatter.MaskStr = "[MASKED]"
+	textFormatter.MaskValue = "[MASKED]"
 
 	entry := core.GetEntryFromPool()
 	entry.Timestamp = time.Now()

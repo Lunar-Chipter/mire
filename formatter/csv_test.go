@@ -212,7 +212,7 @@ func TestCSVFormatterFormatCSVField(t *testing.T) {
 	entry.SpanID = []byte("span456")
 	entry.UserID = []byte("user789")
 	entry.RequestID = []byte("req012")
-	entry.Caller = util.GetCaller(1)
+	entry.Caller = util.GetCallerInfo(1)
 	if entry.Caller != nil {
 		entry.Caller.File = "test.go"
 		entry.Caller.Line = 100

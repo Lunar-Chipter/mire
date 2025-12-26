@@ -127,7 +127,7 @@ func TestTextFormatterWithCaller(t *testing.T) {
 
 	entry.Level = core.INFO
 	entry.Message = []byte("with caller")
-	entry.Caller = util.GetCaller(1) // Get caller info from one level up
+	entry.Caller = util.GetCallerInfo(1) // Get caller info from one level up
 
 	buf := &bytes.Buffer{}
 	err := tf.Format(buf, entry)
@@ -418,7 +418,7 @@ func TestTextFormatterWriteMeta(t *testing.T) {
 	entry.RequestID = []byte("req777")
 	entry.Hostname = []byte("test-host")
 	entry.Application = []byte("test-app")
-	entry.Caller = util.GetCaller(1)
+	entry.Caller = util.GetCallerInfo(1)
 	entry.Duration = 5 * time.Second
 
 	buf := &bytes.Buffer{}
