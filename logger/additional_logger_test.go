@@ -21,24 +21,24 @@ func TestAdditionalLoggerFeatures(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:    false,
-			ShowShowTimestamp:   true,
+			ShowTimestamp:   true,
 			ShowCaller:      true,
 			ShowGoroutine:   true,
 			ShowPID:         true,
-			ShowTrace:   true,
-			ShowShowHostname:    true,
-			ShowShowApp: true,
+			ShowTraceInfo:   true,
+			ShowHostname:    true,
+			ShowApplication: true,
 		},
 		ShowGoroutine:   true,
 		ShowPID:         true,
 		ShowTrace:   true,
-		ShowShowHostname:    true,
-		ShowShowApp: true,
-		ShowHostname:        "test-host",
+		ShowHostname:    true,
+		ShowApplication: true,
+		Hostname:        "test-host",
 		Application:     "test-app",
 		Version:         "1.0.0",
 		Environment:     "test-env",
-		MaxField:    1000,
+		MaxFieldSize:    1000,
 	})
 	defer logger.Close()
 
@@ -64,7 +64,7 @@ func TestLoggerWithCustomExitFunc(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:  false,
-			ShowShowTimestamp: false,
+			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
 		ExitFunc: func(code int) {
@@ -92,7 +92,7 @@ func TestLoggerWithCustomErrorHandler(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:  false,
-			ShowShowTimestamp: false,
+			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
 		ErrorHandler: func(err error) {
@@ -122,7 +122,7 @@ func TestLoggerWithHooks(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:  false,
-			ShowShowTimestamp: false,
+			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
 	})
@@ -143,7 +143,7 @@ func TestLoggerBufferedWriting(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:  false,
-			ShowShowTimestamp: false,
+			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
 		BufSize:    512,
@@ -179,7 +179,7 @@ func TestLoggerWithSampling(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:  false,
-			ShowShowTimestamp: false,
+			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
 		Sampling: true,
@@ -208,7 +208,7 @@ func TestLoggerWithDisableLocking(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:  false,
-			ShowShowTimestamp: false,
+			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
 		NoLock: true, // This option exists
@@ -231,7 +231,7 @@ func TestLoggerWithMetrics(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:  false,
-			ShowShowTimestamp: false,
+			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
 		Metrics: true,
@@ -254,7 +254,7 @@ func TestLoggerWithPreAllocateSettings(t *testing.T) {
 		Output: &buf,
 		Formatter: &formatter.TextFormatter{
 			UseColors:  false,
-			ShowShowTimestamp: false,
+			ShowTimestamp: false,
 			ShowCaller:    false,
 		},
 		FieldCap: 16, // Pre-allocate for fields
