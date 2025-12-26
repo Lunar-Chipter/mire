@@ -53,7 +53,7 @@ func TestNewBuffered(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBuffered returned nil")
 	}
-	defer _ = bufferedWriter.Close()
+	defer func() { _, _ = bufferedWriter.Close() }()
 
 	// Check initial state
 	if bufferedWriter.writer != &output {
@@ -112,7 +112,7 @@ func TestBufferedFullBuffer(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBuffered returned nil")
 	}
-	defer _ = bufferedWriter.Close()
+	defer func() { _, _ = bufferedWriter.Close() }()
 
 	// Write data to fill up the internal channel
 	for i := 0; i < 10; i++ {
@@ -155,7 +155,7 @@ func TestBufferedWriteError(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBuffered returned nil")
 	}
-	defer _ = bufferedWriter.Close()
+	defer func() { _, _ = bufferedWriter.Close() }()
 
 	// Write some data
 	_, err := bufferedWriter.Write([]byte("test"))
@@ -222,7 +222,7 @@ func TestBufferedWithBatches(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBuffered returned nil")
 	}
-	defer _ = bufferedWriter.Close()
+	defer func() { _, _ = bufferedWriter.Close() }()
 
 	// Write multiple small chunks that should be batched together
 	for i := 0; i < 5; i++ {
@@ -260,7 +260,7 @@ func TestBufferedWithTimeout(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBuffered returned nil")
 	}
-	defer _ = bufferedWriter.Close()
+	defer func() { _, _ = bufferedWriter.Close() }()
 
 	// Write one chunk - it should be flushed by timeout since batch size won't be reached
 	_, err := bufferedWriter.Write([]byte("single chunk\n"))
@@ -287,7 +287,7 @@ func TestBufferedStats(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBuffered returned nil")
 	}
-	defer _ = bufferedWriter.Close()
+	defer func() { _, _ = bufferedWriter.Close() }()
 
 	// Write some data to populate stats
 	for i := 0; i < 3; i++ {
@@ -339,7 +339,7 @@ func TestBufferedConcurrent(t *testing.T) {
 	if bufferedWriter == nil {
 		t.Fatal("NewBuffered returned nil")
 	}
-	defer _ = bufferedWriter.Close()
+	defer func() { _, _ = bufferedWriter.Close() }()
 
 	// Run multiple goroutines that write concurrently
 	const numGoroutines = 5

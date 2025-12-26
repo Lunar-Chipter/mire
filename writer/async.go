@@ -70,17 +70,17 @@ func (al *AsyncLogger) worker() {
 				defer mu.Unlock()
 
 				// Write panic message manually
-				_ = al.processor.ErrOut().Write([]byte("recovering from panic in async logger worker: "))
+				_, _ = al.processor.ErrOut().Write([]byte("recovering from panic in async logger worker: "))
 				// Convert recovered value to string manually
 				recoveredStr := util.ConvertValue(r)
-				al.processor.ErrOut().Write(util.StringToBytes(recoveredStr))
-				_ = al.processor.ErrOut().Write([]byte("\n"))
+				_, _ = al.processor.ErrOut().Write(util.StringToBytes(recoveredStr))
+				_, _ = al.processor.ErrOut().Write([]byte("\n"))
 
 				buf := make([]byte, 1024)
 				n := runtime.Stack(buf, false)
-				_ = al.processor.ErrOut().Write([]byte("stack trace: "))
-				al.processor.ErrOut().Write(buf[:n])
-				_ = al.processor.ErrOut().Write([]byte("\n"))
+				_, _ = al.processor.ErrOut().Write([]byte("stack trace: "))
+				_, _ = al.processor.ErrOut().Write(buf[:n])
+				_, _ = al.processor.ErrOut().Write([]byte("\n"))
 			}
 		}
 	}()
@@ -140,7 +140,7 @@ func (al *AsyncLogger) LogZero(level core.Level, msg []byte, ctx context.Context
 		} else if errOut := al.processor.ErrOut(); errOut != nil {
 			mu := al.processor.ErrOutMu()
 			mu.Lock()
-			errOut.Write([]byte("async buffer full\n"))
+			_, _ = al.processor.ErrOut().Write([]byte("async buffer full\n"))
 			mu.Unlock()
 		}
 	}
