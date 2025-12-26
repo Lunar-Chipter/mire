@@ -17,8 +17,8 @@ func TestNewJSONFormatter(t *testing.T) {
 	}
 
 	// Check default values
-	if jf.MaskStr != "[MASKED]" {
-		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", jf.MaskStr)
+	if jf.MaskValue != "[MASKED]" {
+		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", jf.MaskValue)
 	}
 
 	if jf.FieldKeyMap == nil {
@@ -117,7 +117,7 @@ func TestJSONFormatterWithPrettyPrint(t *testing.T) {
 // TestJSONFormatterWithPID tests JSONFormatter with PID
 func TestJSONFormatterWithPID(t *testing.T) {
 	jf := NewJSON()
-	jf.PID = true
+	jf.ShowPID = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -149,7 +149,7 @@ func TestJSONFormatterWithPID(t *testing.T) {
 // TestJSONFormatterWithCaller tests JSONFormatter with caller info
 func TestJSONFormatterWithCaller(t *testing.T) {
 	jf := NewJSON()
-	jf.Caller = true
+	jf.ShowCaller = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -224,7 +224,7 @@ func TestJSONFormatterWithFields(t *testing.T) {
 // TestJSONFormatterWithTraceInfo tests JSONFormatter with trace information
 func TestJSONFormatterWithTraceInfo(t *testing.T) {
 	jf := NewJSON()
-	jf.Trace = true
+	jf.ShowTrace = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -262,7 +262,7 @@ func TestJSONFormatterWithTraceInfo(t *testing.T) {
 // TestJSONFormatterWithStackTrace tests JSONFormatter with stack trace
 func TestJSONFormatterWithStackTrace(t *testing.T) {
 	jf := NewJSON()
-	jf.StackTrace = true
+	jf.IncludeStackTrace = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)

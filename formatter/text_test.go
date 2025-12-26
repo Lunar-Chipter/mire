@@ -18,8 +18,8 @@ func TestNewTextFormatter(t *testing.T) {
 	}
 
 	// Check default values
-	if tf.MaskStr != "[MASKED]" {
-		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", tf.MaskStr)
+	if tf.MaskValue != "[MASKED]" {
+		t.Errorf("Default MaskValue should be '[MASKED]', got '%s'", tf.MaskValue)
 	}
 
 	if tf.FieldTransformers == nil {
@@ -68,7 +68,7 @@ func TestTextFormatterFormat(t *testing.T) {
 // TestTextFormatterWithColors tests TextFormatter with colors enabled
 func TestTextFormatterWithColors(t *testing.T) {
 	tf := NewText()
-	tf.Colors = true
+	tf.UseColors = true
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
@@ -96,7 +96,7 @@ func TestTextFormatterWithColors(t *testing.T) {
 // TestTextFormatterWithoutTimestamp tests TextFormatter without showing timestamp
 func TestTextFormatterWithoutTimestamp(t *testing.T) {
 	tf := NewText()
-	tf.Timestamp = false
+	tf.ShowTimestamp = false
 
 	entry := core.GetEntryFromPool()
 	defer core.PutEntryToPool(entry)
