@@ -19,12 +19,12 @@ func TestMainFunction(t *testing.T) {
 	main()
 
 	// Restore stdout
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	// Read the output
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, _ = io.Copy(&buf, r)
 
 	// Check the output contains expected parts
 	output := buf.String()
@@ -136,12 +136,12 @@ func TestPrintLine(t *testing.T) {
 	printLine(testMessage)
 
 	// Restore stdout
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	// Read the output
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, _ = io.Copy(&buf, r)
 	output := buf.String()
 
 	// Check if the message was printed with a newline
@@ -162,12 +162,12 @@ func TestPrintLineEmpty(t *testing.T) {
 	printLine("")
 
 	// Restore stdout
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	// Read the output
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, _ = io.Copy(&buf, r)
 	output := buf.String()
 
 	// Check if an empty line was printed
@@ -238,7 +238,7 @@ func TestMainFunctionDoesNotPanic(t *testing.T) {
 	}()
 
 	// Restore stdout and clean up
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	// Drain the pipe to prevent blocking

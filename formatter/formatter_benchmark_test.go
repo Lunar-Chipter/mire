@@ -22,7 +22,7 @@ func BenchmarkCSVFormatter(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_, _ = formatter.Format(&buf, entry)
 	}
 }
 
@@ -39,7 +39,7 @@ func BenchmarkJSONFormatter(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_, _ = formatter.Format(&buf, entry)
 	}
 }
 
@@ -56,7 +56,7 @@ func BenchmarkJSONFormatterPretty(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		formatter.Format(&buf, entry)
+		_, _ = formatter.Format(&buf, entry)
 	}
 }
 
@@ -138,7 +138,7 @@ func BenchmarkAllFormatters(b *testing.B) {
 
 			for i := 0; i < b.N; i++ {
 				buf.Reset()
-				tt.formatter.Format(&buf, entry)
+				_, _ = tt.formatter.Format(&buf, entry)
 			}
 		})
 	}
@@ -174,7 +174,7 @@ func BenchmarkFormatterWithFields(b *testing.B) {
 
 			for i := 0; i < b.N; i++ {
 				buf.Reset()
-				tt.formatter.Format(&buf, entry)
+				_, _ = tt.formatter.Format(&buf, entry)
 			}
 		})
 	}
@@ -228,7 +228,7 @@ func BenchmarkFormatterWithSensitiveData(b *testing.B) {
 
 			for i := 0; i < b.N; i++ {
 				buf.Reset()
-				tt.formatter.Format(&buf, entry)
+				_, _ = tt.formatter.Format(&buf, entry)
 			}
 		})
 	}

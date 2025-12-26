@@ -70,17 +70,17 @@ func (al *AsyncLogger) worker() {
 				defer mu.Unlock()
 
 				// Write panic message manually
-				al.processor.ErrOut().Write([]byte("recovering from panic in async logger worker: "))
+				_ = al.processor.ErrOut().Write([]byte("recovering from panic in async logger worker: "))
 				// Convert recovered value to string manually
 				recoveredStr := util.ConvertValue(r)
 				al.processor.ErrOut().Write(util.StringToBytes(recoveredStr))
-				al.processor.ErrOut().Write([]byte("\n"))
+				_ = al.processor.ErrOut().Write([]byte("\n"))
 
 				buf := make([]byte, 1024)
 				n := runtime.Stack(buf, false)
-				al.processor.ErrOut().Write([]byte("stack trace: "))
+				_ = al.processor.ErrOut().Write([]byte("stack trace: "))
 				al.processor.ErrOut().Write(buf[:n])
-				al.processor.ErrOut().Write([]byte("\n"))
+				_ = al.processor.ErrOut().Write([]byte("\n"))
 			}
 		}
 	}()

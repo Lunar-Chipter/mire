@@ -229,9 +229,9 @@ func (bw *Buffered) flushBatch(batch [][]byte) {
 			})
 		} else {
 			// Write error message manually without fmt
-			os.Stderr.Write([]byte("Error writing from buffered writer: "))
-			os.Stderr.Write(util.StringToBytes(err.Error()))
-			os.Stderr.Write([]byte("\n"))
+			_, _ = os.Stderr.Write([]byte("Error writing from buffered writer: "))
+			_, _ = os.Stderr.Write(util.StringToBytes(err.Error()))
+			_, _ = os.Stderr.Write([]byte("\n"))
 		}
 	}
 }

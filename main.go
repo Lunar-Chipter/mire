@@ -33,8 +33,8 @@ func (e *wrappedError) Unwrap() error {
 
 // printLine is a helper function to print lines without fmt
 func printLine(s string) {
-	os.Stdout.Write([]byte(s))
-	os.Stdout.Write([]byte("\n"))
+	_, _ = os.Stdout.Write([]byte(s))
+	_, _ = os.Stdout.Write([]byte("\n"))
 }
 
 func main() {
@@ -194,7 +194,7 @@ func setupCustomTextLogger() *logger.Logger {
 		Level:       core.TRACE, // Display all logs, even trace
 		ErrorOutput: io.Discard, // Discard internal logger error messages
 		Formatter: &formatter.TextFormatter{
-			EnableColors:     true,
+			EnableColors:  true,
 			ShowTimestamp: false, // Hide timestamp
 			ShowCaller:    false, // Hide caller info
 			ShowPID:       true,  // Show Process ID

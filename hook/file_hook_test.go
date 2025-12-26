@@ -31,7 +31,7 @@ func TestFileHookCreation(t *testing.T) {
 
 	// Clean up
 	_ = hook.Close()
-	os.Remove(tempFile)
+	_ = os.Remove(tempFile)
 }
 
 // TestFileHookCreationError tests error case when file can't be created

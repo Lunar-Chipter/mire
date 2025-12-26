@@ -160,7 +160,9 @@ func (al *AppLogger) LogSecurityEvent(ctx context.Context, eventType, descriptio
 func ExampleUsage() {
 	// Create application logger
 	appLogger := NewAppLogger(os.Stdout, core.INFO, "production")
-	defer func() { appLogger.Close() }()
+	defer func() {
+	_ = appLogger.Close()
+}()
 
 	// Simulate context with trace ID
 	ctx := context.Background()

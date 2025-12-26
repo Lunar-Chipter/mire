@@ -483,7 +483,7 @@ func (l *Logger) writeZero(ctx context.Context, level core.Level, message []byte
 	buf := util.GetBuffer()
 	defer util.PutBuffer(buf)
 	
-	l.Config.Formatter.Format(buf, entry)
+	_, _ = l.Config.Formatter.Format(buf, entry)
 	l.mu.Lock()
 	l.Config.Output.Write(buf.Bytes())
 	l.mu.Unlock()
@@ -812,7 +812,7 @@ func (l *Logger) handleLevelActions(level core.Level, entry *core.LogEntry) {
 			msgBuf.WriteString("PANIC: ")
 			msgBuf.Write(entry.Message)
 			msgBuf.WriteByte('\n')
-			l.out.Write(msgBuf.Bytes())
+			_, _ = l.out.Write(msgBuf.Bytes())
 		}
 		l.exitFunc(1)
 	}
