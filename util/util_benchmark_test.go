@@ -213,7 +213,7 @@ func BenchmarkGetCallerInfo(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		info := GetCallerInfo(2) // Get info for calling function
 		if info != nil {
-			core.PutCallerInfoToPool(info)
+			core.PutCallerToPool(info)
 		}
 	}
 }

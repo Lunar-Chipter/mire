@@ -11,7 +11,7 @@ import (
 func TestGetCallerInfo(t *testing.T) {
 	// Call GetCallerInfo from this function (skip=1)
 	callerInfo := GetCallerInfo(1)
-	defer core.PutCallerInfoToPool(callerInfo)
+	defer core.PutCallerToPool(callerInfo)
 
 	if callerInfo == nil {
 		t.Fatal("GetCallerInfo returned nil")
@@ -41,12 +41,12 @@ func TestGetCallerInfo(t *testing.T) {
 // TestGetCallerInfoSkip2 tests the GetCallerInfo function with skip=2
 func TestGetCallerInfoSkip2(t *testing.T) {
 	// Create a helper function that calls GetCallerInfo
-	var helper = func() *core.CallerInfo {
+	var helper = func() *core.Caller {
 		return GetCallerInfo(2) // Should get info from TestGetCallerInfoSkip2
 	}
 
 	callerInfo := helper()
-	defer core.PutCallerInfoToPool(callerInfo)
+	defer core.PutCallerToPool(callerInfo)
 
 	if callerInfo == nil {
 		t.Fatal("GetCallerInfo with skip=2 returned nil")
@@ -71,7 +71,7 @@ func TestGetCallerInfoSkip2(t *testing.T) {
 func TestGetCallerInfoSkip0(t *testing.T) {
 	// This would get info about GetCallerInfo itself
 	callerInfo := GetCallerInfo(0)
-	defer core.PutCallerInfoToPool(callerInfo)
+	defer core.PutCallerToPool(callerInfo)
 
 	if callerInfo == nil {
 		t.Fatal("GetCallerInfo with skip=0 returned nil")
@@ -92,7 +92,7 @@ func TestGetCallerInfoInvalidSkip(t *testing.T) {
 	// at
 	if callerInfo != nil {
 		t.Errorf("GetCallerInfo with invalid skip should return nil, got %+v", callerInfo)
-		core.PutCallerInfoToPool(callerInfo)
+		core.PutCallerToPool(callerInfo)
 	}
 }
 
@@ -207,8 +207,8 @@ func TestGetStackTraceNegativeDepth(t *testing.T) {
 	}
 }
 
-// TestPutCallerInfoToPool tests the PutCallerInfoToPool function
-func TestPutCallerInfoToPool(t *testing.T) {
+// TestPutCallerToPool tests the PutCallerToPool function
+func TestPutCallerToPool(t *testing.T) {
 	// Get a caller info object
 	callerInfo := GetCallerInfo(1)
 	if callerInfo == nil {
@@ -223,11 +223,11 @@ func TestPutCallerInfoToPool(t *testing.T) {
 	callerInfo.Package = "TestPackage"
 
 	// Put it back to the pool
-	core.PutCallerInfoToPool(callerInfo)
+	core.PutCallerToPool(callerInfo)
 
 	// Get another caller info object - it might be the same one
 	anotherCallerInfo := GetCallerInfo(1)
-	defer core.PutCallerInfoToPool(anotherCallerInfo)
+	defer core.PutCallerToPool(anotherCallerInfo)
 
 	// Verify that the new object has default values (if it's the reused one)
 	// This is hard to test definitively without knowing implementation details,
@@ -289,7 +289,7 @@ func TestGetCallerInfoConcurrent(t *testing.T) {
 				}
 
 				// Return to pool
-				core.PutCallerInfoToPool(callerInfo)
+				core.PutCallerToPool(callerInfo)
 			}
 		}()
 	}
